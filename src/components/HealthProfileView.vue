@@ -574,7 +574,7 @@ function onTimePickerConfirm({ selectedValues }: { selectedValues: string[] }) {
         <button class="mt-2 w-full rounded-xl border border-[#1F6A95]/20 py-2 text-[10px] font-bold text-[#1F6A95]" @click="showUploadModal = true">补充 / 替换材料</button>
       </Card>
 
-      <Card v-if="qData?.medicalReports && qData.medicalReports.length > 0">
+      <Card v-if="qData?.medicalReports && qData.medicalReports.some((r: any) => r.url)">
         <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2 border-b pb-2">
           <FileText class="h-4 w-4 text-[#1F6A95]" />
           个人医疗报告

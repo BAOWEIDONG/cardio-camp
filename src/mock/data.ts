@@ -858,7 +858,7 @@ Object.values(MOCK_STUDENT_WEIGHTS).forEach((records) => {
 
 /** 营期/期列表 */
 export const MOCK_CAMPS: Camp[] = [
-  { id: 'camp1', name: '第一期', startDate: dateStr(-15), endDate: dateStr(13), status: 'active' },
+  { id: 'camp1', name: '第一期 · 21天强化', startDate: dateStr(-15), endDate: dateStr(5), status: 'active' },
   { id: 'camp2', name: '第二期', startDate: dateStr(-2), endDate: dateStr(26), status: 'active' },
   { id: 'camp3', name: '第三期', startDate: dateStr(7), endDate: dateStr(35), status: 'upcoming' },
 ];

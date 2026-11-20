@@ -165,7 +165,7 @@ const roleLabel: Record<string, string> = { doctor: '医师', dietitian: '营养
         <div class="space-y-2">
           <Card v-for="d in groupedDays" :key="d.date" class="p-3 border-0 shadow-sm">
             <div class="flex items-center justify-between border-b border-gray-50 pb-2">
-              <div class="text-[11px] font-bold text-gray-900">{{ fmt(d.date + ' 00:00') }} <span class="text-[8.5px] font-normal text-gray-400">· {{ d.records.length }} 次</span></div>
+              <div class="text-[11px] font-bold text-gray-900">{{ d.date.slice(5) }} <span class="text-[8.5px] font-normal text-gray-400">· {{ d.records.length }} 次</span></div>
               <div class="text-right">
                 <span class="text-[15px] font-black" :class="d.avgSbp >= 140 || d.avgDbp >= 90 ? 'text-orange-500' : 'text-gray-900'">{{ d.avgSbp }}/{{ d.avgDbp }}</span>
                 <span class="text-[8px] text-gray-400 ml-0.5">日均</span>

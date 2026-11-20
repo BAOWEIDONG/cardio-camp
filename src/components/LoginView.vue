@@ -71,6 +71,11 @@ const handlePhoneSubmit = () => {
         demo: true, submittedAt: new Date().toISOString(),
         name: account.name, gender: studentInfo?.gender || 'male', age: studentInfo?.age || 56,
         height: 172, weight: 79,
+        medicalHistory: '高血压 3 级、颈动脉斑块、LDL-C 偏高',
+        allergies: '无',
+        sleepTime: '23:00', wakeTime: '06:30', sleepDuration: '7.5',
+        drinkAlcohol: '从不', smoke: '已戒烟', snack: '否', dailyWater: '1800',
+        exerciseFrequency: '3', exerciseDuration: '30', exerciseTypes: ['快走', '太极'],
         medicalReports: [
           { url: '', type: 'pdf', name: '空腹抽血化验单（三甲医院）' },
           { url: '', type: 'pdf', name: '12 导联心电图' },
