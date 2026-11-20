@@ -527,12 +527,12 @@ export const MOCK_REWARD_TIERS: RewardTier[] = [
   {
     id: 't2',
     campId: 'camp1',
-    name: '瑜伽垫',
+    name: '电子血压计',
     requiredDays: 21,
-    imageUrl: rewardImg('瑜伽垫', '🧘', '#2C7DA0', '#1A577C'),
+    imageUrl: rewardImg('电子血压计', '压', '#1F6A95', '#2C7DA0'),
     stock: 20,
     source: 'streak',
-    description: '加厚防滑瑜伽垫 6mm，TPE 环保材质，健身塑形更舒适',
+    description: '上臂式电子血压计，双人记忆，语音播报',
     deliveryMethods: ['shipped', 'in-person'],
   },
   {
@@ -543,7 +543,7 @@ export const MOCK_REWARD_TIERS: RewardTier[] = [
     imageUrl: rewardImg('健康礼包', '礼', '#1E3A52', '#123B53'),
     stock: 5,
     source: 'streak',
-    description: '智能体脂秤，连接手机同步记录，28 项身体数据科学管理',
+    description: '分药盒、血压记录本、低钠食谱、运动毛巾',
     deliveryMethods: ['shipped'],
   },
 ];
@@ -554,7 +554,7 @@ export const MOCK_REWARD_CLAIMS: RewardClaim[] = [
     campId: 'camp1',
     tierId: 't0',
     studentId: 's1',
-    studentName: '李明',
+    studentName: '张伟',
     recipientName: '李明',
     recipientPhone: '13800000001',
     recipientAddress: '北京市朝阳区某某路1号',
@@ -915,7 +915,7 @@ export const MOCK_POINT_PRODUCTS: PointProduct[] = [
 /** 小红花兑换记录 */
 export const MOCK_POINT_EXCHANGES: PointExchangeRecord[] = [
   // campId 与对应商品 pp1(camp1)/pp2(camp2)/pp3(camp1) 一致，避免无归属导致营期视图口径不一致
-  { id: 'pe1', studentId: 's1', studentName: '李明', productId: 'pp1', productName: '运动水杯', productImage: rewardImg('运动水杯', '🥤', '#2C7DA0', '#0099CC'), pointsSpent: 30, exchangeDate: iso(-3, '14:30:00'), status: 'fulfilled', deliveryMethod: 'shipped', trackingNumber: 'SF1024567890', shipDate: iso(-2, '10:00:00'), recipientName: '李明', recipientPhone: '13800001111', recipientAddress: '北京市海淀区中关村大街1号', campId: 'camp1' },
+  { id: 'pe1', studentId: 's1', studentName: '张伟', productId: 'pp1', productName: '运动水杯', productImage: rewardImg('运动水杯', '🥤', '#2C7DA0', '#0099CC'), pointsSpent: 30, exchangeDate: iso(-3, '14:30:00'), status: 'fulfilled', deliveryMethod: 'shipped', trackingNumber: 'SF1024567890', shipDate: iso(-2, '10:00:00'), recipientName: '李明', recipientPhone: '13800001111', recipientAddress: '北京市海淀区中关村大街1号', campId: 'camp1' },
   { id: 'pe2', studentId: 's7', studentName: '郑爽', productId: 'pp2', productName: '跳绳', productImage: rewardImg('跳绳', '🤸', '#E8674F', '#FF6B35'), pointsSpent: 50, exchangeDate: iso(-1, '09:15:00'), status: 'pending', deliveryMethod: 'shipped', recipientName: '郑爽', recipientPhone: '13800000007', recipientAddress: '上海市浦东新区张江路100号', campId: 'camp2' },
   { id: 'pe3', studentId: 's3', studentName: '张伟', productId: 'pp3', productName: '瑜伽垫', productImage: rewardImg('瑜伽垫', '🧘', '#1F6A95', '#164864'), pointsSpent: 80, exchangeDate: iso(-5, '16:20:00'), status: 'fulfilled', deliveryMethod: 'in-person', deliveredAt: iso(-4, '14:00:00'), campId: 'camp1' },
   { id: 'pe4', studentId: 's7', studentName: '郑爽', productId: 'pp2', productName: '跳绳', productImage: rewardImg('跳绳', '🤸', '#E8674F', '#FF6B35'), pointsSpent: 50, exchangeDate: iso(-1, '11:00:00'), status: 'cancelled', deliveryMethod: 'shipped', recipientName: '郑爽', recipientPhone: '13800000007', recipientAddress: '上海市浦东新区张江路100号', cancelledAt: iso(-1, '12:34:00'), campId: 'camp2' },
