@@ -31,6 +31,8 @@ const VIEW_IMPORTERS: Record<string, () => Promise<{ default: Component }>> = {
   'doctor-dashboard': () => import('./components/DoctorDashboardView.vue'),
   'doctor-student-detail': () => import('./components/DoctorStudentDetailView.vue'),
   'doctor-followup': () => import('./components/DoctorFollowupView.vue'),
+  'care-chat': () => import('./components/CareChatView.vue'),
+  'followup': () => import('./components/StudentFollowupView.vue'),
   'admin-dashboard': () => import('./components/AdminDashboardView.vue'),
   calendar: () => import('./components/CalendarView.vue'),
   'coach-dashboard': () => import('./components/CoachDashboardView.vue'),
@@ -71,8 +73,8 @@ const VIEW_IMPORTERS: Record<string, () => Promise<{ default: Component }>> = {
 const ROLE_TABS: Record<string, string[]> = {
   student: ['dashboard', 'activity-hub', 'messages', 'health-profile', 'exercise', 'diet', 'weight-checkin', 'bp-checkin', 'points-mall', 'calendar', 'reward'],
   dietitian: ['dietitian-dashboard', 'dietitian-unannotated-list', 'dietitian-config', 'fulfillment-center', 'reward-config', 'dietitian-student-detail', 'account-manage'],
-  coach: ['coach-dashboard', 'coach-student-detail', 'coach-unannotated-list', 'activity-upload', 'activities-list'],
-  doctor: ['doctor-dashboard', 'doctor-student-detail', 'doctor-followup'],
+  doctor: ['doctor-dashboard', 'doctor-student-detail', 'doctor-followup', 'care-chat'],
+  coach: ['coach-dashboard', 'coach-student-detail', 'coach-unannotated-list', 'activity-upload', 'activities-list', 'care-chat'],
   org_admin: ['admin-dashboard'],
   super_admin: ['admin-dashboard'],
 };
@@ -119,7 +121,7 @@ const currentComponent = computed<Component>(() => viewMap[store.currentView] ||
 // 杜绝"换账户后仍显示前一个人的姓名 / 问卷预填别人数据"的串账户问题。
 const viewCacheKey = computed(() => `${store.user?.id || 'anon'}:${store.currentView}`);
 
-// 同步营养师/教练角色到 <body>，用于全局复用首页浅渐变背景（学员端不挂该类）
+// 同步营养师/运动师角色到 <body>，用于全局复用首页浅渐变背景（学员端不挂该类）
 function syncRoleClass(role?: string | null) {
   document.body.classList.remove('role-diet', 'role-coach');
   if (role === 'dietitian') document.body.classList.add('role-diet');

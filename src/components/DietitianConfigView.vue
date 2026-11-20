@@ -24,7 +24,7 @@ interface ConfigItem {
 const configItems = computed<ConfigItem[]>(() => [
   // 仅督导权限账号可见：全局运营数据入口
   ...(store.user?.supervisor
-    ? [{ view: 'supervisor-dashboard', title: '运营总览', desc: '营养师/教练批注情况与完成率', icon: BarChart3, color: '#1F4E79' }]
+    ? [{ view: 'supervisor-dashboard', title: '运营总览', desc: '营养师/运动师批注情况与完成率', icon: BarChart3, color: '#1F4E79' }]
     : []),
   { view: 'account-manage', title: '账户管理', desc: '各角色手机号与营期', icon: Users, color: '#E8674F' },
   { view: 'reward-config', title: '奖品配置', desc: '连续打卡奖励阶梯与配置', icon: Gift, color: '#E8674F' },

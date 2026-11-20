@@ -38,7 +38,7 @@ const store = useAppStore();
 // ─── 底部 Tabbar 角标：批注=待批注数，配置=发放中心待发货数（各营养师页面共用口径） ───
 const { unannotatedCount, fulfillmentPendingCount } = useDietitianCounts();
 
-// ─── 营期切换（实时读 store.selectedCampId，与教练端口径一致；KeepAlive 缓存视图不再存本地快照） ───
+// ─── 营期切换（实时读 store.selectedCampId，与运动师端口径一致；KeepAlive 缓存视图不再存本地快照） ───
 const selectedCampId = computed<string>({
   get: () => store.selectedCampId || latestOrFirstId(store.camps) || '',
   set: (v: string) => { store.selectedCampId = v; },

@@ -7,17 +7,18 @@ import { Card } from './ui';
 const store = useAppStore();
 const role = computed(() => store.user?.role);
 const isSuper = computed(() => role.value === 'super_admin');
-const students = computed(() => store.students.slice(0, 12));
+const students = computed(() => isSuper.value ? store.students : store.students.filter((s) => (s as any).campIds?.includes('camp1') || !(s as any).campIds));
 const accounts = computed(() => store.accounts);
 const highRisk = computed(() => students.value.filter((s) => {
   const b = store.latestBpFor(s.id, store.selectedCampId || 'camp1');
   return b && (b.sbp >= 140 || b.dbp >= 90);
 }).length);
-const orgs = computed(() => [
+const allOrgs = [
   { name: '北京大学国际医院', type: '总部', accounts: 18, students: students.value.length, active: true },
   { name: '北大医疗康复医院', type: '机构', accounts: 6, students: 0, active: true },
   { name: '北大医疗石油医院', type: '机构', accounts: 4, students: 0, active: false },
-]);
+];
+const orgs = computed(() => isSuper.value ? allOrgs : allOrgs.slice(0, 1));
 const roles = [
   { name: '学员', scope: '本人数据 · 打卡/领奖' },
   { name: '医师', scope: '所负责营期 · 诊疗/随访/用药' },
@@ -25,6 +26,15 @@ const roles = [
   { name: '营养师', scope: '所负责营期 · 营养处方/批注/配置' },
   { name: '机构管理员', scope: '本机构 · 账号/营期/活动' },
   { name: '超级管理员', scope: '全部机构 · 规则/权限/项目' },
+];
+const permissionRows = [
+  { m: '账号与准入', s: '●', d: '◐审核', c: '○', n: '○', o: '●本机构', a: '●' },
+  { m: '电子健康档案', s: '●编辑', d: '◐录方案', c: '◐录运动', n: '◐录营养', o: '●本机构', a: '●' },
+  { m: '运动管理', s: '●打卡', d: '○', c: '●评估/处方', n: '○', o: '●本机构', a: '●' },
+  { m: '营养管理', s: '●打卡', d: '○', c: '—', n: '●评估/处方', o: '●本机构', a: '●' },
+  { m: '用药与诊疗', s: '●查看', d: '●开具', c: '—', n: '—', o: '—', a: '●' },
+  { m: '运营活动', s: '●参与', d: '○', c: '○', n: '○', o: '●本机构', a: '●' },
+  { m: '报告与数据', s: '●查看', d: '○', c: '○', n: '○', o: '●本机构', a: '●项目' },
 ];
 </script>
 
@@ -97,6 +107,26 @@ const roles = [
             <span class="w-20 text-[10px] font-bold text-gray-900">{{ r.name }}</span>
             <span class="flex-1 text-[9px] text-gray-500">{{ r.scope }}</span>
           </div>
+        </Card>
+      </div>
+
+      <div>
+        <div class="mb-2 flex items-center gap-1.5 text-sm font-bold text-gray-900"><ShieldCheck class="h-4 w-4 text-[#1E3A52]" /> 功能权限矩阵</div>
+        <Card class="border-0 shadow-sm p-3 overflow-x-auto">
+          <table class="w-full min-w-[520px] border-collapse text-[8px]">
+            <thead><tr class="text-gray-400"><th class="py-1 text-left font-bold">模块</th><th class="py-1 font-bold">学员</th><th class="py-1 font-bold">医师</th><th class="py-1 font-bold">运动师</th><th class="py-1 font-bold">营养师</th><th class="py-1 font-bold">机构</th><th class="py-1 font-bold">超管</th></tr></thead>
+            <tbody>
+              <tr v-for="r in permissionRows" :key="r.m" class="border-t border-gray-50">
+                <td class="py-1.5 text-left font-semibold text-gray-700">{{ r.m }}</td>
+                <td class="py-1.5 text-center text-gray-600">{{ r.s }}</td>
+                <td class="py-1.5 text-center text-gray-600">{{ r.d }}</td>
+                <td class="py-1.5 text-center text-gray-600">{{ r.c }}</td>
+                <td class="py-1.5 text-center text-gray-600">{{ r.n }}</td>
+                <td class="py-1.5 text-center text-gray-600">{{ r.o }}</td>
+                <td class="py-1.5 text-center text-gray-600">{{ r.a }}</td>
+              </tr>
+            </tbody>
+          </table>
         </Card>
       </div>
 

@@ -19,11 +19,11 @@ export interface Account {
   phone: string;       // 手机号（唯一登录凭证）
   name: string;        // 姓名
   role: Role;          // student | coach | dietitian
-  /** 学员所属期（可多选，同一人可参与多期；教练/营养师不强制） */
+  /** 学员所属期（可多选，同一人可参与多期；运动师/营养师不强制） */
   campIds?: string[];
   /** 是否启用（禁用后该手机号无法登录） */
   active: boolean;
-  /** 督导权限：仅此类账号可进入运营总览（可看全部学员与营养师/教练批注情况） */
+  /** 督导权限：仅此类账号可进入运营总览（可看全部学员与营养师/运动师批注情况） */
   supervisor?: boolean;
   createdAt: string;   // 创建时间 YYYY-MM-DD HH:mm:ss
 }
@@ -55,7 +55,7 @@ export interface User {
 /** 打卡记录上的单条批注（同一记录可有多名同角色人员分别批注，逐条展示不覆盖；作者带角色+姓名） */
 export interface CheckinComment {
   id: string;
-  /** 作者角色：营养师 / 教练 */
+  /** 作者角色：营养师 / 运动师 */
   role: 'dietitian' | 'coach' | 'doctor';
   /** 作者姓名 */
   name: string;
@@ -121,9 +121,9 @@ export interface ExerciseRecord {
   photos?: string[];
   /** 运动视频 URL 列表 */
   videoUrls?: string[];
-  /** 全部教练批注（多名教练各自撰写，逐条展示；新增优先，同时镜像到 coach* 单字段以兼容消息/计数） */
+  /** 全部运动师批注（多名运动师各自撰写，逐条展示；新增优先，同时镜像到 coach* 单字段以兼容消息/计数） */
   comments?: CheckinComment[];
-  /** 教练对该条运动记录的批注（最新一条的镜像） */
+  /** 运动师对该条运动记录的批注（最新一条的镜像） */
   coachComment?: string;
   coachName?: string;
   coachCommentDate?: string;
@@ -131,7 +131,7 @@ export interface ExerciseRecord {
   studentFeedback?: 'received' | 'helpful';
   /** 学员是否已读该批注 */
   commentRead?: boolean;
-  /** 教练对该条运动记录的评分：0=未达标 / 1=尚可 / 2=到位 */
+  /** 运动师对该条运动记录的评分：0=未达标 / 1=尚可 / 2=到位 */
   coachScore?: 0 | 1 | 2 | null;
 }
 
@@ -213,16 +213,16 @@ export interface UnlockRecord {
   unlockedDate: string;
 }
 
-/** 结营寄语（可多条：多名营养师/教练各自撰写提交，append 不覆盖）。营收报告逐条展示，带角色+姓名。 */
+/** 结营寄语（可多条：多名营养师/运动师各自撰写提交，append 不覆盖）。营收报告逐条展示，带角色+姓名。 */
 export interface CampMessageEntry {
   id: string;
   campId: string;
   studentId: string;
-  /** 作者角色：营养师 / 教练 */
+  /** 作者角色：营养师 / 运动师 */
   role: 'dietitian' | 'coach' | 'doctor';
   /** 作者姓名 */
   authorName: string;
-  /** 作者账号 ID（用于"仅本人可编辑自己的寄语"判定；教练/营养师端对非本人寄语只读） */
+  /** 作者账号 ID（用于"仅本人可编辑自己的寄语"判定；运动师/营养师端对非本人寄语只读） */
   authorId?: string;
   text: string;
   /** yyyy-MM-dd HH:mm:ss */
@@ -705,4 +705,24 @@ export interface BadgeRecord {
   earnedAt: string;
   /** 该周期内达成的天数 / 达成值 */
   value: number;
+}
+
+// ============================================================================
+//  在线沟通（学员 ↔ 医师/营养师/运动师）
+// ============================================================================
+export interface ChatMessage {
+  id: string;
+  fromRole: 'student' | 'doctor' | 'coach' | 'dietitian' | 'system';
+  fromName: string;
+  text: string;
+  time: string;
+  read: boolean;
+}
+
+export interface ChatThread {
+  id: string;
+  studentId: string;
+  staffRole: 'doctor' | 'coach' | 'dietitian';
+  title: string;
+  messages: ChatMessage[];
 }

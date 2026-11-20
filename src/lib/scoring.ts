@@ -12,7 +12,7 @@
  *
  *  运动小红花 (exerciseScore):
  *    - 每条运动记录: duration >= 40 分钟记 1 分（基础分）
- *    - 教练评分直接加分: coachScore=2 再 +2 分，coachScore=1 再 +1 分
+ *    - 运动师评分直接加分: coachScore=2 再 +2 分，coachScore=1 再 +1 分
  *    - 总分 = Σ 各条记录小红花
  *
  *  总小红花 (totalScore):
@@ -58,7 +58,7 @@ export function calculateDietScore(records: DietRecord[]): number {
  *
  * 公式:
  *   1. 每条记录 duration >= 40 分钟 -> 基础 1 分
- *   2. 教练评分直接加分: coachScore=2 再 +2 分，coachScore=1 再 +1 分
+ *   2. 运动师评分直接加分: coachScore=2 再 +2 分，coachScore=1 再 +1 分
  *
  * 每天最多 5 次运动打卡，每次有效运动（≥40min）均可计分。
  *
@@ -71,7 +71,7 @@ export function calculateExerciseScore(records: ExerciseRecord[]): number {
     if (record.duration >= 40) {
       totalScore += 1;
     }
-    // 教练评分直接作为加分
+    // 运动师评分直接作为加分
     if (record.coachScore === 2) {
       totalScore += 2;
     } else if (record.coachScore === 1) {

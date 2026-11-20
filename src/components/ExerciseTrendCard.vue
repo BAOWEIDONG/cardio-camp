@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // 共享「每日运动趋势」卡片：标题 + 计算规则说明 + 趋势图 + 全部运动统计
-// 三端(学员/营养师/教练)统一展示，保证口径一致
+// 三端(学员/营养师/运动师)统一展示，保证口径一致
 import { computed } from 'vue';
 import type { ExerciseRecord } from '../types';
 import DailyExerciseTrend from './DailyExerciseTrend.vue';

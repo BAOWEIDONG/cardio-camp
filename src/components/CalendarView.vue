@@ -558,7 +558,7 @@ const submitAddressEdit = () => {
               </div>
             </div>
             <div v-if="ex.coachComment" class="mt-2 p-2.5 bg-[#1F6A95]/5 rounded-lg border border-[#1F6A95]/10">
-              <span class="text-xs font-bold text-[#1F6A95]">教练批注</span>
+              <span class="text-xs font-bold text-[#1F6A95]">运动师批注</span>
               <CheckinComments :comments="recordComments(ex)" />
             </div>
           </div>
@@ -774,7 +774,7 @@ const submitAddressEdit = () => {
             </div>
             <div class="text-xs text-gray-400 flex items-start gap-1.5">
               <Check class="w-3.5 h-3.5 text-orange-500 shrink-0 mt-0.5" />
-              <span>请确认信息无误，提交后如需修改请联系教练。</span>
+              <span>请确认信息无误，提交后如需修改请联系运动师。</span>
             </div>
             <div v-if="claimFormError" class="text-red-500 text-xs font-medium text-center">{{ claimFormError }}</div>
           </div>

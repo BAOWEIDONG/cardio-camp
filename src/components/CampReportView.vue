@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { useAppStore } from '../store/app';
 import { campDateRange, campDaysOf, elapsedCampDays } from '../lib/camps';
 import { NavBar, Card, StudentTabbar } from './ui';
-import { Trophy, TrendingDown, TrendingUp, Activity, Target, Download, Lock, MessageCircle, Award } from 'lucide-vue-next';
+import { Trophy, TrendingDown, TrendingUp, Activity, Target, Download, Lock, MessageCircle, Award, HeartPulse } from 'lucide-vue-next';
 import BadgeInfoPopup from './BadgeInfoPopup.vue';
 import { Popup as VanPopup } from 'vant';
 import { metricValuesFor } from '../mock/data';
@@ -201,7 +201,7 @@ const reportMessages = computed<ReportMessage[]>(() => {
   const sid = studentId.value;
   const cid = selectedCampId.value || campInfo.value?.id;
   const list: ReportMessage[] = [];
-  // 结营寄语（campMessageList append 语义，可多条）；仅营养师可填写，教练寄语一律不展示
+  // 结营寄语（campMessageList append 语义，可多条）；仅营养师可填写，运动师寄语一律不展示
   if (cid) {
     store.getCampMessages(cid, sid).filter((m) => m.role === 'dietitian').forEach((m) => {
       list.push({
@@ -273,6 +273,16 @@ const weightTrendIcon = computed(() => {
 // 顶部鼓励语：固定优先级拼接——①体重减重→②肌肉增加→③脂肪减少，命中几条拼几条，
 // 皆未命中则用累计/最长连续打卡天数兜底。句式固定，以「不积跬步…不积汗水…」收尾。
 // 口径：优先级指标必须有营前营后数据且方向正确(体重/脂肪为降、肌肉为增)才取值拼接，无数据或方向不符跳过。
+const cvSummary = computed(() => {
+  const bp = report.value.metricChanges.find((m) => m.name.includes('收缩压'));
+  const ldl = report.value.metricChanges.find((m) => m.name.includes('低密度脂蛋白'));
+  const fu = store.getDoctorFollowups(studentId.value)[0];
+  const latestBp = store.latestBpFor(studentId.value, selectedCampId.value || undefined);
+  const sbp = latestBp?.sbp || 0;
+  const risk = sbp >= 160 ? '很高危' : sbp >= 140 ? '高危' : sbp >= 130 ? '中危' : '低危';
+  return { bp, ldl, fu, latestBp, risk };
+});
+
 const encouragement = computed(() => {
   const s = report.value.summary;
   const name = studentName.value;
@@ -336,7 +346,7 @@ const exportPDF = () => {
     <!-- 营期已结束：显示完整报告 -->
     <div v-else ref="exportRef" class="p-4 space-y-4">
       <!-- 顶部鼓励卡片 -->
-      <div class="bg-gradient-to-br from-[#1F6A95] to-[#06A952] rounded-2xl p-5 text-white shadow-lg">
+      <div class="bg-gradient-to-br from-[#123B53] to-[#1F6A95] rounded-2xl p-5 text-white shadow-lg">
         <div class="flex items-center gap-2 mb-3">
           <Trophy class="w-6 h-6" />
           <h2 class="text-lg font-bold">个人营期报告</h2>
@@ -357,6 +367,32 @@ const exportPDF = () => {
           </div>
         </div>
       </div>
+
+      <!-- 心血管核心指标与医师结论 -->
+      <Card>
+        <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2 border-b pb-2">
+          <HeartPulse class="h-4 w-4 text-[#1F6A95]" />
+          心血管核心指标
+          <span class="ml-auto rounded-full bg-[#1F6A95]/10 px-2 py-0.5 text-[9px] font-bold text-[#1F6A95]">{{ cvSummary.risk }}</span>
+        </h3>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="rounded-xl bg-[#F4F8FB] p-3">
+            <div class="text-[9px] text-gray-500">收缩压</div>
+            <div class="mt-1 text-[17px] font-black text-gray-900">{{ cvSummary.bp?.afterValue ?? cvSummary.latestBp?.sbp ?? '—' }}<span class="text-[9px] font-normal text-gray-400"> mmHg</span></div>
+            <div class="text-[8.5px] text-gray-400">开营 {{ cvSummary.bp?.beforeValue ?? '—' }} · {{ cvSummary.bp?.isImproved ? '较开营改善' : '待复筛' }}</div>
+          </div>
+          <div class="rounded-xl bg-[#F4F8FB] p-3">
+            <div class="text-[9px] text-gray-500">LDL-C</div>
+            <div class="mt-1 text-[17px] font-black text-gray-900">{{ cvSummary.ldl?.afterValue ?? '—' }}<span class="text-[9px] font-normal text-gray-400"> mmol/L</span></div>
+            <div class="text-[8.5px] text-gray-400">目标 &lt;1.8 · 高危人群</div>
+          </div>
+        </div>
+        <div v-if="cvSummary.fu" class="mt-2 rounded-xl bg-[#1F6A95]/5 px-3 py-2">
+          <div class="text-[9px] font-bold text-[#1F6A95]">医师结论 · {{ cvSummary.fu.doctorName }} {{ cvSummary.fu.date.slice(0, 10) }}</div>
+          <div class="mt-0.5 text-[9.5px] leading-relaxed text-gray-700">{{ cvSummary.fu.conclusion }}</div>
+          <div class="mt-0.5 text-[8.5px] leading-relaxed text-gray-500">方案：{{ cvSummary.fu.plan }}</div>
+        </div>
+      </Card>
 
       <!-- 徽章墙（里程碑 / 成就 / 活动，与「我的徽章」同源） -->
       <Card>

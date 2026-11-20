@@ -8,6 +8,7 @@ import { uploadFile } from '../lib/api';
 import { compressImage } from '../lib/imageCompress';
 import { Checkbox as VanCheckbox, showToast } from 'vant';
 import { NavBar, Card, Button, CheckinComments } from './ui';
+import { HeartPulse, ShieldAlert } from 'lucide-vue-next';
 import { Camera, X, ChevronDown, UtensilsCrossed } from 'lucide-vue-next';
 import { formatDateTime } from '../lib/utils';
 import { thumbUrl } from '../lib/imageThumb';
@@ -257,6 +258,28 @@ onActivated(processPendingDeepLink);
 <template>
   <div ref="sheetRoot" class="flex min-h-full flex-col bg-[#F7F8FA] pb-8">
     <NavBar title="饮食打卡" :on-back="store.goBack" />
+
+    <!-- 心血管饮食处方（会议纪要：低盐低脂 DASH，服药人群需避药物食物相互作用） -->
+    <div class="px-4 pt-3">
+      <Card class="border-0 shadow-sm bg-gradient-to-br from-[#2C7DA0]/6 to-white">
+        <div class="flex items-center gap-2">
+          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2C7DA0]/10 text-[#2C7DA0]"><UtensilsCrossed class="h-4 w-4" /></span>
+          <div class="min-w-0 flex-1">
+            <div class="text-[12px] font-bold text-gray-900">心血管饮食处方</div>
+            <div class="text-[9px] text-gray-500">DASH 饮食 + 低盐低脂 · 营养师评估后发布</div>
+          </div>
+          <span class="rounded-full bg-[#2C7DA0]/10 px-2 py-0.5 text-[8px] font-bold text-[#2C7DA0]">已发布</span>
+        </div>
+        <div class="mt-3 grid grid-cols-3 gap-2">
+          <div class="rounded-xl bg-white/80 px-2.5 py-2"><div class="text-[8px] text-gray-400">每日能量</div><div class="text-[15px] font-black text-gray-900">1800<span class="text-[8px] font-normal text-gray-400"> kcal</span></div></div>
+          <div class="rounded-xl bg-white/80 px-2.5 py-2"><div class="text-[8px] text-gray-400">食盐</div><div class="text-[15px] font-black text-[#2C7DA0]">&lt;5<span class="text-[8px] font-normal text-gray-400"> g</span></div></div>
+          <div class="rounded-xl bg-white/80 px-2.5 py-2"><div class="text-[8px] text-gray-400">蛋白质</div><div class="text-[15px] font-black text-gray-900">18<span class="text-[8px] font-normal text-gray-400">%</span></div></div>
+        </div>
+        <div class="mt-2 rounded-xl bg-[#fdf6ef] px-2.5 py-2 text-[8.5px] leading-relaxed text-[#8a641f]">
+          <ShieldAlert class="mr-0.5 inline h-3 w-3" /> 他汀：避免大量西柚/柚子汁；阿司匹林：避免空腹饮酒；降压药：避免与高钾盐同用。合并糖尿病按低 GI 主食替换。
+        </div>
+      </Card>
+    </div>
 
     <!-- Tab 切换：打卡 / 记录（液态玻璃胶囊） -->
     <div class="sticky top-14 z-20 px-4 pt-3 pb-1">

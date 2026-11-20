@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed, watch } from 'vue';
 import { showImagePreview } from 'vant';
-import type { User, WeightRecord, BpRecord, ExerciseRecord, DietRecord, CheckinComment, CoachActivityRecord, RewardTier, RewardClaim, MealTimeConfig, MetricConfig, Camp, Account, PointProduct, PointExchangeRecord, ManualScoreRecord, ExchangeAuditEntry, ConfigAudit, RewardTierSnapshot, UnlockRecord, CampMessageEntry, BadgeConfig, BadgeRecord } from '../types';
+import type { User, WeightRecord, BpRecord, ExerciseRecord, DietRecord, CheckinComment, ChatThread, ChatMessage, CoachActivityRecord, RewardTier, RewardClaim, MealTimeConfig, MetricConfig, Camp, Account, PointProduct, PointExchangeRecord, ManualScoreRecord, ExchangeAuditEntry, ConfigAudit, RewardTierSnapshot, UnlockRecord, CampMessageEntry, BadgeConfig, BadgeRecord } from '../types';
 import {
   MOCK_REWARD_TIERS,
   MOCK_REWARD_CLAIMS,
@@ -28,7 +28,8 @@ import { computeBadgeRecords, computeOneTimeBadgeRecords } from '../lib/badges';
 import { generateStudentReport } from '../lib/campReport';
 import { calculateStreak, calculateLongestStreakInRange } from '../lib/streak';
 import { latestOrFirst, latestOrFirstId } from '../lib/camps';
-import { MOCK_FOLLOWUPS, MOCK_MEDS, type FollowupRecord, type MedicationPlan } from '../lib/doctorData';
+import { MOCK_FOLLOWUPS, MOCK_MEDS, DOCTOR_PATIENTS, type FollowupRecord, type MedicationPlan } from '../lib/doctorData';
+import { MOCK_CHAT_THREADS } from '../lib/chatData';
 import { loadMsgSeenState, saveMsgSeenState, systemMsgUnread } from '../lib/messageSeen';
 
 /** 生成 yyyy-MM-dd HH:mm:ss 格式的当前时间字符串（全站统一格式） */
@@ -80,6 +81,8 @@ export type View =
   | 'doctor-dashboard'
   | 'doctor-student-detail'
   | 'doctor-followup'
+  | 'care-chat'
+  | 'followup'
   | 'admin-dashboard'
   | 'calendar'
   | 'coach-dashboard'
@@ -162,8 +165,8 @@ function defaultBadges(campId: string): BadgeConfig[] {
 
 export const useAppStore = defineStore('app', () => {
   const user = ref<User | null>(null);
-  /** 结营寄语列表（支持多条：多名营养师/教练各自撰写提交，append 不覆盖）。
-   *  种子含 camp1_s1 的 3 条，演示"营养师 + 教练 多条寄语带角色姓名"的展示效果。 */
+  /** 结营寄语列表（支持多条：多名营养师/运动师各自撰写提交，append 不覆盖）。
+   *  种子含 camp1_s1 的 3 条，演示"营养师 + 运动师 多条寄语带角色姓名"的展示效果。 */
   const campMessageList = ref<CampMessageEntry[]>([
     {
       id: 'cm1', campId: 'camp1', studentId: 's1', role: 'dietitian', authorName: '王营养师', authorId: 'd1',
@@ -181,7 +184,7 @@ export const useAppStore = defineStore('app', () => {
       createdAt: '2026-11-02 10:20:00',
     },
     {
-      id: 'cm5', campId: 'camp1', studentId: 's13', role: 'coach', authorName: '李教练', authorId: 'c1',
+      id: 'cm5', campId: 'camp1', studentId: 's13', role: 'coach', authorName: '李运动师', authorId: 'c1',
       text: '运动习惯已经建立起来了，接下来把频率保持在一周 4 次，强度可以慢慢加到中等偏上，记得每次练完拉伸。',
       createdAt: '2026-11-02 18:40:00',
     },
@@ -196,7 +199,7 @@ export const useAppStore = defineStore('app', () => {
       createdAt: '2026-11-01 15:00:00',
     },
     {
-      id: 'cm8', campId: 'camp1', studentId: 's14', role: 'coach', authorName: '王教练', authorId: 'c2',
+      id: 'cm8', campId: 'camp1', studentId: 's14', role: 'coach', authorName: '王运动师', authorId: 'c2',
       text: '你的有氧基础不错，建议每周加两次力量训练，把肌肉量守住，减脂会更稳。',
       createdAt: '2026-11-02 19:30:00',
     },
@@ -341,13 +344,14 @@ export const useAppStore = defineStore('app', () => {
   const weightRecords = ref<WeightRecord[]>([...MOCK_WEIGHT_RECORDS]);
   const bpRecords = ref<BpRecord[]>([...MOCK_BP_RECORDS]);
   const doctorFollowups = ref<FollowupRecord[]>([...MOCK_FOLLOWUPS]);
+  const chatThreads = ref<ChatThread[]>([...MOCK_CHAT_THREADS]);
   const medications = ref<MedicationPlan[]>([...MOCK_MEDS]);
   const exerciseRecords = ref<ExerciseRecord[]>([...MOCK_EXERCISE_RECORDS]);
   const dietRecords = ref<DietRecord[]>([...MOCK_DIET_RECORDS]);
   const coachActivities = ref<CoachActivityRecord[]>([...MOCK_COACH_ACTIVITIES]);
-  // 正在编辑的教练活动（from coach dashboard → activity-upload 编辑模式）
+  // 正在编辑的运动师活动（from coach dashboard → activity-upload 编辑模式）
   const editingActivity = ref<CoachActivityRecord | null>(null);
-  // 教练端首页当前激活 Tab（持久化，返回/编辑发布后回到对应 Tab，而非重置到「未运动」）
+  // 运动师端首页当前激活 Tab（持久化，返回/编辑发布后回到对应 Tab，而非重置到「未运动」）
   const coachDashboardTab = ref<'incomplete' | 'completed' | 'activities'>('incomplete');
   const rewardTiers = ref<RewardTier[]>([...MOCK_REWARD_TIERS]);
   const rewardClaims = ref<RewardClaim[]>([...MOCK_REWARD_CLAIMS]);
@@ -384,14 +388,14 @@ export const useAppStore = defineStore('app', () => {
   const selectedDateStr = ref<string | null>(null);
   /** 营养师首页「昨天/今天」切换后进入打卡情况看板的初始日期 */
   const attendanceBoardDate = ref<string>('');
-  // 教练批注深链：跳转到某条运动记录（教练学员详情页滚动定位到该条后清空）
+  // 运动师批注深链：跳转到某条运动记录（运动师学员详情页滚动定位到该条后清空）
   const coachFocusRecordId = ref<string | null>(null);
 
 
   /** 学员端当前选中的营期 ID（多期学员可切换；null 时自动取第一个 active 营期） */
   const selectedCampId = ref<string | null>(null);
 
-  /** 学员详情（营养师/教练查看某学员档案）流内的营期上下文，独立于全局 selectedCampId，不影响首页营期 */
+  /** 学员详情（营养师/运动师查看某学员档案）流内的营期上下文，独立于全局 selectedCampId，不影响首页营期 */
   const detailSelectedCampId = ref<string | null>(null);
 
   /** 刚完成打卡标记（用于返回首页时触发成就/里程碑检测） */
@@ -465,7 +469,7 @@ export const useAppStore = defineStore('app', () => {
     }
   }
 
-  /** 默认展示最新营期：学员取本人所属期中最新的，教练取其负责期中最新的，营养师取全局最新的 */
+  /** 默认展示最新营期：学员取本人所属期中最新的，运动师取其负责期中最新的，营养师取全局最新的 */
   function applyLatestCampDefault() {
     if (!user.value) return;
     let pool: Camp[];
@@ -488,7 +492,7 @@ export const useAppStore = defineStore('app', () => {
   function setUser(u: User | null) {
     user.value = u;
     if (u) {
-      // 默认展示最新营期（学员取本人所属期中最新的，营养师/教练取全局最新的）
+      // 默认展示最新营期（学员取本人所属期中最新的，营养师/运动师取全局最新的）
       applyLatestCampDefault();
       // 持久化登录态到 localStorage，实现保活
       const authData = {
@@ -594,7 +598,7 @@ export const useAppStore = defineStore('app', () => {
   }
 
   /** 底部 Tab 根页面（切换时去重，避免历史栈无限增长） */
-  // 学员端底部Tab：首页/消息/活动/档案（无活动配置时「活动」自动隐藏）；教练/营养师端各自的底部Tab根页
+  // 学员端底部Tab：首页/消息/活动/档案（无活动配置时「活动」自动隐藏）；运动师/营养师端各自的底部Tab根页
   const TAB_ROOTS: View[] = ['dashboard', 'messages', 'activity-hub', 'health-profile', 'coach-dashboard', 'dietitian-dashboard', 'dietitian-unannotated-list', 'dietitian-config', 'supervisor-dashboard'];
 
   /** 学员详情流视图：在此流内继承 detailSelectedCampId，离开则清空（不污染全局 selectedCampId） */
@@ -708,7 +712,7 @@ export const useAppStore = defineStore('app', () => {
   }
 
   /**
-   * 给打卡记录写批注（恢复「单一批注」语义）：一条记录营养师/教练**各只有一条批注**，
+   * 给打卡记录写批注（恢复「单一批注」语义）：一条记录营养师/运动师**各只有一条批注**，
    * 谁编辑都改这同一条（保留最新内容，作者=最后编辑者），**不再为不同作者各新增一条**。
    * 同时镜像到单字段（dietitian 系 / coach 系），保证消息中心/未读计数等仍按单品逻辑工作。
    * ★并发：由 annotationLock 编辑锁保证「先后提交」，此处直接覆写为单条最新。
@@ -1275,7 +1279,7 @@ export const useAppStore = defineStore('app', () => {
   }
 
   /**
-   * 学员「消息」Tab 角标总数 = 批注未读(营养师+教练) + 系统通知未读(奖励/兑换，事件晚于最近查看时刻)。
+   * 学员「消息」Tab 角标总数 = 批注未读(营养师+运动师) + 系统通知未读(奖励/兑换，事件晚于最近查看时刻)。
    * 供各学员页底部 StudentTabbar 的 messages badge 统一使用，保证任何页面下角标一致。
    * 口径与 MessagesView 内逐条 unread 完全一致（共享 lib/messageSeen 的时刻模型 + getStudentCamp 营期）。
    */
@@ -1291,7 +1295,8 @@ export const useAppStore = defineStore('app', () => {
     const wt = (cid ? getCampWeightRecords(cid) : weightRecords.value).filter(
       (r) => r.studentId === studentId && r.dietitianComment && !r.commentRead,
     );
-    const batch = diet.length + ex.length + wt.length;
+    const bp = bpRecords.value.filter((r) => r.studentId === studentId && r.doctorComment && !r.commentRead);
+    const batch = diet.length + ex.length + wt.length + bp.length;
 
     const seen = { ranks: {}, lastSystemSeenAt: systemSeenAt.value, readNotif: readNotifIds.value };
     const claims = (cid ? getCampRewardClaims(cid) : rewardClaims.value).filter((c) => c.studentId === studentId);
@@ -1309,7 +1314,7 @@ export const useAppStore = defineStore('app', () => {
       const d = (e.status === 'fulfilled' && e.shipDate) || e.exchangeDate;
       if (systemMsgUnread(seen, d, `exch-${e.id}`)) sys++;
     }
-    return batch + sys;
+    return batch + sys + chatUnreadForStudent(studentId);
   }
 
   /** 更新兑换状态（含审计留痕）。
@@ -1635,6 +1640,12 @@ export const useAppStore = defineStore('app', () => {
 
   function addDoctorFollowup(rec: FollowupRecord) {
     doctorFollowups.value.unshift(rec);
+    const th = ensureChatThread(rec.studentId, 'doctor');
+    th.messages.push({
+      id: `cm_fu_${Date.now()}`, fromRole: 'doctor', fromName: rec.doctorName,
+      text: `【随访记录】${rec.conclusion} 处理方案：${rec.plan}`,
+      time: formatDateTimeStr().slice(0, 16), read: false,
+    });
   }
 
   function getDoctorFollowups(studentId: string) {
@@ -1643,6 +1654,60 @@ export const useAppStore = defineStore('app', () => {
 
   function getMedication(studentId: string) {
     return medications.value.find((m) => m.studentId === studentId) || null;
+  }
+
+  function getDoctorPatients(doctorId: string) {
+    const ids = DOCTOR_PATIENTS[doctorId] || [];
+    return students.value.filter((s) => ids.includes(s.id));
+  }
+
+  function chatThreadsForStudent(studentId: string) {
+    return chatThreads.value.filter((t) => t.studentId === studentId);
+  }
+
+  function ensureChatThread(studentId: string, staffRole: 'doctor' | 'coach' | 'dietitian') {
+    const exist = chatThreads.value.find((t) => t.studentId === studentId && t.staffRole === staffRole);
+    if (exist) return exist;
+    const stu = students.value.find((s) => s.id === studentId);
+    const staffName = staffRole === 'doctor' ? '李建国' : staffRole === 'coach' ? '李运动师' : '王营养师';
+    const th: ChatThread = {
+      id: `chat_${studentId}_${staffRole}`, studentId, staffRole,
+      title: `${staffName}${staffRole === 'doctor' ? '医师 · 随访沟通' : staffRole === 'coach' ? '运动师 · 运动处方' : '营养师 · 饮食处方'}`,
+      messages: [],
+    };
+    chatThreads.value.push(th);
+    return th;
+  }
+
+  function sendChatMessage(threadId: string, text: string) {
+    const th = chatThreads.value.find((t) => t.id === threadId);
+    const u = user.value;
+    if (!th || !u || !text.trim()) return;
+    const msg: ChatMessage = {
+      id: `cm_${Date.now()}`, fromRole: u.role as ChatMessage['fromRole'], fromName: u.name,
+      text: text.trim(), time: formatDateTimeStr().slice(0, 16), read: true,
+    };
+    th.messages.push(msg);
+  }
+
+  function markChatThreadRead(threadId: string) {
+    const th = chatThreads.value.find((t) => t.id === threadId);
+    const u = user.value;
+    th?.messages.forEach((m) => { if (m.fromRole !== u?.role) m.read = true; });
+  }
+
+  function chatUnreadForStudent(studentId: string) {
+    return chatThreads.value.filter((t) => t.studentId === studentId)
+      .reduce((n, t) => n + t.messages.filter((m) => !m.read && m.fromRole !== 'student').length, 0);
+  }
+
+  function chatUnreadForStaff(staffRole: 'doctor' | 'coach' | 'dietitian') {
+    return chatThreads.value.filter((t) => t.staffRole === staffRole)
+      .reduce((n, t) => n + t.messages.filter((m) => !m.read && m.fromRole === 'student').length, 0);
+  }
+
+  function markBpCommentRead(recordId: string) {
+    bpRecords.value = bpRecords.value.map((r) => (r.id === recordId ? { ...r, commentRead: true } : r));
   }
 
   function getCampBpRecords(campId: string) {
@@ -1677,7 +1742,7 @@ export const useAppStore = defineStore('app', () => {
     return coachActivities.value.filter((a) => !a.campIds || a.campIds.length === 0 || a.campIds.includes(campId));
   }
 
-  /** 获取教练负责的营期列表（从 coach account.campIds 获取） */
+  /** 获取运动师负责的营期列表（从 coach account.campIds 获取） */
   /** 兼容旧版命名：取营期列表中最新的已开营营期（口径同 lib/camps.latestCamp） */
   function pickLatestCamp(campList: Camp[]): Camp | null {
     return latestOrFirst(campList);
@@ -1690,7 +1755,7 @@ export const useAppStore = defineStore('app', () => {
     return camps.value.filter(c => account.campIds.includes(c.id));
   }
 
-  /** 获取教练负责的学员列表（按教练营期过滤） */
+  /** 获取运动师负责的学员列表（按运动师营期过滤） */
   function getCoachStudents(): { id: string; name: string; phone: string; gender?: 'male' | 'female'; age?: number }[] {
     const coachCamps = getCoachCamps();
     if (coachCamps.length === 0) return [];
@@ -1798,6 +1863,15 @@ export const useAppStore = defineStore('app', () => {
     addDoctorFollowup,
     getDoctorFollowups,
     getMedication,
+    getDoctorPatients,
+    chatThreads,
+    chatThreadsForStudent,
+    ensureChatThread,
+    sendChatMessage,
+    markChatThreadRead,
+    chatUnreadForStudent,
+    chatUnreadForStaff,
+    markBpCommentRead,
     doctorFollowups,
     medications,
     updateWeightRecord,

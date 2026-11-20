@@ -56,7 +56,7 @@ interface Entry {
   summary: string;
   ownerRole: 'dietitian' | 'coach';
   annotations: Annotation[];
-  /** 是否已处理：有批注，或已评分（与营养师/教练待批注口径一致） */
+  /** 是否已处理：有批注，或已评分（与营养师/运动师待批注口径一致） */
   annotated: boolean;
 }
 
@@ -69,12 +69,12 @@ const annotationsOf = (rec: any, role: 'dietitian' | 'coach'): Annotation[] => {
   arr.filter((c: any) => c.role === role).forEach((c: any) => list.push({ name: c.name, date: c.date }));
   if (list.length === 0) {
     if (role === 'dietitian' && rec.dietitianComment) list.push({ name: rec.dietitianName || '营养师', date: rec.dietitianCommentDate || '' });
-    if (role === 'coach' && rec.coachComment) list.push({ name: rec.coachName || '教练', date: rec.coachCommentDate || '' });
+    if (role === 'coach' && rec.coachComment) list.push({ name: rec.coachName || '运动师', date: rec.coachCommentDate || '' });
   }
   return list;
 };
 
-/** 与营养师/教练端「待批注」同一口径：有批注文本或已评分都算已处理 */
+/** 与营养师/运动师端「待批注」同一口径：有批注文本或已评分都算已处理 */
 const isAnnotated = (rec: any, role: 'dietitian' | 'coach'): boolean => {
   if (annotationsOf(rec, role).length > 0) return true;
   return role === 'dietitian' ? rec.dietitianScore != null : rec.coachScore != null;
@@ -141,7 +141,7 @@ const staffStats = computed(() => {
         if (Number.isFinite(diff) && diff >= 0) { hours += diff; timed++; }
       }
     }
-    return { id: a.id, name: a.name, roleLabel: a.role === 'dietitian' ? '营养师' : '教练', count, dietCount, weightCount, exerciseCount, avgHours: timed ? Math.round((hours / timed) * 10) / 10 : null };
+    return { id: a.id, name: a.name, roleLabel: a.role === 'dietitian' ? '营养师' : '运动师', count, dietCount, weightCount, exerciseCount, avgHours: timed ? Math.round((hours / timed) * 10) / 10 : null };
   }).sort((x, y) => y.count - x.count);
 });
 
@@ -191,7 +191,7 @@ const exportCsv = () => {
     s.name, s.roleLabel,
     s.roleLabel === '营养师' ? String(s.dietCount) : '',
     s.roleLabel === '营养师' ? String(s.weightCount) : '',
-    s.roleLabel === '教练' ? String(s.exerciseCount) : '',
+    s.roleLabel === '运动师' ? String(s.exerciseCount) : '',
     String(s.count), s.avgHours === null ? '' : String(s.avgHours),
   ]));
   lines.push([]);
@@ -222,7 +222,7 @@ const exportCsv = () => {
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-xl font-black text-gray-900">运营总览</h2>
-          <p class="text-[11px] text-gray-500 mt-0.5">营养师 / 教练批注情况</p>
+          <p class="text-[11px] text-gray-500 mt-0.5">营养师 / 运动师批注情况</p>
         </div>
         <div class="flex items-center gap-1">
           <button @click="exportCsv" class="p-2 rounded-full bg-white/70 text-[#1F4E79] active:bg-white"><Download class="w-5 h-5" /></button>
@@ -323,14 +323,14 @@ const exportCsv = () => {
                 </td>
                 <td class="py-2 text-right" :class="s.roleLabel === '营养师' ? 'text-gray-800 font-bold' : 'text-gray-300'">{{ s.roleLabel === '营养师' ? s.dietCount : '—' }}</td>
                 <td class="py-2 text-right" :class="s.roleLabel === '营养师' ? 'text-gray-800 font-bold' : 'text-gray-300'">{{ s.roleLabel === '营养师' ? s.weightCount : '—' }}</td>
-                <td class="py-2 text-right" :class="s.roleLabel === '教练' ? 'text-gray-800 font-bold' : 'text-gray-300'">{{ s.roleLabel === '教练' ? s.exerciseCount : '—' }}</td>
+                <td class="py-2 text-right" :class="s.roleLabel === '运动师' ? 'text-gray-800 font-bold' : 'text-gray-300'">{{ s.roleLabel === '运动师' ? s.exerciseCount : '—' }}</td>
                 <td class="py-2 text-right text-gray-900 font-black">{{ s.count }}</td>
                 <td class="py-2 text-right text-gray-500">{{ s.avgHours === null ? '--' : s.avgHours + 'h' }}</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div v-if="staffStats.length === 0" class="text-center text-xs text-gray-400 py-4">暂无营养师/教练账号</div>
+        <div v-if="staffStats.length === 0" class="text-center text-xs text-gray-400 py-4">暂无营养师/运动师账号</div>
       </Card>
 
       <!-- 学员批注覆盖 -->

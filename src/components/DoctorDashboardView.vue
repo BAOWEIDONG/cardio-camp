@@ -7,7 +7,8 @@ import { Button, Card } from './ui';
 
 const store = useAppStore();
 const u = computed(() => store.user!);
-const patients = computed(() => store.students.slice(0, 8));
+const patients = computed(() => store.getDoctorPatients(store.user?.id || 'dr1'));
+const chatUnread = computed(() => store.chatUnreadForStaff('doctor'));
 const bpOf = (id: string) => store.latestBpFor(id, store.selectedCampId || 'camp1');
 const fuOf = (id: string) => store.getDoctorFollowups(id)[0];
 const riskOf = (sbp: number, dbp: number) => sbp >= 160 || dbp >= 100 ? '很高危' : sbp >= 140 || dbp >= 90 ? '高危' : sbp >= 130 || dbp >= 80 ? '中危' : '低危';
@@ -36,7 +37,7 @@ function logout() { store.logout(); }
           <div class="text-[11px] text-gray-500 font-medium">北京大学国际医院 · 心内科</div>
           <div class="text-[17px] font-black text-gray-900">{{ u.name }} 医师</div>
         </div>
-        <button class="rounded-full bg-white px-3 py-1.5 text-[10px] font-bold text-gray-500 shadow-sm" @click="logout"><LogOut class="mr-1 inline h-3 w-3" />退出</button>
+        <button class="rounded-full bg-white px-3 py-1.5 text-[10px] font-bold text-gray-500 shadow-sm" @click="store.setCurrentView('care-chat')"><MessageCircle class="mr-1 inline h-3 w-3" />沟通</button>
       </div>
     </div>
 
@@ -57,17 +58,18 @@ function logout() { store.logout(); }
           <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1F6A95]/10 text-[#1F6A95]"><CalendarClock class="h-4 w-4" /></span>
           <span class="text-[9px] font-bold text-gray-700">随访计划</span>
         </button>
-        <button class="flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="store.setCurrentView('account-manage')">
-          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2C7DA0]/10 text-[#2C7DA0]"><Users class="h-4 w-4" /></span>
-          <span class="text-[9px] font-bold text-gray-700">患者名单</span>
+        <button class="relative flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="store.setCurrentView('care-chat')">
+          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2C7DA0]/10 text-[#2C7DA0]"><MessageCircle class="h-4 w-4" /></span>
+          <span class="text-[9px] font-bold text-gray-700">在线沟通</span>
+          <span v-if="chatUnread" class="absolute right-2 top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[8px] font-bold text-white">{{ chatUnread }}</span>
         </button>
         <button class="flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="showToast('入营审核：演示环境 3 份待审')">
           <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E8674F]/10 text-[#E8674F]"><ClipboardCheck class="h-4 w-4" /></span>
           <span class="text-[9px] font-bold text-gray-700">入营审核</span>
         </button>
-        <button class="flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="store.setCurrentView('messages')">
-          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#fbf3e2] text-amber-600"><MessageCircle class="h-4 w-4" /></span>
-          <span class="text-[9px] font-bold text-gray-700">消息</span>
+        <button class="flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="store.setCurrentView('doctor-followup')">
+          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#fbf3e2] text-amber-600"><CalendarClock class="h-4 w-4" /></span>
+          <span class="text-[9px] font-bold text-gray-700">随访记录</span>
         </button>
       </div>
 

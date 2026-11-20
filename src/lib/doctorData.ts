@@ -105,3 +105,9 @@ export const MOCK_MEDS: MedicationPlan[] = [
     ],
   },
 ];
+
+/** 医师负责的患者（演示用固定分组，正式环境按营期/分组授权） */
+export const DOCTOR_PATIENTS: Record<string, string[]> = {
+  dr1: ['s1', 's2', 's3', 's5'],
+  dr2: ['s4', 's6', 's7', 's8'],
+};

@@ -5,7 +5,7 @@ import { usePaged } from '../composables/usePaged';
 import { NavBar, Card } from './ui';
 import { Popup as VanPopup, showToast, showConfirmDialog, Switch as VanSwitch } from 'vant';
 import {
-  Plus, Trash2, Edit3, Users, UserCircle, Dumbbell, Stethoscope,
+  Plus, Trash2, Edit3, Users, UserCircle, Dumbbell, Stethoscope, HeartPulse,
   Phone, Search, X, Settings2, UserPlus, ShieldCheck, ShieldOff,
 } from 'lucide-vue-next';
 import type { Account, Camp, Role } from '../types';
@@ -14,9 +14,11 @@ const store = useAppStore();
 
 // ─── Tab 切换 ───
 const activeTab = ref<Role>('student');
+const roleLabel = (r: Role) => r === 'student' ? '学员' : r === 'coach' ? '运动师' : r === 'doctor' ? '医师' : r === 'dietitian' ? '营养师' : r === 'org_admin' ? '机构管理员' : '超级管理员';
 const tabs: { role: Role; label: string; icon: typeof Users; color: string }[] = [
   { role: 'student', label: '学员', icon: UserCircle, color: '#1F6A95' },
-  { role: 'coach', label: '教练', icon: Dumbbell, color: '#E8674F' },
+  { role: 'coach', label: '运动师', icon: Dumbbell, color: '#E8674F' },
+  { role: 'doctor', label: '医师', icon: HeartPulse, color: '#1F6A95' },
   { role: 'dietitian', label: '营养师', icon: Stethoscope, color: '#2C7DA0' },
 ];
 
@@ -61,6 +63,7 @@ watch([activeTab, filterCampId, searchKeyword], () => resetPagedAccounts());
 const roleCount = computed(() => ({
   student: store.accounts.filter((a) => a.role === 'student').length,
   coach: store.accounts.filter((a) => a.role === 'coach').length,
+  doctor: store.accounts.filter((a) => a.role === 'doctor').length,
   dietitian: store.accounts.filter((a) => a.role === 'dietitian').length,
 }));
 
@@ -155,7 +158,7 @@ const handleEditAccount = (account?: Account) => {
         phone: '',
         name: '',
         role: activeTab.value,
-        campIds: (activeTab.value === 'student' || activeTab.value === 'coach') ? [] : undefined,
+        campIds: (activeTab.value === 'student' || activeTab.value === 'coach' || activeTab.value === 'doctor') ? [] : undefined,
         active: true,
         supervisor: false,
       };
@@ -236,7 +239,7 @@ const saveAccount = () => {
       phone: phone.trim(),
       name: name?.trim() || '',
       role,
-      campIds: (role === 'student' || role === 'coach') ? campIds : undefined,
+      campIds: (role === 'student' || role === 'coach' || role === 'doctor') ? campIds : undefined,
       active,
       ...(canGrant ? { supervisor: supervisorFlag } : {}),
     });
@@ -246,7 +249,7 @@ const saveAccount = () => {
       phone: phone.trim(),
       name: name?.trim() || '',
       role: role as Role,
-      campIds: (role === 'student' || role === 'coach') ? campIds : undefined,
+      campIds: (role === 'student' || role === 'coach' || role === 'doctor') ? campIds : undefined,
       active: active ?? true,
       supervisor: canGrant ? supervisorFlag : false,
       createdAt,
@@ -379,7 +382,7 @@ const switchTab = (role: Role) => {
         <input
           v-model="searchQuery"
           type="text"
-          :placeholder="`搜索${activeTab === 'student' ? '学员' : activeTab === 'coach' ? '教练' : '营养师'}姓名或手机号`"
+          :placeholder="`搜索${roleLabel(activeTab)}姓名或手机号`"
           class="w-full pl-9 pr-9 py-2.5 bg-white border border-gray-100 rounded-xl text-sm shadow-sm focus:outline-none focus:border-[#E8674F] transition-colors"
         />
         <button
@@ -404,11 +407,12 @@ const switchTab = (role: Role) => {
                 :class="[
                   'h-10 w-10 rounded-full flex items-center justify-center shrink-0',
                   activeTab === 'student' ? 'bg-[#1F6A95]/10 text-[#1F6A95]' :
+                  activeTab === 'doctor' ? 'bg-[#1F6A95]/10 text-[#1F6A95]' :
                   activeTab === 'coach' ? 'bg-[#E8674F]/10 text-[#E8674F]' :
                   'bg-[#2C7DA0]/10 text-[#2C7DA0]',
                 ]"
               >
-                <component :is="activeTab === 'student' ? UserCircle : activeTab === 'coach' ? Dumbbell : Stethoscope" class="w-6 h-6" />
+                <component :is="activeTab === 'student' ? UserCircle : activeTab === 'doctor' ? HeartPulse : activeTab === 'coach' ? Dumbbell : Stethoscope" class="w-6 h-6" />
               </div>
               <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1 flex-wrap">
@@ -423,7 +427,7 @@ const switchTab = (role: Role) => {
                   <Phone class="w-3 h-3" /> {{ maskPhone(account.phone) }}
                 </div>
                 <!-- 学员营期标签 -->
-                <div v-if="(account.role === 'student' || account.role === 'coach') && account.campIds && account.campIds.length > 0" class="flex flex-wrap gap-1">
+                <div v-if="(account.role === 'student' || account.role === 'coach' || account.role === 'doctor') && account.campIds && account.campIds.length > 0" class="flex flex-wrap gap-1">
                   <span
                     v-for="campId in account.campIds"
                     :key="campId"
@@ -455,7 +459,7 @@ const switchTab = (role: Role) => {
           </button>
         </template>
         <div v-else class="text-center text-xs text-gray-400 py-8 bg-white rounded-xl border border-gray-100">
-          {{ searchKeyword ? `未找到匹配的${activeTab === 'student' ? '学员' : activeTab === 'coach' ? '教练' : '营养师'}` : '暂无账户，请添加' }}
+          {{ searchKeyword ? `未找到匹配的${roleLabel(activeTab)}` : '暂无账户，请添加' }}
         </div>
       </div>
     </div>
@@ -468,7 +472,7 @@ const switchTab = (role: Role) => {
         @click="handleEditAccount()"
       >
         <UserPlus class="w-5 h-5" />
-        新增{{ activeTab === 'student' ? '学员' : activeTab === 'coach' ? '教练' : '营养师' }}
+        新增{{ roleLabel(activeTab) }}
       </button>
     </div>
 
@@ -519,7 +523,7 @@ const switchTab = (role: Role) => {
     <VanPopup v-model:show="showAccountModal" position="bottom" round :style="{ maxHeight: '90%' }">
       <div class="p-5 flex flex-col" style="max-height: 90vh;" v-if="editingAccount">
         <h3 class="text-lg font-bold text-gray-900 mb-5 shrink-0">
-          {{ editingAccount.id ? '编辑账户' : '新增' + (editingAccount.role === 'student' ? '学员' : editingAccount.role === 'coach' ? '教练' : '营养师') }}
+          {{ editingAccount.id ? '编辑账户' : '新增' + (roleLabel(editingAccount.role)) }}
         </h3>
         <div class="space-y-4 mb-6 overflow-y-auto flex-1 min-h-0">
           <!-- 手机号 -->
@@ -568,8 +572,8 @@ const switchTab = (role: Role) => {
               </button>
             </div>
           </div>
-          <!-- 营期关联（学员/教练） -->
-          <div v-if="editingAccount.role === 'student' || editingAccount.role === 'coach'">
+          <!-- 营期关联（学员/运动师） -->
+          <div v-if="editingAccount.role === 'student' || editingAccount.role === 'coach' || editingAccount.role === 'doctor'">
             <label class="text-sm font-medium text-gray-700 block mb-2">{{ editingAccount.role === 'coach' ? '负责营期' : '所属营期' }} <span v-if="editingAccount.role === 'student'" class="text-red-500">*</span></label>
             <div v-if="store.camps.length === 0" class="text-xs text-orange-500 bg-orange-50 rounded-lg p-2.5">
               暂无营期，请先在上方新增营期
@@ -624,7 +628,7 @@ const switchTab = (role: Role) => {
           <div v-if="store.user?.supervisor && editingAccount.role === 'dietitian'" class="flex items-center justify-between bg-[#1F4E79]/5 rounded-lg p-3 border border-[#1F4E79]/10">
             <div>
               <div class="text-sm font-medium text-gray-700">运营总览权限</div>
-              <div class="text-[10px] text-gray-400 mt-0.5">开启后可查看全部学员打卡与营养师/教练批注情况</div>
+              <div class="text-[10px] text-gray-400 mt-0.5">开启后可查看全部学员打卡与营养师/运动师批注情况</div>
             </div>
             <VanSwitch
               :model-value="editingAccount.supervisor === true"

@@ -414,7 +414,7 @@ const copied = ref(false);
           </div>
           <div class="text-xs text-gray-400 flex items-start gap-1.5">
             <Check class="w-3.5 h-3.5 text-orange-500 shrink-0 mt-0.5" />
-            <span>请确认信息无误，提交后如需修改请联系教练。</span>
+            <span>请确认信息无误，提交后如需修改请联系运动师。</span>
           </div>
         </div>
 

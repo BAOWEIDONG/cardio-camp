@@ -34,7 +34,7 @@ export const MOCK_STUDENTS: { id: string; name: string; age: number; gender: 'ma
   { id: 's11', name: '钱多多', age: 27, gender: 'male', phone: '13800000011' },
   // s12：演示用——每天只完成部分打卡(1-2项)，用于展示「打卡率」与「打卡全部完成率」区别
   { id: 's12', name: '陈曦', age: 30, gender: 'female', phone: '13800000012' },
-  // 体验账号：同一手机号可按学员/营养师/教练三种角色登录（登录时选择角色）
+  // 体验账号：同一手机号可按学员/营养师/运动师三种角色登录（登录时选择角色）
   { id: 's13', name: '体验学员', age: 30, gender: 'female', phone: '13900000009' },
 ];
 
@@ -156,7 +156,7 @@ for (let i = -(COMPLETE_DAYS - 1); i <= 0; i++) {
     photos: i % 2 === 0 ? ['https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&q=80'] : undefined,
     coachComment: i < 0 ? (i % 2 === 0 ? '配速不错，继续保持。' : '动作标准，力量稳步提升。') : undefined,
     coachCommentDate: i < 0 ? iso(i, '21:00:00') : undefined,
-    coachName: i < 0 ? '李教练' : undefined,
+    coachName: i < 0 ? '李运动师' : undefined,
     coachScore: i < 0 ? 2 : undefined,
   });
 }
@@ -294,7 +294,7 @@ MOCK_EXERCISE_RECORDS.push(
     duration: 40,
     intensity: 2,
     coachComment: '核心收紧得很好，拉伸很到位，继续保持！',
-    coachName: '李教练',
+    coachName: '李运动师',
     coachCommentDate: iso(0, '20:30:00'),
   },
   {
@@ -470,7 +470,7 @@ export const MOCK_COACH_ACTIVITIES: CoachActivityRecord[] = [
       'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80',
       'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80'
     ],
-    coachName: '李教练',
+    coachName: '李运动师',
     date: dateStr(0),
     videoUrls: ['http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'],
   },
@@ -482,7 +482,7 @@ export const MOCK_COACH_ACTIVITIES: CoachActivityRecord[] = [
       'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80',
       'https://images.unsplash.com/photo-1599901860904-17e08c2d159a?w=800&q=80'
     ],
-    coachName: '王教练',
+    coachName: '王运动师',
     date: dateStr(-1),
     campIds: ['camp1'],
   },
@@ -495,7 +495,7 @@ export const MOCK_COACH_ACTIVITIES: CoachActivityRecord[] = [
       'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=800&q=80',
       'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80'
     ],
-    coachName: '张教练',
+    coachName: '张运动师',
     date: dateStr(-2),
   }
 ];
@@ -871,12 +871,12 @@ export const MOCK_ACCOUNTS: Account[] = [
   { id: 'd2', phone: '13900000002', name: '李营养师', role: 'dietitian', active: true, createdAt: iso(-20, '09:00:00') },
   // 体验营养师 / 运营督导：同号不同角色，带督导权限可见运营总览
   { id: 'sup1', phone: '13900000009', name: '运营督导', role: 'dietitian', campIds: ['camp1', 'camp2'], active: true, supervisor: true, createdAt: iso(-30, '09:00:00') },
-  // 教练
-  { id: 'c1', phone: '13700000001', name: '李教练', role: 'coach', campIds: ['camp1'], active: true, createdAt: iso(-28, '10:00:00') },
-  { id: 'c2', phone: '13700000002', name: '王教练', role: 'coach', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-28, '10:00:00') },
-  { id: 'c3', phone: '13700000003', name: '张教练', role: 'coach', active: true, createdAt: iso(-28, '10:00:00') },
-  // 体验教练：同号不同角色
-  { id: 'c4', phone: '13900000009', name: '体验教练', role: 'coach', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-28, '10:00:00') },
+  // 运动师
+  { id: 'c1', phone: '13700000001', name: '李运动师', role: 'coach', campIds: ['camp1'], active: true, createdAt: iso(-28, '10:00:00') },
+  { id: 'c2', phone: '13700000002', name: '王运动师', role: 'coach', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-28, '10:00:00') },
+  { id: 'c3', phone: '13700000003', name: '张运动师', role: 'coach', active: true, createdAt: iso(-28, '10:00:00') },
+  // 体验运动师：同号不同角色
+  { id: 'c4', phone: '13900000009', name: '体验运动师', role: 'coach', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-28, '10:00:00') },
   // 医师与两级管理员（心脑血管营新增角色）
   { id: 'dr1', phone: '13600000001', name: '李建国', role: 'doctor', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-30, '09:00:00') },
   { id: 'dr2', phone: '13600000002', name: '周敏', role: 'doctor', campIds: ['camp1'], active: true, createdAt: iso(-20, '09:00:00') },
@@ -934,7 +934,7 @@ export const MOCK_MANUAL_SCORES: ManualScoreRecord[] = [
 //  目标：三端登录后每个页面都有可看的真实感数据，而不是空态。
 //  - 新增 s14–s20 学员，覆盖第一期/第二期
 //  - s2–s20 生成连续多天的饮食/运动/体重记录，完成度分层（全勤/良好/偶尔/几乎不打卡）
-//  - 批注按营养师/教练真实姓名写入 comments[] 并镜像单字段（与 store.addRecordComment 口径一致）
+//  - 批注按营养师/运动师真实姓名写入 comments[] 并镜像单字段（与 store.addRecordComment 口径一致）
 //  - 数据由固定种子生成，日期随“今天”平移，但每天完成模式稳定，刷新不跳变
 // ============================================================================
 
@@ -994,24 +994,24 @@ interface DemoProfile {
   annotate: number;
   /** 主要批注营养师 */
   dietitian: string;
-  /** 主要批注教练 */
+  /** 主要批注运动师 */
   coach: string;
 }
 
 const demoProfiles: DemoProfile[] = [
   // 仅对尚无打卡数据的学员生成，避免与原有 s1–s8/s12 种子重复计分
-  { id: 's10', campId: 'camp1', rate: 0.08, startWeight: 74, annotate: 0.05, dietitian: '王营养师', coach: '李教练' },
-  { id: 's13', campId: 'camp1', rate: 0.95, startWeight: 80, annotate: 0.4, dietitian: '王营养师', coach: '李教练' },
-  { id: 's14', campId: 'camp1', rate: 0.8, startWeight: 61, annotate: 0.25, dietitian: '李营养师', coach: '王教练' },
-  { id: 's15', campId: 'camp1', rate: 0.55, startWeight: 90, annotate: 0.18, dietitian: '王营养师', coach: '李教练' },
-  { id: 's16', campId: 'camp1', rate: 0.68, startWeight: 57, annotate: 0.2, dietitian: '李营养师', coach: '王教练' },
-  { id: 's17', campId: 'camp1', rate: 0.76, startWeight: 84, annotate: 0.26, dietitian: '王营养师', coach: '李教练' },
-  { id: 's10', campId: 'camp2', rate: 0.33, startWeight: 74, annotate: 0.1, dietitian: '李营养师', coach: '李教练' },
-  { id: 's13', campId: 'camp2', rate: 0.92, startWeight: 72, annotate: 0.9, dietitian: '李营养师', coach: '王教练' },
-  { id: 's17', campId: 'camp2', rate: 0.7, startWeight: 84, annotate: 0.2, dietitian: '王营养师', coach: '李教练' },
-  { id: 's18', campId: 'camp2', rate: 0.85, startWeight: 59, annotate: 0.28, dietitian: '李营养师', coach: '王教练' },
-  { id: 's19', campId: 'camp2', rate: 0.5, startWeight: 96, annotate: 0.15, dietitian: '王营养师', coach: '李教练' },
-  { id: 's20', campId: 'camp2', rate: 0.7, startWeight: 66, annotate: 0.2, dietitian: '李营养师', coach: '王教练' },
+  { id: 's10', campId: 'camp1', rate: 0.08, startWeight: 74, annotate: 0.05, dietitian: '王营养师', coach: '李运动师' },
+  { id: 's13', campId: 'camp1', rate: 0.95, startWeight: 80, annotate: 0.4, dietitian: '王营养师', coach: '李运动师' },
+  { id: 's14', campId: 'camp1', rate: 0.8, startWeight: 61, annotate: 0.25, dietitian: '李营养师', coach: '王运动师' },
+  { id: 's15', campId: 'camp1', rate: 0.55, startWeight: 90, annotate: 0.18, dietitian: '王营养师', coach: '李运动师' },
+  { id: 's16', campId: 'camp1', rate: 0.68, startWeight: 57, annotate: 0.2, dietitian: '李营养师', coach: '王运动师' },
+  { id: 's17', campId: 'camp1', rate: 0.76, startWeight: 84, annotate: 0.26, dietitian: '王营养师', coach: '李运动师' },
+  { id: 's10', campId: 'camp2', rate: 0.33, startWeight: 74, annotate: 0.1, dietitian: '李营养师', coach: '李运动师' },
+  { id: 's13', campId: 'camp2', rate: 0.92, startWeight: 72, annotate: 0.9, dietitian: '李营养师', coach: '王运动师' },
+  { id: 's17', campId: 'camp2', rate: 0.7, startWeight: 84, annotate: 0.2, dietitian: '王营养师', coach: '李运动师' },
+  { id: 's18', campId: 'camp2', rate: 0.85, startWeight: 59, annotate: 0.28, dietitian: '李营养师', coach: '王运动师' },
+  { id: 's19', campId: 'camp2', rate: 0.5, startWeight: 96, annotate: 0.15, dietitian: '王营养师', coach: '李运动师' },
+  { id: 's20', campId: 'camp2', rate: 0.7, startWeight: 66, annotate: 0.2, dietitian: '李营养师', coach: '王运动师' },
 ];
 
 const demoMealText = {

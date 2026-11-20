@@ -75,7 +75,7 @@ const MESSAGE_TEMPLATES = [
   '这期进步很大，下期我们继续向目标冲刺！',
 ];
 
-// 结营寄语（可多条：多名营养师/教练各自撰写提交 append 不覆盖；学员端结营报告逐条展示带角色姓名；
+// 结营寄语（可多条：多名营养师/运动师各自撰写提交 append 不覆盖；学员端结营报告逐条展示带角色姓名；
 // 后端可用 PUT /camp/message/:studentId 持久化）
 const campMessageText = ref('');
 const campMessageSaved = ref(false);
@@ -280,7 +280,7 @@ watch(selectedCampId, () => {
 // Questionnaire tab
 const qData = ref<any>(null);
 
-// 批注深链（与教练端同一套 pendingAnnotation 机制）：从待批注列表/消息进入时自动切 Tab + 滚动定位+高亮目标记录
+// 批注深链（与运动师端同一套 pendingAnnotation 机制）：从待批注列表/消息进入时自动切 Tab + 滚动定位+高亮目标记录
 // ★KeepAlive 双挂：onMounted 只在首次挂载跑一次，订阅详情视图被缓存后再次进入 onMounted 不再触发 → 必须 onActivated 也跑；
 // 否则「第二次开始点批注不自动定位」（v27 加 KeepAlive 后回归）。首次挂载时 onActivated 也触发，第一次执行即清掉 pending，二次调用空转，安全。
 const consumePendingAnnotation = () => {
@@ -535,7 +535,7 @@ function handleDeleteManualScore(id: string) {
             <div v-for="m in existingMessages" :key="m.id"
                  class="rounded-lg border border-[#1F6A95]/15 bg-white p-3">
               <div class="flex items-center gap-2 mb-1 flex-wrap">
-                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#1F6A95]/10 text-[#1F6A95]">{{ m.role === 'coach' ? '教练' : '营养师' }}</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-[#1F6A95]/10 text-[#1F6A95]">{{ m.role === 'coach' ? '运动师' : '营养师' }}</span>
                 <span class="text-xs font-bold text-gray-800">{{ m.authorName }}</span>
                 <span class="text-[10px] text-gray-400">{{ m.createdAt }}</span>
                 <button
@@ -853,12 +853,12 @@ function handleDeleteManualScore(id: string) {
               </div>
             </div>
 
-            <!-- 运动批注区域（只读，批注由教练操作） -->
+            <!-- 运动批注区域（只读，批注由运动师操作） -->
             <div class="p-4 bg-gray-50/50">
               <div v-if="record.coachComment" class="relative">
                 <div class="flex items-center justify-between mb-1">
                   <div class="flex items-center gap-2">
-                    <span class="text-xs font-bold text-[#1F6A95]">教练批注</span>
+                    <span class="text-xs font-bold text-[#1F6A95]">运动师批注</span>
                     <span v-if="typeof record.coachScore === 'number'" :class="['text-[10px] px-1.5 py-0.5 rounded font-bold', record.coachScore >= 2 ? 'bg-blue-100 text-blue-800' : record.coachScore === 1 ? 'bg-orange-100 text-orange-600' : 'bg-gray-200 text-gray-600']">
                       +{{ record.coachScore }}
                     </span>
@@ -874,7 +874,7 @@ function handleDeleteManualScore(id: string) {
               </div>
               <div v-else class="text-xs text-gray-400 flex items-center gap-1">
                 <MessageCircle class="w-3 h-3" />
-                暂无教练批注
+                暂无运动师批注
               </div>
             </div>
           </Card>

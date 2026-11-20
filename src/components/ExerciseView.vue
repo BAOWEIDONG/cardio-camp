@@ -875,7 +875,7 @@ const handleSubmit = () => {
                 <div v-if="record.coachComment" class="mt-3 p-2.5 rounded-lg bg-[#1F6A95]/5 border border-[#1F6A95]/10">
                   <div class="flex items-center gap-1.5 mb-1">
                     <MessageCircle class="w-3 h-3 text-[#1F6A95]" />
-                    <span class="text-[11px] font-bold text-[#1F6A95]">教练批注</span>
+                    <span class="text-[11px] font-bold text-[#1F6A95]">运动师批注</span>
                     <span v-if="record.coachScore === 2" class="text-[10px] font-bold text-white bg-[#1F6A95] px-1.5 py-0.5 rounded">+2</span>
                     <span v-else-if="record.coachScore === 1" class="text-[10px] font-bold text-white bg-[#E8674F] px-1.5 py-0.5 rounded">+1</span>
                     <span v-else-if="record.coachScore === 0" class="text-[10px] font-bold text-white bg-gray-400 px-1.5 py-0.5 rounded">0</span>

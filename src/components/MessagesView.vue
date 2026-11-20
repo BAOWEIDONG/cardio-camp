@@ -3,7 +3,7 @@ import { computed, ref } from 'vue';
 import { format } from 'date-fns';
 import { useAppStore } from '../store/app';
 import { NavBar, StudentTabbar } from './ui';
-import { MessageCircle, Gift, Trophy, Bell, ChevronRight, Activity, RefreshCw } from 'lucide-vue-next';
+import { MessageCircle, Gift, Trophy, Bell, ChevronRight, Activity, RefreshCw, Stethoscope, Users } from 'lucide-vue-next';
 import { useTabSwipe } from '../lib/useTabSwipe';
 import { usePaged } from '../composables/usePaged';
 import { useDebounced } from '../composables/useDebounced';
@@ -53,19 +53,19 @@ const campTiers = computed(() => activeCampId.value ? store.getCampRewardTiers(a
 
 interface MessageItem {
   id: string;
-  type: 'dietitian' | 'coach' | 'reward' | 'rank';
+  type: 'doctor' | 'dietitian' | 'coach' | 'reward' | 'rank';
   date: string; // yyyy-MM-dd HH:mm:ss
   title: string;
   body: string;
   unread: boolean;
-  targetView: 'diet' | 'exercise' | 'weight-checkin' | 'reward' | 'ranking' | 'camp-activities' | 'points-mall' | 'my-rewards';
+  targetView: 'diet' | 'exercise' | 'weight-checkin' | 'bp-checkin' | 'reward' | 'ranking' | 'camp-activities' | 'points-mall' | 'my-rewards';
   targetDate?: string; // yyyy-MM-dd for scroll-to-record
   recType?: 'diet' | 'weight' | 'exercise'; // 批注消息：点开时按此清该条 commentRead
   recordId?: string; // 批注消息对应记录 id
   notifId?: string; // 系统通知消息：点开时按此记已读
 }
 
-// ---- 批注消息（营养师：饮食/体重；教练：运动） ----
+// ---- 批注消息（营养师：饮食/体重；运动师：运动） ----
 const commentMessages = computed<MessageItem[]>(() => {
   const dietitianWrap = (r: any, type: 'diet' | 'weight'): MessageItem => ({
     id: `${type}-${r.id}`,
@@ -83,7 +83,7 @@ const commentMessages = computed<MessageItem[]>(() => {
     id: `ex-${r.id}`,
     type: 'coach',
     date: r.coachCommentDate || r.date,
-    title: `${r.coachName || '教练'} 批注了你的运动打卡`,
+    title: `${r.coachName || '运动师'} 批注了你的运动打卡`,
     body: r.coachComment,
     unread: !r.commentRead,
     targetView: 'exercise',
@@ -96,6 +96,24 @@ const commentMessages = computed<MessageItem[]>(() => {
     ...campWtRecs.value.filter((r) => isMine(r) && r.dietitianComment).map((r) => dietitianWrap(r, 'weight')),
     ...campExRecs.value.filter((r) => isMine(r) && r.coachComment).map((r) => coachWrap(r)),
   ];
+});
+
+// ---- 医师批注消息（血压记录，来自医师端） ----
+const doctorMessages = computed<MessageItem[]>(() => {
+  if (!store.user) return [];
+  return store.bpRecords
+    .filter((r) => r.studentId === store.user!.id && r.doctorComment && !r.commentRead)
+    .map((r) => ({
+      id: `doctor-${r.id}`,
+      type: 'doctor',
+      date: r.doctorCommentDate || r.date,
+      title: `${r.doctorName || '医师'} 批注了你的血压`,
+      body: r.doctorComment || '',
+      unread: !r.commentRead,
+      targetView: 'bp-checkin',
+      recType: undefined,
+      recordId: r.id,
+    }));
 });
 
 // ---- 奖励消息（领取/审核/发货/线下发放，计入「系统通知」未读） ----
@@ -157,7 +175,7 @@ const exchangeMessages = computed<MessageItem[]>(() => {
 // 同一时间按优先级：批注 > 奖励/兑换（排名动态不再推送消息到消息中心）
 const typePriority: Record<string, number> = { dietitian: 0, coach: 0, reward: 1 };
 const allMessages = computed<MessageItem[]>(() =>
-  [...commentMessages.value, ...rewardMessages.value, ...exchangeMessages.value]
+  [...doctorMessages.value, ...commentMessages.value, ...rewardMessages.value, ...exchangeMessages.value]
     .sort((a, b) => {
       const dc = b.date.localeCompare(a.date);
       if (dc !== 0) return dc;
@@ -165,26 +183,27 @@ const allMessages = computed<MessageItem[]>(() =>
     }),
 );
 
-// ---- 分类筛选：营养师批注 / 教练批注 / 系统通知 ----
+// ---- 分类筛选：营养师批注 / 运动师批注 / 系统通知 ----
 const filters = [
   { key: 'all', label: '全部' },
-  { key: 'dietitian', label: '营养师批注' },
-  { key: 'coach', label: '教练批注' },
+  { key: 'doctor', label: '医师' },
+  { key: 'dietitian', label: '营养师' },
+  { key: 'coach', label: '运动师' },
   { key: 'reward', label: '系统通知' },
 ];
 const activeFilter = ref<string>('all');
 const sheetRoot = ref<HTMLElement | null>(null);
-useTabSwipe(sheetRoot, activeFilter, ['all', 'dietitian', 'coach', 'reward']);
+useTabSwipe(sheetRoot, activeFilter, ['all', 'doctor', 'dietitian', 'coach', 'reward']);
 const messages = computed<MessageItem[]>(() =>
   activeFilter.value === 'all'
     ? allMessages.value
     : allMessages.value.filter((m) => m.type === activeFilter.value),
 );
 
-// 未读数 = 批注(营养师+教练) + 系统通知(奖励/兑换)，与各学员页底部「消息」Tab 角标口径一致
+// 未读数 = 批注(营养师+运动师) + 系统通知(奖励/兑换)，与各学员页底部「消息」Tab 角标口径一致
 // （共享 store.getStudentMsgUnreadCount / lib/messageSeen）。排名动态不进入角标。
 const unreadCount = computed(() =>
-  allMessages.value.filter((m) => m.unread && (m.type === 'dietitian' || m.type === 'coach' || m.type === 'reward')).length,
+  allMessages.value.filter((m) => m.unread && (m.type === 'doctor' || m.type === 'dietitian' || m.type === 'coach' || m.type === 'reward')).length + store.chatUnreadForStudent(store.user?.id || ''),
 );
 // 长列表分页 + 防抖：默认只渲染前 20 条；打卡/批注等高频变化时列表重建合并为一次
 const debouncedMessages = useDebounced(messages, 300);
@@ -200,17 +219,21 @@ const tabUnread = (key: string): number =>
 const sheetUnread = computed(() => tabUnread(activeFilter.value));
 
 const typeMeta = (type: MessageItem['type']) =>
-  type === 'dietitian'
+  type === 'doctor'
+    ? { icon: Stethoscope, cls: 'bg-[#1F6A95]/10 text-[#1F6A95]', tag: '医师批注', tagCls: 'bg-[#1F6A95]/10 text-[#1F6A95]' }
+    : type === 'dietitian'
     ? { icon: MessageCircle, cls: 'bg-[#1F6A95]/10 text-[#1F6A95]', tag: '营养师批注', tagCls: 'bg-[#1F6A95]/10 text-[#1F6A95]' }
     : type === 'coach'
-      ? { icon: Activity, cls: 'bg-sky-50 text-sky-500', tag: '教练批注', tagCls: 'bg-sky-50 text-sky-500' }
+      ? { icon: Activity, cls: 'bg-sky-50 text-sky-500', tag: '运动师批注', tagCls: 'bg-sky-50 text-sky-500' }
       : type === 'reward'
         ? { icon: Gift, cls: 'bg-orange-50 text-orange-500', tag: '系统通知', tagCls: 'bg-orange-50 text-orange-500' }
         : { icon: Trophy, cls: 'bg-yellow-50 text-yellow-600', tag: '排名动态', tagCls: 'bg-yellow-50 text-yellow-600' };
 
 const openMessage = (m: MessageItem) => {
   // 点开才读才清：批注清该记录 commentRead，系统通知记该 notifId 已读
-  if (m.recType && m.recordId) {
+  if (m.type === 'doctor' && m.recordId) {
+    store.markBpCommentRead(m.recordId);
+  } else if (m.recType && m.recordId) {
     store.markCommentRead(m.recType, m.recordId);
   } else if (m.notifId) {
     store.markNotifRead(m.notifId);
@@ -258,6 +281,27 @@ const fmtDate = (d: string) => {
       </div>
     </transition>
 
+    <!-- 在线沟通入口（医师 / 营养师 / 运动师三师团队） -->
+    <div class="px-4 pt-4">
+      <button class="w-full rounded-2xl bg-gradient-to-r from-[#1F6A95] to-[#2C7DA0] p-3.5 text-left text-white shadow-lg shadow-[#1F6A95]/20 active:scale-[0.98] transition" @click="store.setCurrentView('care-chat')">
+        <div class="flex items-center gap-2">
+          <div class="flex h-9 w-9 items-center justify-center rounded-full bg-white/15"><MessageCircle class="h-4 w-4" /></div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[12px] font-bold">在线沟通 · 三师团队</span>
+              <span v-if="store.chatUnreadForStudent(store.user?.id || '')" class="rounded-full bg-white px-1.5 py-0.5 text-[8px] font-bold text-[#1F6A95]">{{ store.chatUnreadForStudent(store.user?.id || '') }} 条新消息</span>
+            </div>
+            <div class="mt-0.5 text-[9px] text-white/70">医师随访、营养师饮食、运动师处方，消息全程留痕</div>
+          </div>
+          <div class="flex -space-x-1.5">
+            <span class="flex h-6 w-6 items-center justify-center rounded-full border border-white/30 bg-white/20"><Stethoscope class="h-3 w-3" /></span>
+            <span class="flex h-6 w-6 items-center justify-center rounded-full border border-white/30 bg-white/20"><Users class="h-3 w-3" /></span>
+            <span class="flex h-6 w-6 items-center justify-center rounded-full border border-white/30 bg-white/20"><Activity class="h-3 w-3" /></span>
+          </div>
+        </div>
+      </button>
+    </div>
+
     <div class="px-4 pt-4">
       <div class="flex bg-white rounded-xl p-1 border border-gray-100 shadow-sm">
         <button
@@ -289,7 +333,7 @@ const fmtDate = (d: string) => {
           <Bell class="w-8 h-8 text-gray-300" />
         </div>
         <div class="text-sm font-bold text-gray-600 mb-1">暂无消息</div>
-        <div class="text-xs text-gray-400">营养师/教练的批注和系统通知会出现在这里</div>
+        <div class="text-xs text-gray-400">营养师/运动师的批注和系统通知会出现在这里</div>
       </div>
 
       <!-- 消息列表 -->

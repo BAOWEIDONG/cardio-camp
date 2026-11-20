@@ -11,7 +11,7 @@ import { Camera, Video, X, ChevronDown, Check } from 'lucide-vue-next';
 
 const store = useAppStore();
 
-// 教练可发布的营期：来源于营养师端账号管理分配的 campIds
+// 运动师可发布的营期：来源于营养师端账号管理分配的 campIds
   // 无 campIds = 负责全部营期
   const coachCamps = computed(() => {
     const coachAccount = store.accounts.find(a => a.id === store.user?.id || a.phone === store.user?.phone);
@@ -143,7 +143,7 @@ const handleSubmit = () => {
       description: formData.description,
       imageUrls: mediaType.value === 'image' ? imageFiles.value : [],
       videoUrls: mediaType.value === 'video' ? videoUrls.value : [],
-      coachName: store.user?.name || '教练',
+      coachName: store.user?.name || '运动师',
       date: format(new Date(), 'yyyy-MM-dd'),
       campIds: selectedCampIds.value.length > 0 ? [...selectedCampIds.value] : undefined,
     });

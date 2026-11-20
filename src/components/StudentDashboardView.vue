@@ -354,7 +354,7 @@ const dailySummary = computed(() => {
   const todayMissing = SUMMARY_ITEMS.filter((it) => !todayItems[it.key]).map((it) => it.label);
   const todayDoneCount = 5 - todayMissing.length;
 
-  // 昨日收到的最新一条营养师/教练批注
+  // 昨日收到的最新一条营养师/运动师批注
   const comments = [
     ...campDiet.value.filter((r) => isMine(r) && r.dietitianComment && (r.dietitianCommentDate || '').startsWith(yesterdayStr)),
     ...campEx.value.filter((r) => isMine(r) && r.coachComment && (r.coachCommentDate || '').startsWith(yesterdayStr)),
@@ -810,15 +810,15 @@ onActivated(() => {
             </div>
           </Card>
 
-          <Card class="p-5 cursor-pointer hover:shadow-md transition-shadow border-0 shadow-sm flex flex-col justify-between h-32 bg-white relative overflow-hidden" @click="store.setCurrentView('badge-center')">
-            <div class="absolute -top-8 -right-6 w-32 h-32 bg-gradient-to-br from-yellow-100/60 to-orange-50 rounded-full blur-2xl pointer-events-none"></div>
+          <Card class="p-5 cursor-pointer hover:shadow-md transition-shadow border-0 shadow-sm flex flex-col justify-between h-32 bg-white relative overflow-hidden" @click="store.setCurrentView('followup')">
+            <div class="absolute -top-8 -right-6 w-32 h-32 bg-gradient-to-br from-blue-100/60 to-blue-50 rounded-full blur-2xl pointer-events-none"></div>
             <div class="relative z-10">
-              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-100 to-orange-50 flex items-center justify-center text-amber-500 mb-2 shadow-sm">
-                <Medal class="h-5 w-5" />
+              <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center text-[#1F6A95] mb-2 shadow-sm">
+                <HeartPulse class="h-5 w-5" />
               </div>
               <div>
-                <div class="text-sm font-bold text-gray-900">我的徽章</div>
-                <div class="text-[11px] text-gray-500 mt-0.5">趣味活动达成记录</div>
+                <div class="text-sm font-bold text-gray-900">随访用药</div>
+                <div class="text-[11px] text-gray-500 mt-0.5">医师结论与用药方案</div>
               </div>
             </div>
           </Card>

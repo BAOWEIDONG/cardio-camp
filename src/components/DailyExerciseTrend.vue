@@ -6,7 +6,7 @@ import type { ExerciseRecord } from '../types';
 import { TrendingUp, Clock, Gauge, ListChecks, ChevronLeft, ChevronRight } from 'lucide-vue-next';
 
 /**
- * 每日运动趋势图（学员/教练/营养师三端复用）
+ * 每日运动趋势图（学员/运动师/营养师三端复用）
  *
  * props.records: 已按当前用户/学员过滤好的运动记录数组。
  * 内部按自然日聚合出"每日累计时长趋势"，支持：

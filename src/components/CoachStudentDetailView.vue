@@ -33,7 +33,7 @@ const selectedCamp = computed(() => studentCamps.value.find(c => c.id === select
 
 watch(() => store.selectedStudentId, (id) => {
   if (id) {
-    // 详情流内已选营期优先；否则继承教练首页当前营期（与首页数据口径一致），
+    // 详情流内已选营期优先；否则继承运动师首页当前营期（与首页数据口径一致），
     // 避免首页看第二期、详情却默认「全部营期」导致批注落到另一期、学员端消息收不到。
     const ctx = store.detailSelectedCampId || store.selectedCampId;
     if (ctx && studentCamps.value.some(c => c.id === ctx)) {
@@ -98,7 +98,7 @@ const EXERCISE_TEMPLATES = [
 // ─── 批注编辑锁（并发串行）：打开批注编辑器即持锁，保存/取消/离开释放，避免两人同时批注同一学员互相覆盖（先后提交） ───
 const heldLocks: { type: 'diet' | 'weight' | 'exercise'; recordId: string }[] = [];
 function tryAcquireLock(type: 'diet' | 'weight' | 'exercise', recordId: string): boolean {
-  const res = store.tryLockAnnotation(type, recordId, store.user?.id || '', store.user?.name || '教练');
+  const res = store.tryLockAnnotation(type, recordId, store.user?.id || '', store.user?.name || '运动师');
   if (!res.ok) {
     showToast(`${res.byName} 正在编辑此条批注，请稍后再试`);
     return false;
@@ -138,7 +138,7 @@ const handleSaveExerciseComment = (recordId: string) => {
   store.addRecordComment('exercise', recordId, {
     id: `cc_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     role: 'coach',
-    name: store.user?.name || '教练',
+    name: store.user?.name || '运动师',
     text: exerciseCommentText.value,
     date: format(new Date(), 'yyyy-MM-dd HH:mm:ss'),
   });
@@ -395,7 +395,7 @@ onActivated(consumePendingAnnotation);
                 </div>
               </div>
 
-              <!-- 教练批注区域 -->
+              <!-- 运动师批注区域 -->
               <div class="p-4 bg-gray-50/50">
                 <div v-if="exerciseCommentingId === record.id" class="space-y-3">
                   <!-- 运动打分 -->
@@ -454,7 +454,7 @@ onActivated(consumePendingAnnotation);
                 <div v-else-if="record.coachComment || typeof record.coachScore === 'number'" class="relative group">
                   <div class="flex items-center justify-between mb-1">
                     <div class="flex items-center gap-2">
-                      <span class="text-xs font-bold text-[#1F6A95]">教练批注</span>
+                      <span class="text-xs font-bold text-[#1F6A95]">运动师批注</span>
                       <span v-if="typeof record.coachScore === 'number'" :class="['text-[10px] px-1.5 py-0.5 rounded font-bold', record.coachScore >= 2 ? 'bg-blue-100 text-blue-800' : record.coachScore === 1 ? 'bg-orange-100 text-orange-600' : 'bg-gray-200 text-gray-600']">
                         +{{ record.coachScore }}
                       </span>

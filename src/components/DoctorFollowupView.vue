@@ -10,7 +10,7 @@ const sid = ref(store.selectedStudentId || store.students[0]?.id || 's1');
 const student = computed(() => store.students.find((s) => s.id === sid.value) || store.students[0]);
 const campId = computed(() => store.selectedCampId || 'camp1');
 const records = computed(() => store.getDoctorFollowups(sid.value));
-const patientOptions = computed(() => store.students.slice(0, 10));
+const patientOptions = computed(() => store.getDoctorPatients(store.user?.id || 'dr1'));
 const latest = computed(() => store.latestBpFor(sid.value, campId.value));
 const nextDate = (offset: number) => {
   const d = new Date(); d.setDate(d.getDate() + offset);

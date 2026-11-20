@@ -44,6 +44,8 @@ const formData = reactive({
   specialDietDetails: '',
   hasFoodAllergy: '',
   foodAllergyDetails: '',
+  medications: '',
+  symptoms: [] as string[],
   wakeTime: '',
   sleepTime: '',
   sleepDuration: '7.5',
@@ -134,6 +136,7 @@ const handleNext = () => {
     if (formData.hasChronic === '有' && !formData.chronicDetails) { error.value = '请填写疾病名称'; return; }
     if (formData.hasSpecialDiet === '有' && !formData.specialDietDetails) { error.value = '请说明特殊饮食内容'; return; }
     if (formData.hasFoodAllergy === '有' && !formData.foodAllergyDetails) { error.value = '请列出过敏食物'; return; }
+    if (!formData.medications.trim()) { error.value = '请填写正在服用的药物（无则填“无”）'; return; }
   } else if (step.value === 3) {
     if (!formData.wakeTime || !formData.sleepTime || !formData.sleepDuration || !formData.drinkAlcohol || !formData.smoke || !formData.snack || !formData.dailyWater) {
       error.value = '请回答所有必填问题'; return;
@@ -239,7 +242,7 @@ const openReport = (r: any) => {
 // 步进标题（去"板块"感）
 const steps = [
   { key: 'basic', label: '认识一下', icon: Sparkles },
-  { key: 'health', label: '身体小秘密', icon: HeartPulse },
+  { key: 'health', label: '心血管情况', icon: HeartPulse },
   { key: 'lifestyle', label: '日常节奏', icon: Moon },
   { key: 'exercise', label: '运动习惯', icon: Dumbbell },
   { key: 'report', label: '营养小助手', icon: Salad },
@@ -288,7 +291,7 @@ function onTimePickerConfirm({ selectedValues }: { selectedValues: string[] }) {
 
 <template>
   <div class="flex min-h-full flex-col bg-[#F7F8FA] pb-safe relative">
-    <NavBar title="入营小问卷" />
+    <NavBar title="心脑血管入营问卷" />
 
     <div class="p-4 flex-1 flex flex-col space-y-4 pb-32">
       <!-- 顶部：问候 + 进度 -->
@@ -400,12 +403,12 @@ function onTimePickerConfirm({ selectedValues }: { selectedValues: string[] }) {
       <!-- ============ Step 2: 身体小秘密 ============ -->
       <Card v-else-if="step === 2" key="s2" class="space-y-6 flex-1">
         <div>
-          <h3 class="font-bold text-gray-900 text-lg">聊聊你的身体</h3>
-          <p class="text-xs text-gray-400 mt-1">这些信息只有营养师能看到，用来保障你的健康安全</p>
+          <h3 class="font-bold text-gray-900 text-lg">聊聊你的心血管情况</h3>
+          <p class="text-xs text-gray-400 mt-1">用于医师风险分层与运动/营养处方，只有三师团队可见</p>
         </div>
 
         <div v-for="q in [
-            { key: 'hasChronic', detailKey: 'chronicDetails', label: '有慢性疾病或病史吗？', placeholder: '请填写疾病名称，如：高血压、糖尿病' },
+            { key: 'hasChronic', detailKey: 'chronicDetails', label: '有心脑血管疾病或相关病史吗？', placeholder: '如：高血压 3 级、冠心病、脑梗、颈动脉斑块' },
             { key: 'hasSpecialDiet', detailKey: 'specialDietDetails', label: '平时有特殊饮食要求吗？', placeholder: '请说明特殊饮食内容，如：素食、低盐' },
             { key: 'hasFoodAllergy', detailKey: 'foodAllergyDetails', label: '有食物过敏吗？', placeholder: '请列出过敏食物，如：海鲜、花生' },
           ]" :key="q.key" class="space-y-2.5">
@@ -430,6 +433,29 @@ function onTimePickerConfirm({ selectedValues }: { selectedValues: string[] }) {
               @input="(formData as any)[q.detailKey] = ($event.target as HTMLInputElement).value; error = ''"
             />
           </transition>
+        </div>
+
+        <div class="space-y-2.5">
+          <label class="text-sm font-medium text-gray-700 block">正在服用的药物 <span class="text-red-500">*</span></label>
+          <input
+            type="text"
+            placeholder="如：氨氯地平 5mg 每日1次；阿托伐他汀 20mg 每晚1次；无则填“无”"
+            class="w-full rounded-xl border border-gray-200 p-3.5 focus:border-[#1F6A95] focus:outline-none focus:ring-2 focus:ring-[#1F6A95]/10"
+            :value="formData.medications"
+            @input="formData.medications = ($event.target as HTMLInputElement).value; error = ''"
+          />
+        </div>
+
+        <div class="space-y-2.5">
+          <label class="text-sm font-medium text-gray-700 block">近 3 个月是否有以下症状</label>
+          <div class="flex flex-wrap gap-2">
+            <button v-for="s in ['胸闷/胸痛', '活动后气短', '头晕/黑矇', '心悸', '下肢水肿', '无上述症状']" :key="s"
+              class="rounded-lg border px-2.5 py-1.5 text-[11px] font-semibold"
+              :class="formData.symptoms.includes(s) ? 'border-[#1F6A95]/40 bg-[#1F6A95]/5 text-[#1F6A95]' : 'border-gray-200 bg-white text-gray-500'"
+              @click="s === '无上述症状' ? (formData.symptoms = formData.symptoms.includes(s) ? [] : [s]) : (formData.symptoms = formData.symptoms.filter((x) => x !== '无上述症状').includes(s) ? formData.symptoms.filter((x) => x !== s) : [...formData.symptoms.filter((x) => x !== '无上述症状'), s])">
+              {{ s }}
+            </button>
+          </div>
         </div>
       </Card>
 

@@ -175,10 +175,10 @@ const exercisePoints = (record: ExerciseRecord): number => {
           <div class="text-sm text-gray-700">时长: {{ record.duration }} 分钟</div>
           <div v-if="record.duration < 40" class="text-[10px] text-gray-500 mt-1 bg-gray-50 p-1 rounded inline-block">未达40分钟，不计基础分</div>
           <div v-if="record.coachScore != null" class="text-[10px] text-[#1F6A95] mt-1 bg-[#1F6A95]/5 p-1 rounded inline-block ml-1">
-            教练评分: +{{ record.coachScore }} 加成
+            运动师评分: +{{ record.coachScore }} 加成
           </div>
           <div v-if="record.coachComment" class="mt-3 bg-gray-50 p-2 rounded text-xs text-gray-600">
-            <span class="font-bold text-[#1F6A95] mr-1">{{ record.coachName || '教练' }}批注:</span>
+            <span class="font-bold text-[#1F6A95] mr-1">{{ record.coachName || '运动师' }}批注:</span>
             {{ record.coachComment }}
           </div>
         </Card>

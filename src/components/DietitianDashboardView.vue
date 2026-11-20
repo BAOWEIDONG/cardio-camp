@@ -179,9 +179,10 @@ const maskPhone = (phone: string) => phone.replace(/(\d{3})\d{4}(\d{4})/, '$1***
           <ChevronDown class="w-4 h-4 text-gray-400" />
         </button>
         <span class="text-xs text-gray-400">{{ campStudents.length }} 名学员</span>
+        <button class="ml-auto rounded-full bg-white/70 px-3 py-1.5 text-[10px] font-bold text-[#1F6A95]" @click="store.setCurrentView('care-chat')">在线沟通</button>
         <button
           @click="store.setCurrentView('ranking')"
-          class="ml-auto text-xs font-medium text-[#E8674F] active:opacity-70"
+          class="text-xs font-medium text-[#E8674F] active:opacity-70"
         >
           总排名 ›
         </button>
@@ -236,7 +237,7 @@ const maskPhone = (phone: string) => phone.replace(/(\d{3})\d{4}(\d{4})/, '$1***
           </div>
           <div class="flex-1 min-w-0">
             <div class="text-sm font-bold text-gray-900">运营总览</div>
-            <div class="text-[10px] text-gray-500">营养师/教练批注情况与完成率</div>
+            <div class="text-[10px] text-gray-500">营养师/运动师批注情况与完成率</div>
           </div>
           <ChevronRight class="w-4 h-4 text-gray-400" />
         </div>

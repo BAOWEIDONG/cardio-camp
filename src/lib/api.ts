@@ -86,7 +86,7 @@ export async function login(phone: string, code: string, role: User['role']): Pr
     return {
       id: role === 'student' ? 's1' : `usr_${Date.now()}`,
       role,
-      name: role === 'student' ? '李明' : role === 'coach' ? '李教练' : '王营养师',
+      name: role === 'student' ? '李明' : role === 'coach' ? '李运动师' : '王营养师',
       phone,
     };
   }
@@ -247,10 +247,10 @@ export async function updateWeightRecord(id: string, updates: Partial<WeightReco
   });
 }
 
-// ============ 教练活动（图文/视频） ============
+// ============ 运动师活动（图文/视频） ============
 
 /**
- * 获取教练发布的活动列表
+ * 获取运动师发布的活动列表
  * GET /coach-activities
  *
  * @returns CoachActivityRecord[] — 按 date 降序
@@ -261,7 +261,7 @@ export async function getCoachActivities(): Promise<CoachActivityRecord[]> {
 }
 
 /**
- * 创建教练活动（教练端发布图文/视频）
+ * 创建运动师活动（运动师端发布图文/视频）
  * POST /coach-activities
  *
  * @body  CoachActivityRecord
@@ -276,7 +276,7 @@ export async function createCoachActivity(record: CoachActivityRecord): Promise<
 }
 
 /**
- * 编辑教练活动（教练端修改已发布的历史活动）
+ * 编辑运动师活动（运动师端修改已发布的历史活动）
  * PUT /coach-activities/:id
  *
  * @body  Partial<CoachActivityRecord> — 仅包含需要更新的字段
@@ -294,7 +294,7 @@ export async function updateCoachActivity(id: string, updates: Partial<CoachActi
 }
 
 /**
- * 删除教练活动（教练端删除已发布的历史活动）
+ * 删除运动师活动（运动师端删除已发布的历史活动）
  * DELETE /coach-activities/:id
  *
  * @returns { success: boolean }

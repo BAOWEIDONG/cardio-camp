@@ -118,7 +118,7 @@ const openStudent = (id: string) => {
   store.setCurrentView('coach-student-detail');
 };
 
-// ─── 教练活动编辑/删除 ───
+// ─── 运动师活动编辑/删除 ───
 const editActivity = (activity: CoachActivityRecord) => {
   store.setEditingActivity(activity);
   store.setCurrentView('activity-upload');
@@ -158,7 +158,7 @@ const selectCamp = (campId: string | null) => {
           <UserCircle class="h-7 w-7 text-white" />
         </div>
         <div>
-          <h2 class="text-xl font-bold text-gray-900">教练您好，{{ store.user?.name || '教练' }}</h2>
+          <h2 class="text-xl font-bold text-gray-900">运动师您好，{{ store.user?.name || '运动师' }}</h2>
           <p class="text-xs font-bold text-[#1F6A95] uppercase tracking-wider mt-1">您当前负责 {{ campStudents.length }} 名学员</p>
         </div>
       </div>
@@ -175,6 +175,7 @@ const selectCamp = (campId: string | null) => {
           <ChevronDown class="w-4 h-4 text-gray-400" />
         </button>
         <span class="text-xs text-gray-400">{{ campStudents.length }} 名学员</span>
+        <button class="ml-auto rounded-full bg-white/70 px-3 py-1.5 text-[10px] font-bold text-[#1F6A95]" @click="store.setCurrentView('care-chat')">在线沟通</button>
       </div>
 
       <!-- Tab 切换 -->
