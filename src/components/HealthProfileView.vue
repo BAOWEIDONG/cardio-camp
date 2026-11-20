@@ -4,7 +4,7 @@ import { useAppStore, questionnaireStorageKey } from '../store/app';
 import { uploadFile } from '../lib/api';
 import { compressImage } from '../lib/imageCompress';
 import { NavBar, Card, StudentTabbar } from './ui';
-import { Activity, FileText, ClipboardList, Stethoscope, UploadCloud, X, Pencil, ChevronRight, ChevronDown } from 'lucide-vue-next';
+import { Activity, FileText, ClipboardList, Stethoscope, UploadCloud, X, Pencil, ChevronRight, ChevronDown, Check, ShieldCheck, Info } from 'lucide-vue-next';
 import { Popup as VanPopup, TimePicker as VanTimePicker } from 'vant';
 import { buildMedicalData } from '../lib/medicalData';
 import { MOCK_METRIC_VALUES, metricValuesFor } from '../mock/data';
@@ -38,6 +38,17 @@ const toggleCat = (title: string) => {
 const qData = ref<any>(null);
 const showUploadModal = ref(false);
 const pendingReports = ref<{ url: string; type: 'image' | 'pdf'; name?: string }[]>([]);
+const REQUIRED_MATERIALS = [
+  { name: '空腹抽血化验单', keyword: '抽血', desc: '血脂四项、血糖、肝肾功能' },
+  { name: '心电图 / 动态心电', keyword: '心电图', desc: '12 导联或 24–72 小时 Holter' },
+  { name: '颈动脉超声', keyword: '颈动脉', desc: 'IMT 厚度与斑块描述' },
+  { name: '疾病确诊病历', keyword: '病历', desc: '出院小结 / 门诊病历' },
+];
+const materialItems = computed(() => REQUIRED_MATERIALS.map((m) => {
+  const reports = qData.value?.medicalReports || [];
+  const hit = reports.find((r: any) => (r.name || '').includes(m.keyword));
+  return { ...m, uploaded: !!hit, fileName: hit?.name || '' };
+}));
 const uploadInputRef = ref<HTMLInputElement | null>(null);
 
 // 编辑状态
@@ -532,6 +543,35 @@ function onTimePickerConfirm({ selectedValues }: { selectedValues: string[] }) {
             </div>
           </div>
         </div>
+      </Card>
+
+      <!-- 心脑血管入营材料清单 -->
+      <Card>
+        <div class="flex items-center justify-between border-b pb-2 mb-3">
+          <h3 class="font-bold text-gray-900 flex items-center gap-2">
+            <ShieldCheck class="h-4 w-4 text-[#1F6A95]" />
+            心脑血管入营材料
+          </h3>
+          <span class="text-[10px] font-bold" :class="materialItems.every((m) => m.uploaded) ? 'text-[#1F6A95]' : 'text-orange-500'">
+            {{ materialItems.filter((m) => m.uploaded).length }}/{{ materialItems.length }} 已上传
+          </span>
+        </div>
+        <div class="space-y-1.5">
+          <div v-for="m in materialItems" :key="m.name" class="flex items-center gap-2 rounded-xl bg-gray-50 px-2.5 py-2">
+            <span class="flex h-7 w-7 items-center justify-center rounded-lg" :class="m.uploaded ? 'bg-[#1F6A95]/10 text-[#1F6A95]' : 'bg-orange-50 text-orange-500'">
+              <Check v-if="m.uploaded" class="h-3.5 w-3.5" /><FileText v-else class="h-3.5 w-3.5" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="text-[10.5px] font-bold text-gray-900">{{ m.name }}</div>
+              <div class="text-[8.5px] text-gray-400 truncate">{{ m.uploaded ? m.fileName : m.desc }}</div>
+            </div>
+            <span class="rounded-full px-2 py-0.5 text-[8px] font-bold" :class="m.uploaded ? 'bg-[#1F6A95]/10 text-[#1F6A95]' : 'bg-orange-50 text-orange-500'">{{ m.uploaded ? '已上传' : '待补充' }}</span>
+          </div>
+        </div>
+        <div class="mt-2 flex items-center gap-1.5 rounded-xl bg-[#fbf6e9] px-2.5 py-2 text-[8.5px] leading-relaxed text-[#8a641f]">
+          <Info class="h-3 w-3 shrink-0" /> 需开营前 30 天内的三甲医院报告；确诊人群请附出院小结或门诊病历。补充材料后医师会重新审核。
+        </div>
+        <button class="mt-2 w-full rounded-xl border border-[#1F6A95]/20 py-2 text-[10px] font-bold text-[#1F6A95]" @click="showUploadModal = true">补充 / 替换材料</button>
       </Card>
 
       <Card v-if="qData?.medicalReports && qData.medicalReports.length > 0">

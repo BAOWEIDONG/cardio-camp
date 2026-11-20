@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { showToast } from 'vant';
-import { Activity, CalendarClock, ChevronLeft, HeartPulse, MessageCircle, Pill, Plus, Stethoscope, TrendingDown } from 'lucide-vue-next';
+import { Activity, CalendarClock, ChevronLeft, HeartPulse, MessageCircle, Pill, Plus, Stethoscope, TrendingDown, FileText, ShieldCheck } from 'lucide-vue-next';
 import { useAppStore } from '../store/app';
 import { Button, Card, Input, NavBar } from './ui';
 import { metricValuesFor } from '../mock/data';
@@ -12,6 +12,15 @@ const tab = ref<'overview' | 'bp' | 'med' | 'followup'>('overview');
 const student = computed(() => store.students.find((s) => s.id === store.selectedStudentId) || store.students[0]);
 const campId = computed(() => store.selectedCampId || 'camp1');
 const bpRecords = computed(() => store.getStudentBpRecords(student.value.id, campId.value).slice().reverse());
+const groupedBp = computed(() => {
+  const map: Record<string, any[]> = {};
+  bpRecords.value.slice(0, 20).forEach((r) => { (map[r.date.slice(0, 10)] ||= []).push(r); });
+  return Object.entries(map).sort((a, b) => b[0].localeCompare(a[0])).map(([date, rows]) => ({
+    date, rows,
+    avgSbp: Math.round(rows.reduce((n, r) => n + r.sbp, 0) / rows.length),
+    avgDbp: Math.round(rows.reduce((n, r) => n + r.dbp, 0) / rows.length),
+  }));
+});
 const latest = computed(() => store.latestBpFor(student.value.id, campId.value));
 const med = computed(() => store.getMedication(student.value.id));
 const fus = computed(() => store.getDoctorFollowups(student.value.id));
@@ -81,6 +90,16 @@ function saveComment() {
       </div>
 
       <div v-if="tab === 'overview'" class="space-y-3">
+        <Card class="border-0 shadow-sm p-3.5">
+          <div class="flex items-center gap-2">
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1F6A95]/10 text-[#1F6A95]"><FileText class="h-4 w-4" /></span>
+            <div class="min-w-0 flex-1">
+              <div class="text-[10.5px] font-bold text-gray-900">入营材料 · 4/4 已上传</div>
+              <div class="text-[8.5px] text-gray-400">空腹抽血 / 心电图 / 颈动脉超声 / 确诊病历</div>
+            </div>
+            <span class="flex items-center gap-1 rounded-full bg-[#1F6A95]/10 px-2 py-0.5 text-[8px] font-bold text-[#1F6A95]"><ShieldCheck class="h-2.5 w-2.5" /> 已审核</span>
+          </div>
+        </Card>
         <Card class="border-0 shadow-sm p-4">
           <div class="flex items-center justify-between">
             <div>
@@ -113,19 +132,22 @@ function saveComment() {
       </div>
 
       <div v-else-if="tab === 'bp'" class="space-y-2">
-        <Card v-for="r in bpRecords.slice(0, 12)" :key="r.id" class="border-0 shadow-sm p-3.5">
-          <div class="flex items-center gap-2">
-            <span class="flex h-8 w-8 items-center justify-center rounded-lg" :class="r.period === 'morning' ? 'bg-[#1F6A95]/10 text-[#1F6A95]' : 'bg-[#E8674F]/10 text-[#E8674F]'"><HeartPulse class="h-4 w-4" /></span>
-            <div class="min-w-0 flex-1">
-              <div class="text-[10.5px] font-bold text-gray-900">{{ r.date.slice(5, 16) }} · {{ r.period === 'morning' ? '晨起' : '睡前' }}</div>
-              <div class="text-[8.5px] text-gray-400">{{ r.takenMed ? '已服药' : '未服药' }} · 心率 {{ r.hr }}</div>
-            </div>
-            <span class="text-[15px] font-black" :class="r.sbp >= 140 ? 'text-[#E8674F]' : 'text-gray-900'">{{ r.sbp }}/{{ r.dbp }}</span>
-            <button class="rounded-full bg-[#1F6A95]/10 px-2 py-1 text-[8px] font-bold text-[#1F6A95]" @click="openComment(r.id)">意见</button>
+        <Card v-for="d in groupedBp" :key="d.date" class="border-0 shadow-sm p-3.5">
+          <div class="flex items-center justify-between border-b border-gray-50 pb-2">
+            <div class="text-[10.5px] font-bold text-gray-900">{{ d.date.slice(5) }} <span class="text-[8px] font-normal text-gray-400">· {{ d.rows.length }} 次</span></div>
+            <div class="text-[14px] font-black" :class="d.avgSbp >= 140 ? 'text-[#E8674F]' : 'text-gray-900'">{{ d.avgSbp }}/{{ d.avgDbp }}<span class="ml-0.5 text-[8px] font-normal text-gray-400">日均</span></div>
           </div>
-          <div v-for="c in r.comments" :key="c.id" class="mt-2 rounded-lg bg-[#1F6A95]/5 px-2.5 py-2">
-            <div class="text-[8.5px] font-bold text-[#1F6A95]">{{ c.name }} 医师</div>
-            <div class="text-[9.5px] text-gray-700 mt-0.5 leading-relaxed">{{ c.text }}</div>
+          <div v-for="r in d.rows" :key="r.id" class="mt-1.5 rounded-lg bg-gray-50 px-2.5 py-2">
+            <div class="flex items-center gap-2">
+              <span class="text-[8.5px] font-bold" :class="r.period === 'morning' ? 'text-[#1F6A95]' : 'text-[#E8674F]'">{{ r.period === 'morning' ? '晨起' : '睡前' }}</span>
+              <span class="text-[8.5px] text-gray-400">{{ r.date.slice(11, 16) }} · HR {{ r.hr }}</span>
+              <span class="ml-auto text-[12px] font-bold" :class="r.sbp >= 140 ? 'text-[#E8674F]' : 'text-gray-900'">{{ r.sbp }}/{{ r.dbp }}</span>
+              <button class="rounded-full bg-[#1F6A95]/10 px-2 py-1 text-[8px] font-bold text-[#1F6A95]" @click="openComment(r.id)">意见</button>
+            </div>
+            <div v-for="c in r.comments" :key="c.id" class="mt-1.5 rounded-lg bg-[#1F6A95]/5 px-2 py-1.5">
+              <div class="text-[8.5px] font-bold text-[#1F6A95]">{{ c.name }} 医师</div>
+              <div class="text-[9.5px] text-gray-700 mt-0.5 leading-relaxed">{{ c.text }}</div>
+            </div>
           </div>
         </Card>
       </div>

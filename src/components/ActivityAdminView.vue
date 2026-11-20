@@ -14,8 +14,8 @@ const { unannotatedCount, fulfillmentPendingCount } = useDietitianCounts();
 
 /**
  * 活动配置（营养师端）
- * 仅保留两个活动开关：积分商城 + 连续打卡奖励。
- * 关闭后学员端即时隐藏对应模块，已发放奖励与已累计积分不受影响。
+ * 仅保留两个活动开关：小红花商城 + 连续打卡奖励。
+ * 关闭后学员端即时隐藏对应模块，已发放奖励与已累计小红花不受影响。
  */
 // ─── 营期切换（默认最新营期） ───
 const selectedCampId = ref<string>(latestOrFirstId(store.camps) || '');
@@ -73,13 +73,13 @@ function onCampPick(id: string) {
         </h3>
         <p class="text-[10px] text-gray-400">关闭后学员端将隐藏对应活动模块</p>
 
-        <!-- 积分商城 -->
+        <!-- 小红花商城 -->
         <div class="flex items-center justify-between py-2 border-t border-gray-50">
           <div class="flex items-center gap-2">
             <Coins class="h-4 w-4 text-[#FF6B35]" />
             <div>
-              <div class="text-sm font-bold text-gray-900">积分商城</div>
-              <div class="text-[10px] text-gray-400">学员用排行榜积分兑换商品</div>
+              <div class="text-sm font-bold text-gray-900">小红花商城</div>
+              <div class="text-[10px] text-gray-400">学员用排行榜小红花兑换商品</div>
             </div>
           </div>
           <VanSwitch :model-value="cfg.pointsMall" @update:model-value="updateActivityConfigSafe('pointsMall', $event)" size="22" />
@@ -100,7 +100,7 @@ function onCampPick(id: string) {
 
       <!-- 说明 -->
       <div class="text-center py-3">
-        <p class="text-[10px] text-gray-300">积分商城与连续打卡奖励的开关独立配置 · 关闭后学员端即时隐藏对应模块，已发放奖励 / 已累计积分不受影响</p>
+        <p class="text-[10px] text-gray-300">小红花商城与连续打卡奖励的开关独立配置 · 关闭后学员端即时隐藏对应模块，已发放奖励 / 已累计小红花不受影响</p>
       </div>
     </div>
 

@@ -41,7 +41,7 @@ const formError = ref('');
 
 function openExchange(product: PointProduct) {
   if (availablePoints.value < product.pointsRequired) {
-    showFailToast('积分不足');
+    showFailToast('小红花不足');
     return;
   }
   if (product.stock <= 0) {
@@ -64,7 +64,7 @@ function openExchange(product: PointProduct) {
 
 function confirmExchange() {
   if (!selectedProduct.value || !store.user) return;
-  if (submitting.value) return; // 防连点重复提交（重复兑换/重复扣库存/重复扣积分）
+  if (submitting.value) return; // 防连点重复提交（重复兑换/重复扣库存/重复扣小红花）
   formError.value = '';
 
   // 邮寄需校验收货信息
@@ -109,10 +109,10 @@ const unreadCount = computed(() =>
 <template>
   <div class="flex min-h-full flex-col font-sans relative bg-[#F7F8FA]">
     <!-- NavBar -->
-    <VanNavBar left-arrow @click-left="store.setCurrentView('activity-hub')" title="积分商城" :border="false"
+    <VanNavBar left-arrow @click-left="store.setCurrentView('activity-hub')" title="小红花商城" :border="false"
       class="!bg-transparent !pt-[env(safe-area-inset-top)]" />
 
-    <!-- 积分卡片 -->
+    <!-- 小红花卡片 -->
     <div class="px-5 pt-2">
       <div class="relative rounded-3xl overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-br from-[#E8674F] via-[#FF6B35] to-[#F59E0B]"></div>
@@ -122,7 +122,7 @@ const unreadCount = computed(() =>
         <div class="relative z-10 p-5">
           <div class="flex items-center gap-2 mb-3">
             <Coins class="w-4 h-4 text-white/80" />
-            <span class="text-xs text-white/80 font-medium">我的积分</span>
+            <span class="text-xs text-white/80 font-medium">我的小红花</span>
           </div>
 
           <div class="flex items-end gap-2 mb-2">
@@ -131,21 +131,21 @@ const unreadCount = computed(() =>
           </div>
 
           <div class="flex items-center gap-3">
-            <span class="text-[11px] text-white/70">累计获得 {{ totalEarned }} 积分</span>
+            <span class="text-[11px] text-white/70">累计获得 {{ totalEarned }} 小红花</span>
             <span class="text-[11px] text-white/50">·</span>
             <span class="text-[11px] text-white/70">打卡自动累积，不可转让</span>
           </div>
         </div>
       </div>
 
-      <!-- 积分规则提示 -->
+      <!-- 小红花规则提示 -->
       <div class="mt-3 flex items-start gap-2 bg-white rounded-2xl p-3 border border-gray-100">
         <div class="w-7 h-7 rounded-lg bg-[#FFF4ED] flex items-center justify-center shrink-0 mt-0.5">
           <Coins class="w-3.5 h-3.5 text-[#E8674F]" />
         </div>
         <div class="text-[11px] text-gray-500 leading-relaxed">
-          <span class="font-bold text-gray-700">积分规则：</span>
-          与排行榜积分规则一致--饮食每日按营养师评分累计（上限6分/天），运动≥40分钟记1分+营养师评分加分。兑换不影响排名成绩。
+          <span class="font-bold text-gray-700">小红花规则：</span>
+          与排行榜小红花规则一致--饮食每日按营养师评分累计（上限6分/天），运动≥40分钟记1分+营养师评分加分。兑换不影响排名成绩。
         </div>
       </div>
     </div>
@@ -198,7 +198,7 @@ const unreadCount = computed(() =>
               <div class="flex items-baseline gap-1">
                 <Coins class="w-3.5 h-3.5 text-[#E8674F]" />
                 <span class="text-base font-black text-[#FF6B35]">{{ product.pointsRequired }}</span>
-                <span class="text-[9px] text-gray-400">积分</span>
+                <span class="text-[9px] text-gray-400">小红花</span>
               </div>
               <button
                 :disabled="product.stock === 0 || availablePoints < product.pointsRequired || isLimitReached(product)"
@@ -213,7 +213,7 @@ const unreadCount = computed(() =>
                         : 'bg-[#FF6B35] text-white active:bg-[#E55A2B]'
                 ]"
               >
-                {{ product.stock === 0 ? '已兑完' : isLimitReached(product) ? '已兑满' : availablePoints < product.pointsRequired ? '积分不足' : '兑换' }}
+                {{ product.stock === 0 ? '已兑完' : isLimitReached(product) ? '已兑满' : availablePoints < product.pointsRequired ? '小红花不足' : '兑换' }}
               </button>
             </div>
           </div>
@@ -240,14 +240,14 @@ const unreadCount = computed(() =>
               <h3 class="text-base font-black text-gray-900">{{ selectedProduct.name }}</h3>
               <p class="text-xs text-gray-500 mt-1 leading-relaxed">{{ selectedProduct.description }}</p>
 
-              <!-- 积分明细 -->
+              <!-- 小红花明细 -->
               <div class="mt-3 bg-[#FFF8F4] rounded-2xl p-3 space-y-2">
                 <div class="flex items-center justify-between">
-                  <span class="text-xs text-gray-500">兑换积分</span>
+                  <span class="text-xs text-gray-500">兑换小红花</span>
                   <span class="text-sm font-black text-[#FF6B35]">{{ selectedProduct.pointsRequired }} 分</span>
                 </div>
                 <div class="flex items-center justify-between">
-                  <span class="text-xs text-gray-500">当前积分</span>
+                  <span class="text-xs text-gray-500">当前小红花</span>
                   <span class="text-sm font-bold text-gray-700">{{ availablePoints }} 分</span>
                 </div>
                 <div class="border-t border-[#E8674F]/15 pt-2 flex items-center justify-between">

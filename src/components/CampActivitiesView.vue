@@ -269,7 +269,7 @@ const activityTypeLabel = (type?: string) => {
           </div>
           <h2 class="text-lg font-black text-gray-900 mb-0.5">达标赢好礼</h2>
           <p class="text-xs text-gray-500 leading-relaxed">
-            完成挑战赢奖励，与积分排名互不影响，人人都能参与！
+            完成挑战赢奖励，与小红花排名互不影响，人人都能参与！
           </p>
         </div>
       </div>
@@ -529,7 +529,7 @@ const activityTypeLabel = (type?: string) => {
       </div>
 
       <div v-else class="text-center py-3">
-        <p class="text-[10px] text-gray-300">活动奖励与积分排名互不影响，人人可参与</p>
+        <p class="text-[10px] text-gray-300">活动奖励与小红花排名互不影响，人人可参与</p>
         <p class="text-[10px] text-gray-300 mt-0.5">具体奖品以企业/营养师通知为准</p>
       </div>
     </div>

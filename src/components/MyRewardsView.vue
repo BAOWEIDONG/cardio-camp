@@ -10,7 +10,7 @@ import { format } from 'date-fns';
 
 const store = useAppStore();
 
-// ─── Tab（去掉「活动奖励」，仅 全部/积分兑换/打卡奖励） ───
+// ─── Tab（去掉「活动奖励」，仅 全部/小红花兑换/打卡奖励） ───
 type Tab = 'all' | 'exchange' | 'reward';
 const activeTab = ref<Tab>('all');
 // 从消息中心发货通知等跳进来时，始终回到「全部」tab（即使 KeepAlive 缓存过旧 tab）
@@ -57,7 +57,7 @@ const campLongestStreak = computed(() => {
   );
 });
 
-// 积分兑换记录（按当前营期过滤，与打卡/活动奖励口径一致）
+// 小红花兑换记录（按当前营期过滤，与打卡/活动奖励口径一致）
 const exchanges = computed(() =>
   store.getStudentExchanges(studentId.value)
     .filter((e) => !activeCampId.value || !e.campId || e.campId === activeCampId.value),
@@ -184,7 +184,7 @@ const allRecords = computed<UnifiedRecord[]>(() => {
       ? { label: '待线下发放', color: '#E8674F', bg: '#FFF4ED' }
       : EXCHANGE_STATUS_MAP[e.status] || { label: e.status, color: '#969799', bg: '#F2F3F5' };
     list.push({
-      id: e.id, type: 'exchange', typeName: '积分兑换',
+      id: e.id, type: 'exchange', typeName: '小红花兑换',
       productName: e.productName, productImage: e.productImage,
       date: e.exchangeDate, status: e.status,
       statusLabel: s.label, statusColor: s.color, statusBg: s.bg,
@@ -289,10 +289,10 @@ function confirmCancel() {
   store.cancelExchange(raw.id, store.user?.role === 'dietitian' ? store.user.name : store.user?.name || '学员');
   showCancelModal.value = false;
   cancelTarget.value = null;
-  showSuccessToast('已取消兑换，积分已返还');
+  showSuccessToast('已取消兑换，小红花已返还');
 }
 
-// ─── 修改收货地址（积分兑换·待发货·邮寄方式） ───
+// ─── 修改收货地址（小红花兑换·待发货·邮寄方式） ───
 const showEditAddress = ref(false);
 const editTarget = ref<UnifiedRecord | null>(null);
 const editAddressForm = ref({ name: '', phone: '', address: '' });
@@ -356,7 +356,7 @@ const unreadCount = computed(() =>
         <button
           v-for="t in [
             { key: 'all', label: '全部', count: tabCounts.all },
-            { key: 'exchange', label: '积分兑换', count: tabCounts.exchange },
+            { key: 'exchange', label: '小红花兑换', count: tabCounts.exchange },
             { key: 'reward', label: '打卡奖励', count: tabCounts.reward },
           ]"
           :key="t.key"
@@ -405,7 +405,7 @@ const unreadCount = computed(() =>
                 </span>
               </div>
 
-              <!-- 来源标签 + 积分/日期 -->
+              <!-- 来源标签 + 小红花/日期 -->
               <div class="flex items-center gap-2 mt-1 flex-wrap">
                 <span :class="['text-[9px] font-bold px-1.5 py-0.5 rounded-full',
                   record.type === 'exchange' ? 'bg-[#FFF4ED] text-[#FF6B35]' :
@@ -417,7 +417,7 @@ const unreadCount = computed(() =>
                   <Coins class="w-3 h-3 text-[#E8674F]" />
                   <span class="font-bold text-[#FF6B35]">-{{ record.pointsSpent }}</span>
                 </span>
-                <!-- 已取消则积分已返还，不再显示红字扣分（弹窗明示已返还） -->
+                <!-- 已取消则小红花已返还，不再显示红字扣分（弹窗明示已返还） -->
                 <span v-else-if="record.pointsSpent && record.status === 'cancelled'" class="flex items-center gap-0.5 text-[10px] text-gray-400">
                   <Coins class="w-3 h-3 text-[#1F6A95]" />
                   <span class="font-bold text-[#1F6A95]">+{{ record.pointsSpent }} 已返还</span>
@@ -458,7 +458,7 @@ const unreadCount = computed(() =>
                 </button>
               </div>
 
-              <!-- 取消/改地址按钮（仅积分兑换+待发货状态） -->
+              <!-- 取消/改地址按钮（仅小红花兑换+待发货状态） -->
               <div v-if="record.type === 'exchange' && record.status === 'pending'" class="mt-2 flex items-center gap-2">
                 <button
                   class="text-[11px] font-bold text-gray-500 bg-gray-100 px-3 py-1.5 rounded-full active:scale-95 transition-transform"
@@ -502,7 +502,7 @@ const unreadCount = computed(() =>
               <h3 class="text-base font-black text-gray-900">确认取消兑换？</h3>
               <p class="text-xs text-gray-500 mt-2 leading-relaxed">
                 取消后将在记录中显示为"已取消"，<br>
-                消耗的 <span class="font-bold text-[#FF6B35]">{{ cancelTarget.pointsSpent }} 积分</span> 将自动返还。
+                消耗的 <span class="font-bold text-[#FF6B35]">{{ cancelTarget.pointsSpent }} 小红花</span> 将自动返还。
               </p>
               <div class="mt-3 bg-gray-50 rounded-xl p-2.5 flex items-center gap-2 text-left">
                 <div class="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 shrink-0">
@@ -533,7 +533,7 @@ const unreadCount = computed(() =>
       </Transition>
     </Teleport>
 
-    <!-- 修改收货地址弹窗（积分兑换·待发货·邮寄） -->
+    <!-- 修改收货地址弹窗（小红花兑换·待发货·邮寄） -->
     <Teleport to="body">
       <Transition name="fade">
         <div v-if="showEditAddress" class="fixed inset-0 z-[999] bg-black/40 flex items-center justify-center p-6" @click="showEditAddress = false">

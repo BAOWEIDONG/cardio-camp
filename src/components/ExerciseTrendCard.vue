@@ -26,7 +26,7 @@ const avgDuration = computed(() => (totalCount.value > 0 ? Math.round(totalDurat
         <span class="text-[10px] text-gray-400">单位：分钟</span>
         <ChartRulePopup title="运动趋势计算规则">
           <p><span class="font-bold text-gray-900">每日总时长：</span>该日所有运动记录的时长之和（分钟），同日多次分别相加。</p>
-          <p><span class="font-bold text-gray-900">达标（≥40min）：</span>单次时长≥40 分钟的记录数。与积分规则一致。</p>
+          <p><span class="font-bold text-gray-900">达标（≥40min）：</span>单次时长≥40 分钟的记录数。与小红花规则一致。</p>
           <p><span class="font-bold text-gray-900">交互：</span>点击柱形看当天记录；图上左右滑动切换前一天/后一天。</p>
         </ChartRulePopup>
       </div>

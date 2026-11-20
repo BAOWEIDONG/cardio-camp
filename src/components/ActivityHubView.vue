@@ -84,16 +84,16 @@ const prizePool = computed<PrizePoolItem[]>(() => {
       });
     }
   }
-  // 积分商城商品：受 pointsMall 开关控制
+  // 小红花商城商品：受 pointsMall 开关控制
   if (cfg.pointsMall) {
     for (const p of store.getPointProducts(activeCampId.value)) {
       if (p.stock <= 0 || !p.active) continue;
       items.push({
         id: p.id, name: p.name, imageUrl: p.imageUrl,
-        tag: `${p.pointsRequired}积分`,
+        tag: `${p.pointsRequired}小红花`,
         tagColor: '#FF6B35', category: 'mall',
         description: p.description || '',
-        obtain: `使用 ${p.pointsRequired} 积分在积分商城兑换`,
+        obtain: `使用 ${p.pointsRequired} 小红花在小红花商城兑换`,
         stock: p.stock,
       });
     }
@@ -114,7 +114,7 @@ function openPrizeDetail(prize: PrizePoolItem) {
 }
 const prizeCtaLabel = computed(() => {
   if (!selectedPrize.value) return '去获取';
-  return selectedPrize.value.category === 'mall' ? '去积分商城兑换' : '查看我的奖励';
+  return selectedPrize.value.category === 'mall' ? '去小红花商城兑换' : '查看我的奖励';
 });
 function goGetPrize() {
   const cat = selectedPrize.value?.category;
@@ -254,7 +254,7 @@ const claimedCount = computed(() => {
   }).length;
 });
 
-// 积分商城摘要
+// 小红花商城摘要
 const mallPoints = computed(() => store.user ? store.getStudentMallPoints(store.user.id, activeCampId.value || undefined) : 0);
 const totalEarned = computed(() => store.user ? store.getStudentTotalEarnedPoints(store.user.id, activeCampId.value || undefined) : 0);
 const productCount = computed(() => store.getPointProducts(activeCampId.value).length);
@@ -272,8 +272,8 @@ const unreadCount = computed(() =>
     <div class="relative pt-[calc(env(safe-area-inset-top)+1.5rem)] px-5 pb-4 overflow-hidden">
       <div class="relative z-10 flex items-center justify-between">
         <div>
-          <h1 class="text-xl font-black text-gray-900 tracking-tight">活动奖励</h1>
-          <p class="text-[11px] text-gray-500 mt-1">坚持打卡，赢取丰厚奖励</p>
+          <h1 class="text-xl font-black text-gray-900 tracking-tight">活动中心</h1>
+          <p class="text-[11px] text-gray-500 mt-1">打卡赢小红花，兑换健康好礼</p>
         </div>
         <button
           class="flex items-center gap-1.5 bg-white/80 backdrop-blur-sm border border-gray-100 px-3 py-2 rounded-full shadow-sm active:scale-95 transition-transform"
@@ -346,7 +346,7 @@ const unreadCount = computed(() =>
         </div>
       </div>
 
-      <!-- 积分商城（需营养师开启） -->
+      <!-- 小红花商城（需营养师开启） -->
       <div
         v-if="showMall"
         class="relative rounded-3xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
@@ -363,7 +363,7 @@ const unreadCount = computed(() =>
                 <Coins class="w-5 h-5 text-white" />
               </div>
               <div>
-                <div class="text-base font-black text-white">积分商城</div>
+                <div class="text-base font-black text-white">小红花商城</div>
                 <div class="text-[11px] text-white/70">打卡累积，兑换好礼</div>
               </div>
             </div>
@@ -376,12 +376,14 @@ const unreadCount = computed(() =>
             <div class="flex flex-col gap-1">
               <div class="flex items-end gap-1.5">
                 <span class="text-[40px] leading-none font-black text-white tracking-tight">{{ mallPoints }}</span>
-                <span class="text-sm text-white/80 font-medium mb-1.5">可用积分</span>
+                <span class="text-sm text-white/80 font-medium mb-1.5">可用小红花</span>
               </div>
               <div class="flex items-center gap-2 text-[10px] text-white/60">
                 <span>累计 {{ totalEarned }}</span>
                 <span>·</span>
                 <span>{{ productCount }} 件可兑</span>
+                <span>·</span>
+                <span>1 朵 = 1 元</span>
               </div>
             </div>
             <div class="flex items-center gap-1.5">
@@ -452,7 +454,7 @@ const unreadCount = computed(() =>
       <!-- 免责声明 -->
       <div class="pt-2 pb-1">
         <p class="text-[10px] text-gray-400 leading-relaxed text-center px-2">
-          本平台所列活动奖品及积分商城商品均为第三方采购的赠品，非平台自有产品。如遇质量问题、售后维修等事宜，请直接联系商品生产厂家或品牌方处理，平台仅提供积分兑换及活动赠礼服务，不承担商品质量担保责任。
+          本平台所列活动奖品及小红花商城商品均为第三方采购的赠品，非平台自有产品。如遇质量问题、售后维修等事宜，请直接联系商品生产厂家或品牌方处理，平台仅提供小红花兑换及活动赠礼服务，不承担商品质量担保责任。
         </p>
       </div>
     </div>
@@ -479,7 +481,7 @@ const unreadCount = computed(() =>
             <Sparkles class="w-3.5 h-3.5" /> 获取途径
           </div>
           <p class="text-sm text-gray-800 leading-relaxed">{{ selectedPrize.obtain }}</p>
-          <p v-if="selectedPrize.category === 'mall'" class="text-[10px] text-gray-400 mt-1.5">积分来自饮食、运动、体重打卡与营养师奖励；兑换后可在「我的奖励」查看物流。</p>
+          <p v-if="selectedPrize.category === 'mall'" class="text-[10px] text-gray-400 mt-1.5">小红花来自饮食、运动、体重打卡与营养师奖励；兑换后可在「我的奖励」查看物流。</p>
           <p v-else class="text-[10px] text-gray-400 mt-1.5">达成条件后到「我的奖励」领取，支持邮寄或线下发放。</p>
         </div>
 

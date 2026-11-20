@@ -97,7 +97,7 @@ export interface ExerciseTrend {
   totalDuration: number;
   /** 该周运动次数 */
   count: number;
-  /** 单次 ≥40 分钟的次数（企业积分规则中的有效运动） */
+  /** 单次 ≥40 分钟的次数（企业小红花规则中的有效运动） */
   qualifiedCount: number;
   /** 平均强度（RPE 1-5），无记录为 null */
   avgIntensity: number | null;
@@ -562,7 +562,7 @@ export function computeDietScoreTrends(
  *    1. totalDuration = 该周所有运动记录的 duration 之和（分钟）
  *    2. count = 该周运动记录条数（同一天多次运动分别计数）
  *    3. qualifiedCount = 单次 duration ≥ 40 分钟的记录数
- *       - 与企业积分规则一致（每日完成单次40分钟以上运动即可计分），
+ *       - 与企业小红花规则一致（每日完成单次40分钟以上运动即可计分），
  *         学员可将此理解为"有效运动次数"
  *    4. avgIntensity = 该周记录 intensity 的算术平均值（RPE 1-5）
  *       - 无记录时为 null，前端显示 "--"

@@ -1,21 +1,21 @@
 /**
  * ============================================================================
- *  积分计算 & 学员排名 - 业务规则
+ *  小红花计算 & 学员排名 - 业务规则
  * ============================================================================
  *
- *  饮食积分 (dietScore):
+ *  饮食小红花 (dietScore):
  *    - 按日聚合，每日所有餐次（早餐/午餐/晚餐/加餐）的 dietitianScore 求和
  *    - 每日上限 6 分: min(Σ餐分, 6)
  *    - dietitianScore 取值: 2(较好) / 1(尚可) / 0(偏离计划) / null(未批注=0分)
- *    - 营养师控分：未批注的记录不计积分（0分），须营养师点评后才计分
- *    - 总分 = 各日积分之和
+ *    - 营养师控分：未批注的记录不计小红花（0分），须营养师点评后才计分
+ *    - 总分 = 各日小红花之和
  *
- *  运动积分 (exerciseScore):
+ *  运动小红花 (exerciseScore):
  *    - 每条运动记录: duration >= 40 分钟记 1 分（基础分）
  *    - 教练评分直接加分: coachScore=2 再 +2 分，coachScore=1 再 +1 分
- *    - 总分 = Σ 各条记录积分
+ *    - 总分 = Σ 各条记录小红花
  *
- *  总积分 (totalScore):
+ *  总小红花 (totalScore):
  *    dietScore + exerciseScore
  *
  *  排名规则:
@@ -25,13 +25,13 @@
 import type { DietRecord, ExerciseRecord, ManualScoreRecord } from '../types';
 
 /**
- * 计算饮食积分
+ * 计算饮食小红花
  *
  * 公式:
  *   1. 按 date (yyyy-MM-dd) 分组，每日 Σ dietitianScore
- *   2. 每日积分 = min(Σ, 6)（封顶 6 分）
+ *   2. 每日小红花 = min(Σ, 6)（封顶 6 分）
  *   3. 未批注记录(dietitianScore=null/undefined)计 0 分，须营养师点评后才计分
- *   4. 总分 = Σ 各日积分
+ *   4. 总分 = Σ 各日小红花
  *
  * @param records 当前学员的饮食记录
  * @returns 饮食总分
@@ -54,7 +54,7 @@ export function calculateDietScore(records: DietRecord[]): number {
 }
 
 /**
- * 计算运动积分
+ * 计算运动小红花
  *
  * 公式:
  *   1. 每条记录 duration >= 40 分钟 -> 基础 1 分
@@ -85,14 +85,14 @@ export function calculateExerciseScore(records: ExerciseRecord[]): number {
  * 计算手动加减分总和
  *
  * @param records 手动加减分记录（已按学员过滤）
- * @returns 手动积分（正数=加分，负数=减分）
+ * @returns 手动小红花（正数=加分，负数=减分）
  */
 export function calculateManualScore(records: ManualScoreRecord[]): number {
   return records.reduce((sum, r) => sum + r.points, 0);
 }
 
 /**
- * 计算总积分 = 饮食积分 + 运动积分 + 手动积分
+ * 计算总小红花 = 饮食小红花 + 运动小红花 + 手动小红花
  */
 export function calculateTotalScore(
   dietRecords: DietRecord[],
@@ -116,9 +116,9 @@ export interface StudentScoreData {
 
 export interface RankedStudent extends StudentScoreData {
   rank: number;
-  /** 进步榜：本周积分 */
+  /** 进步榜：本周小红花 */
   thisWeek?: number;
-  /** 进步榜：上周积分 */
+  /** 进步榜：上周小红花 */
   lastWeek?: number;
   /** 进步榜：本周增长量 */
   growth?: number;
@@ -182,7 +182,7 @@ export function rankStudents(
  * 本周（自然周，周一至周日）排名
  *
  * 仅用于"周榜"展示切换：计分规则与总榜完全一致，
- * 只是把记录过滤到本周之后再调用同一套积分函数。
+ * 只是把记录过滤到本周之后再调用同一套小红花函数。
  */
 export function rankStudentsThisWeek(
   students: { id: string, name: string }[],

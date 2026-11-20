@@ -14,30 +14,8 @@ export default defineConfig(({ mode }) => {
     plugins: [
       vue(),
       tailwindcss(),
-      VitePWA({
-        registerType: 'autoUpdate',
-        manifest: {
-          name: '心脑血管防治营',
-          short_name: '心脑血管防治营',
-          description: '北大医疗国际医院 · 心脑血管防治营',
-          theme_color: '#1A577C',
-          background_color: '#F3F8FC',
-          display: 'standalone',
-          scope: base,
-          start_url: base,
-          icons: [
-            { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
-            { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
-            { src: 'icon-maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
-            { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-          ],
-        },
-        workbox: {
-          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-          navigateFallback: `${base}index.html`,
-          cleanupOutdatedCaches: true,
-        },
-      }),
+      // 演示环境不启用 PWA 缓存：避免微信里旧 Service Worker 继续命中旧版本导致页面打不开
+      VitePWA({ selfDestroying: true }),
     ],
     resolve: {
       alias: {

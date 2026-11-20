@@ -30,8 +30,8 @@ const allExchanges = computed(() =>
   [...store.pointExchanges].sort((a, b) => b.exchangeDate.localeCompare(a.exchangeDate))
 );
 
-// ─── 统一「兑换记录」：积分兑换 + 连续打卡奖励领取 ───
-// 每条记录带来源标签（积分兑换 / 连续打卡奖励）、营期名称及营期时间；
+// ─── 统一「兑换记录」：小红花兑换 + 连续打卡奖励领取 ───
+// 每条记录带来源标签（小红花兑换 / 连续打卡奖励）、营期名称及营期时间；
 // 排序：待发货优先，再按领取时间倒序；时间为年月日时分秒格式。
 interface ExchangeRecordItem {
   id: string;
@@ -48,9 +48,9 @@ interface ExchangeRecordItem {
   cancelledAt?: string;
   campId?: string;
   camp?: Camp;
-  /** 连续打卡奖励档位所需连续打卡天数（积分兑换无） */
+  /** 连续打卡奖励档位所需连续打卡天数（小红花兑换无） */
   requiredDays?: number;
-  /** 积分兑换操作审计（发货/线下核销/取消/下单），连续打卡奖励无 */
+  /** 小红花兑换操作审计（发货/线下核销/取消/下单），连续打卡奖励无 */
   audit?: ExchangeAuditEntry[];
 }
 const campOf = (campId?: string): Camp | undefined =>
@@ -64,10 +64,10 @@ const studentPhoneOf = (studentId?: string): string | undefined => {
 const allExchangeRecords = computed<ExchangeRecordItem[]>(() => {
   const list: ExchangeRecordItem[] = [];
 
-  // 积分兑换（含已取消）
+  // 小红花兑换（含已取消）
   for (const e of allExchanges.value) {
     list.push({
-      id: e.id, type: 'exchange', typeLabel: '积分兑换',
+      id: e.id, type: 'exchange', typeLabel: '小红花兑换',
       productName: e.productName, productImage: e.productImage,
       studentName: e.studentName,
       studentPhone: studentPhoneOf(e.studentId),
@@ -581,7 +581,7 @@ const EXCHANGE_STATUS: Record<string, { label: string; color: string; bg: string
   cancelled: { label: '已取消', color: '#969799', bg: '#F2F3F5' },
 };
 
-/** 兑换记录统一的来源标签 + 状态样式：积分兑换走 EXCHANGE_STATUS，连续打卡奖励走 CLAIM_STATUS */
+/** 兑换记录统一的来源标签 + 状态样式：小红花兑换走 EXCHANGE_STATUS，连续打卡奖励走 CLAIM_STATUS */
 function statusMeta(type: 'exchange' | 'checkin', status: string) {
   const map = type === 'exchange' ? EXCHANGE_STATUS : CLAIM_STATUS;
   return map[status] || { label: status, color: '#969799', bg: '#F2F3F5' };
@@ -822,7 +822,7 @@ function switchModule(m: Module) {
               <div class="mt-0.5">地址：{{ item.recipientAddress }}</div>
             </div>
             <div v-else-if="item.deliveryMethod !== 'in-person'" class="mt-2.5 border border-dashed border-orange-300 bg-orange-50 rounded-lg p-2.5 text-[10px] text-orange-500 leading-relaxed">
-              {{ item.type === 'exchange' ? '积分兑换商品' : '活动奖励' }} · 待补充收货信息
+              {{ item.type === 'exchange' ? '小红花兑换商品' : '活动奖励' }} · 待补充收货信息
             </div>
 
             <!-- 动作 -->
@@ -887,14 +887,14 @@ function switchModule(m: Module) {
         </div>
       </div>
 
-      <!-- ═══ 兑换记录（纯查看：积分兑换 + 连续打卡奖励） ═══ -->
+      <!-- ═══ 兑换记录（纯查看：小红花兑换 + 连续打卡奖励） ═══ -->
       <div v-if="activeModule === 'exchange'">
         <!-- 筛选条 -->
         <div class="bg-white px-4 py-3 border-b border-gray-50 space-y-2.5">
           <div class="flex flex-wrap items-center gap-1.5">
             <span class="text-[10px] text-gray-400 mr-0.5">来源</span>
             <button
-              v-for="opt in ([{ v: 'all', l: '全部' }, { v: 'exchange', l: '积分兑换' }, { v: 'checkin', l: '连续打卡' }] as const)"
+              v-for="opt in ([{ v: 'all', l: '全部' }, { v: 'exchange', l: '小红花兑换' }, { v: 'checkin', l: '连续打卡' }] as const)"
               :key="opt.v" @click="exSource = opt.v"
               :class="['text-[10px] px-2.5 py-1 rounded-full font-bold transition-colors', exSource === opt.v ? 'bg-[#E8674F] text-white' : 'bg-gray-50 text-gray-500']"
             >{{ opt.l }}</button>
@@ -955,7 +955,7 @@ function switchModule(m: Module) {
                         <span v-if="record.studentPhone" class="font-mono">{{ record.studentPhone }}</span>
                         <template v-if="record.type === 'exchange' && record.pointsSpent">
                           <span>·</span>
-                          <span class="text-[#FF6B35] font-bold">-{{ record.pointsSpent }} 积分</span>
+                          <span class="text-[#FF6B35] font-bold">-{{ record.pointsSpent }} 小红花</span>
                         </template>
                       </div>
                       <div class="mt-0.5 text-[10px] text-gray-400 truncate">{{ formatDateTime(record.date) }}</div>

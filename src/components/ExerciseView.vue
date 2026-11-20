@@ -9,7 +9,7 @@ import { compressImage } from '../lib/imageCompress';
 import { compressVideo } from '../lib/videoCompress';
 import { NavBar, Card, Button, Input, ChartRulePopup, CheckinComments } from './ui';
 import { recordComments } from '../lib/comments';
-import { Plus, X, Camera, Video, PlayCircle, Loader, MessageCircle, ChevronDown, Dumbbell, TrendingUp } from 'lucide-vue-next';
+import { Plus, X, Camera, Video, PlayCircle, Loader, MessageCircle, ChevronDown, Dumbbell, TrendingUp, HeartPulse, AlertTriangle, ShieldAlert } from 'lucide-vue-next';
 import { showToast } from 'vant';
 import { computeExerciseTrends } from '../lib/journey';
 import DailyExerciseTrend from './DailyExerciseTrend.vue';
@@ -18,12 +18,12 @@ import { thumbUrl } from '../lib/imageThumb';
 import { useDateGrouping } from '../composables/useDateGrouping';
 import { useTabSwipe } from '../lib/useTabSwipe';
 
-const EXERCISE_TYPES = ['跑步', '游泳', '力量训练', '瑜伽', '快走', '骑行', '其他'];
+const EXERCISE_TYPES = ['快走', '室内骑行', '太极', '八段锦', '弹力带训练', '慢跑', '游泳', '其他'];
 
 /** 主观强度配置 — 颜色从冷到暖，描述参考 RPE (Rating of Perceived Exertion) 自感用力程度量表 */
 const INTENSITY_CONFIG = [
   { level: 1, label: '很轻松',   color: '#3B82F6', lightBg: '#EFF6FF', description: '散步般轻松，能正常对话和唱歌，几乎不喘',   example: '如：慢走、拉伸放松' },
-  { level: 2, label: '轻松',     color: '#10B981', lightBg: '#ECFDF5', description: '轻微出汗，可以正常聊天，呼吸略微加快',     example: '如：快走、轻松骑行' },
+  { level: 2, label: '轻松',     color: '#2C7DA0', lightBg: '#ECFDF5', description: '轻微出汗，可以正常聊天，呼吸略微加快',     example: '如：快走、轻松骑行' },
   { level: 3, label: '适中',     color: '#F59E0B', lightBg: '#FFFBEB', description: '微喘但能说话，燃脂黄金区间，适合日常锻炼', example: '如：慢跑、游泳、健身操' },
   { level: 4, label: '较累',     color: '#F97316', lightBg: '#FFF7ED', description: '呼吸明显加快，能说短句，身体发热出汗',     example: '如：快跑、力量训练、爬楼梯' },
   { level: 5, label: '非常吃力', color: '#EF4444', lightBg: '#FEF2F2', description: '呼吸急促只能说几个字，大汗淋漓，短暂即可', example: '如：跳绳、有氧操、快速爬坡' },
@@ -38,6 +38,10 @@ type ActivityItem = {
 };
 
 const store = useAppStore();
+const targetHr = computed(() => {
+  const hrmax = 220 - (store.user?.age || 56);
+  return { low: Math.round(hrmax * 0.6), high: Math.round(hrmax * 0.7), max: hrmax };
+});
 
 // ─── Tab 结构：打卡 / 趋势 / 记录 ────────────────────────
 const activeTab = ref<'checkin' | 'trend' | 'records'>('checkin');
@@ -421,6 +425,29 @@ const handleSubmit = () => {
   <div ref="sheetRoot" class="flex min-h-full flex-col bg-[#F7F8FA] pb-8 font-sans">
     <NavBar title="运动打卡" :on-back="store.goBack" />
 
+    <!-- 心血管运动处方（会议纪要：运动师评估后开具，按靶心率与风险分层执行） -->
+    <div class="px-4 pt-3">
+      <Card class="border-0 shadow-sm bg-gradient-to-br from-[#1F6A95]/6 to-white">
+        <div class="flex items-center gap-2">
+          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1F6A95]/10 text-[#1F6A95]"><HeartPulse class="h-4 w-4" /></span>
+          <div class="min-w-0 flex-1">
+            <div class="text-[12px] font-bold text-gray-900">心血管运动处方</div>
+            <div class="text-[9px] text-gray-500">运动师评估后发布 · 按靶心率与风险分层执行</div>
+          </div>
+          <span class="rounded-full bg-[#1F6A95]/10 px-2 py-0.5 text-[8px] font-bold text-[#1F6A95]">已发布</span>
+        </div>
+        <div class="mt-3 grid grid-cols-3 gap-2">
+          <div class="rounded-xl bg-white/80 px-2.5 py-2"><div class="text-[8px] text-gray-400">目标心率</div><div class="text-[15px] font-black text-[#1F6A95]">{{ targetHr.low }}–{{ targetHr.high }}<span class="text-[8px] font-normal text-gray-400"> 次/分</span></div></div>
+          <div class="rounded-xl bg-white/80 px-2.5 py-2"><div class="text-[8px] text-gray-400">频率 / 时长</div><div class="text-[15px] font-black text-gray-900">5<span class="text-[8px] font-normal text-gray-400">次/周</span> · 30<span class="text-[8px] font-normal text-gray-400">分钟</span></div></div>
+          <div class="rounded-xl bg-white/80 px-2.5 py-2"><div class="text-[8px] text-gray-400">主观强度</div><div class="text-[13px] font-black text-gray-900 whitespace-nowrap">RPE 11–13</div></div>
+        </div>
+        <div class="mt-2 rounded-xl bg-[#fdf6ef] px-2.5 py-2 text-[8.5px] leading-relaxed text-[#8a641f]">
+          <ShieldAlert class="mr-0.5 inline h-3 w-3" /> 运动前测血压，≥180/110 暂停；出现胸闷/胸痛/头晕/心悸立即停止并联系医师；避免清晨 6 点前户外运动与憋气动作。
+        </div>
+        <div class="mt-1.5 text-[8.5px] text-gray-500">推荐：快走、室内骑行、太极、八段锦、弹力带训练；不推荐高强度间歇与竞技性运动。</div>
+      </Card>
+    </div>
+
     <!-- Tab 切换：打卡 / 趋势 / 记录（液态玻璃胶囊） -->
     <div class="sticky top-14 z-20 px-4 pt-3 pb-1">
       <div class="seg-tabs">
@@ -728,7 +755,7 @@ const handleSubmit = () => {
               <p><span class="font-bold text-gray-900">每日总时长：</span>该日所有运动记录的 duration 之和（分钟），同一日多次运动分别相加。</p>
               <p><span class="font-bold text-gray-900">平均强度：</span>该日记录 intensity 的算术平均值（RPE 1-5），无记录显示"--"。</p>
               <p><span class="font-bold text-gray-900">打卡次数：</span>该日运动记录条数，同一天多次运动分别计数。</p>
-              <p><span class="font-bold text-gray-900">达标（≥40min）：</span>单次运动时长≥40分钟的记录数。与积分规则一致--每日完成单次40分钟以上运动即可计分。</p>
+              <p><span class="font-bold text-gray-900">达标（≥40min）：</span>单次运动时长≥40分钟的记录数。与小红花规则一致--每日完成单次40分钟以上运动即可计分。</p>
               <p><span class="font-bold text-gray-900">交互：</span>点击某根柱形查看当天记录；在图上左右滑动可切换前一天/后一天。</p>
             </ChartRulePopup>
           </div>

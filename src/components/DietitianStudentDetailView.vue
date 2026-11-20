@@ -423,7 +423,7 @@ const studentManualScores = computed<ManualScoreRecord[]>(() => {
 /** 手动加减分合计 */
 const manualScoreTotal = computed(() => calculateManualScore(studentManualScores.value));
 
-/** 积分明细 */
+/** 小红花明细 */
 const scoreBreakdown = computed(() => {
   if (!student.value) return { diet: 0, exercise: 0, manual: 0, total: 0 };
   const diet = calculateDietScore(campDietRecords.value.filter((r) => r.studentId === student.value!.id));
@@ -436,11 +436,11 @@ function handleAddManualScore() {
   if (!student.value || !manualReason.value.trim()) return;
   const points = manualMode.value === 'add' ? Math.abs(manualPoints.value) : -Math.abs(manualPoints.value);
   if (points === 0) return;
-  // 扣分护栏：不允许把学员总积分扣成负数
+  // 扣分护栏：不允许把学员总小红花扣成负数
   if (points < 0) {
     const current = scoreBreakdown.value.total;
     if (current + points < 0) {
-      showToast({ message: `当前积分 ${current}，本次扣 ${-points} 将变成负数，不允许扣分`, position: 'top', duration: 2500 });
+      showToast({ message: `当前小红花 ${current}，本次扣 ${-points} 将变成负数，不允许扣分`, position: 'top', duration: 2500 });
       return;
     }
   }
@@ -465,7 +465,7 @@ function handleAddManualScore() {
 function handleDeleteManualScore(id: string) {
   showConfirmDialog({
     title: '确认删除',
-    message: '删除后该条加减分将回退，积分会相应变化。确认删除？',
+    message: '删除后该条加减分将回退，小红花会相应变化。确认删除？',
   }).then(() => {
     store.deleteManualScoreRecord(id);
   }).catch(() => {});
@@ -502,7 +502,7 @@ function handleDeleteManualScore(id: string) {
           class="text-[#E8674F] border-[#E8674F] shrink-0 text-xs"
           @click="store.setCurrentView('pointsDetail')"
         >
-          积分与排名
+          小红花与排名
         </Button>
       </Card>
 
@@ -618,7 +618,7 @@ function handleDeleteManualScore(id: string) {
           :class="['py-3 text-sm font-bold border-b-2 transition-colors shrink-0', activeTab === 'score' ? 'border-[#1F6A95] text-[#1F6A95]' : 'border-transparent text-gray-500 hover:text-gray-900']"
           @click="activeTab = 'score'"
         >
-          积分管理
+          小红花管理
         </button>
       </div>
     </div>
@@ -1182,19 +1182,19 @@ function handleDeleteManualScore(id: string) {
       <!-- Score tab: 手动加减分 -->
       <template v-if="activeTab === 'score'">
         <div class="space-y-4">
-          <!-- 积分总览 -->
+          <!-- 小红花总览 -->
           <Card>
             <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2 border-b pb-2">
               <Award class="h-4 w-4 text-[#1F6A95]" />
-              积分明细
+              小红花明细
             </h3>
             <div class="space-y-3">
               <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                <span class="text-sm text-gray-500">饮食积分</span>
+                <span class="text-sm text-gray-500">饮食小红花</span>
                 <span class="text-lg font-bold text-[#1F6A95]">{{ scoreBreakdown.diet }}</span>
               </div>
               <div class="flex justify-between items-center py-2 border-b border-gray-50">
-                <span class="text-sm text-gray-500">运动积分</span>
+                <span class="text-sm text-gray-500">运动小红花</span>
                 <span class="text-lg font-bold text-[#E8674F]">{{ scoreBreakdown.exercise }}</span>
               </div>
               <div class="flex justify-between items-center py-2 border-b border-gray-50">
@@ -1204,7 +1204,7 @@ function handleDeleteManualScore(id: string) {
                 </span>
               </div>
               <div class="flex justify-between items-center pt-2">
-                <span class="text-sm font-bold text-gray-900">总积分</span>
+                <span class="text-sm font-bold text-gray-900">总小红花</span>
                 <span class="text-2xl font-bold text-[#1A577C]">{{ scoreBreakdown.total }}</span>
               </div>
             </div>

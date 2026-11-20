@@ -645,7 +645,7 @@ onActivated(() => {
           </div>
         </Card>
 
-        <!-- 排名卡（含总积分 + 距前一名分差） -->
+        <!-- 排名卡（含总小红花 + 距前一名分差） -->
         <Card class="flex flex-col justify-center p-5 cursor-pointer hover:shadow-lg transition-shadow border-0 shadow-[0_4px_20px_-8px_rgba(15,23,42,0.14)] relative overflow-hidden h-full" @click="store.setCurrentView('ranking')">
           <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#E8674F]/20 to-orange-100 rounded-full blur-2xl transform translate-x-1/4 -translate-y-1/4 z-0 pointer-events-none"></div>
           <div class="relative z-10 flex flex-col h-full justify-between">

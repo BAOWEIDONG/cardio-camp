@@ -10,7 +10,7 @@ import { calculateStreak, calculateLongestStreakInRange, getProjectedRewardDates
 import { formatDateTime } from '../lib/utils';
 import type { ExerciseRecord } from '../types';
 
-/** 计算单条运动记录的积分（与 scoring.ts calculateExerciseScore 一致） */
+/** 计算单条运动记录的小红花（与 scoring.ts calculateExerciseScore 一致） */
 const exercisePoints = (record: ExerciseRecord): number => {
   let pts = 0;
   if (record.duration >= 40) pts += 1;

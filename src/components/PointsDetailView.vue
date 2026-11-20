@@ -67,7 +67,7 @@ const studentManualScores = computed<ManualScoreRecord[]>(() => {
   return records.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 });
 
-/** 计算单条运动记录的积分（与 scoring.ts calculateExerciseScore 一致） */
+/** 计算单条运动记录的小红花（与 scoring.ts calculateExerciseScore 一致） */
 const exercisePoints = (record: ExerciseRecord): number => {
   let pts = 0;
   if (record.duration >= 40) pts += 1;
@@ -79,26 +79,26 @@ const exercisePoints = (record: ExerciseRecord): number => {
 
 <template>
   <div v-if="noPermission" class="flex min-h-full flex-col bg-[#F7F8FA]">
-    <NavBar title="积分明细" :on-back="store.goBack" />
+    <NavBar title="小红花明细" :on-back="store.goBack" />
     <div class="flex-1 flex justify-center items-center text-gray-500">
       无权查看他人明细
     </div>
   </div>
 
   <div v-else-if="!student || !scoreData" class="flex min-h-full flex-col bg-[#F7F8FA]">
-    <NavBar title="积分明细" :on-back="store.goBack" />
+    <NavBar title="小红花明细" :on-back="store.goBack" />
     <div class="flex-1 flex justify-center items-center text-gray-500">
       未找到学员信息
     </div>
   </div>
 
   <div v-else class="flex min-h-full flex-col bg-[#F7F8FA] pb-safe">
-    <NavBar :title="`${student.name} 的积分明细`" :on-back="store.goBack" />
+    <NavBar :title="`${student.name} 的小红花明细`" :on-back="store.goBack" />
 
     <div class="bg-white p-6 border-b border-gray-100 flex justify-between items-center">
       <div>
         <div class="text-3xl font-bold text-[#E8674F]">{{ scoreData.totalScore }}</div>
-        <div class="text-xs text-gray-500 mt-1">总积分</div>
+        <div class="text-xs text-gray-500 mt-1">总小红花</div>
       </div>
       <div class="text-right">
         <div class="text-2xl font-bold text-gray-900">第 {{ scoreData.rank }} 位</div>
@@ -111,13 +111,13 @@ const exercisePoints = (record: ExerciseRecord): number => {
         :class="['py-3 text-sm font-bold border-b-2 transition-colors flex-1', activeTab === 'diet' ? 'border-[#E8674F] text-[#E8674F]' : 'border-transparent text-gray-500 hover:text-gray-900']"
         @click="activeTab = 'diet'"
       >
-        饮食积分 ({{ scoreData.dietScore }})
+        饮食小红花 ({{ scoreData.dietScore }})
       </button>
       <button
         :class="['py-3 text-sm font-bold border-b-2 transition-colors flex-1', activeTab === 'exercise' ? 'border-[#1F6A95] text-[#1F6A95]' : 'border-transparent text-gray-500 hover:text-gray-900']"
         @click="activeTab = 'exercise'"
       >
-        运动积分 ({{ scoreData.exerciseScore }})
+        运动小红花 ({{ scoreData.exerciseScore }})
       </button>
       <button
         :class="['py-3 text-sm font-bold border-b-2 transition-colors flex-1', activeTab === 'manual' ? 'border-[#1A577C] text-[#1A577C]' : 'border-transparent text-gray-500 hover:text-gray-900']"

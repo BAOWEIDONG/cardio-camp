@@ -161,7 +161,7 @@ export interface DietRecord {
   hasVegetable?: boolean; // 有蔬菜
 }
 
-/** 营养师手动加减分记录（用于补录线下打卡积分等） */
+/** 营养师手动加减分记录（用于补录线下打卡小红花等） */
 export interface ManualScoreRecord {
   id: string;
   studentId: string;
@@ -254,7 +254,7 @@ export interface RewardTier {
 
 export interface RewardClaim {
   id: string;
-  /** 业务订单号：后端生成填写（预留字段，与积分兑换统一单号体系，前端不生成、不展示） */
+  /** 业务订单号：后端生成填写（预留字段，与小红花兑换统一单号体系，前端不生成、不展示） */
   orderNo?: string;
   tierId: string;
   studentId: string;
@@ -288,7 +288,7 @@ export interface RewardClaim {
 }
 
 // Points mall types
-/** 积分商城兑换操作审计条目（发货/线下核销/取消，记录操作人、时间、原因、状态流转） */
+/** 小红花商城兑换操作审计条目（发货/线下核销/取消，记录操作人、时间、原因、状态流转） */
 export interface ExchangeAuditEntry {
   /** created=下单 / shipped=邮寄发货 / verified=线下核销 / cancelled=取消 */
   op: 'created' | 'shipped' | 'verified' | 'cancelled';
@@ -313,13 +313,13 @@ export interface PointProductSnapshot {
   productVersion?: number;
 }
 
-/** 积分商城商品 */
+/** 小红花商城商品 */
 export interface PointProduct {
   id: string;
   name: string;
   imageUrl: string;
   description: string;
-  /** 所需积分 */
+  /** 所需小红花 */
   pointsRequired: number;
   stock: number;
   active: boolean;
@@ -336,7 +336,7 @@ export interface PointProduct {
   campId?: string;
 }
 
-/** 积分兑换记录 */
+/** 小红花兑换记录 */
 export interface PointExchangeRecord {
   id: string;
   /** 业务订单号：后端生成填写（预留字段，前端不生成、不展示，仅后台可追溯） */
@@ -346,7 +346,7 @@ export interface PointExchangeRecord {
   productId: string;
   productName: string;
   productImage: string;
-  /** 消耗积分 */
+  /** 消耗小红花 */
   pointsSpent: number;
   exchangeDate: string;
   /** 兑换状态：pending=待发货 / fulfilled=已发货 / cancelled=已取消 */
@@ -378,7 +378,7 @@ export interface PointExchangeRecord {
 /** 营养师奖品/商品配置操作审计：记录操作者、时间、营期、前后值、原因、关联对象数 */
 export interface ConfigAudit {
   id: string;
-  /** 配置对象：tier=连续打卡档位 / product=积分商城商品 */
+  /** 配置对象：tier=连续打卡档位 / product=小红花商城商品 */
   module: 'tier' | 'product';
   /** 操作动作描述：新增/编辑/下架/上架/删除 */
   action: string;

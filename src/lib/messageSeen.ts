@@ -58,7 +58,7 @@ export function saveMsgSeenState(userId: string, next: Partial<MsgSeenState>) {
 }
 
 /**
- * 系统通知（奖励领取/发货、积分兑换/发货）是否未读：事件时间晚于最近查看起点 且 该通知未被点开读过。
+ * 系统通知（奖励领取/发货、小红花兑换/发货）是否未读：事件时间晚于最近查看起点 且 该通知未被点开读过。
  * 不同于批注消息( commentRead 字段)，系统通知无记录级已读，用「时间基线 + 单条读记」双条件判。
  */
 export function systemMsgUnread(seen: MsgSeenState, dateStr: string | undefined | null, notifId?: string): boolean {

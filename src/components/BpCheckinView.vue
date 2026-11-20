@@ -31,6 +31,19 @@ const change = computed(() => {
   return { sbp: avg.value.sbp - first.sbp, dbp: avg.value.dbp - first.dbp };
 });
 const todayDone = computed(() => records.value.some((r) => r.date.startsWith(new Date().toISOString().slice(0, 10))));
+/** 按天聚类：同一天的晨起/睡前合并为一张卡，展示日均值 */
+const groupedDays = computed(() => {
+  const map: Record<string, { date: string; records: any[] }> = {};
+  records.value.slice(0, 20).forEach((r) => {
+    const day = r.date.slice(0, 10);
+    (map[day] ||= { date: day, records: [] as any }).records.push(r);
+  });
+  return Object.values(map).sort((a, b) => b.date.localeCompare(a.date)).map((d) => ({
+    ...d,
+    avgSbp: Math.round(d.records.reduce((n, r) => n + r.sbp, 0) / d.records.length),
+    avgDbp: Math.round(d.records.reduce((n, r) => n + r.dbp, 0) / d.records.length),
+  }));
+});
 
 function fill(periodValue: 'morning' | 'evening') {
   period.value = periodValue;
@@ -147,24 +160,26 @@ const roleLabel: Record<string, string> = { doctor: '医师', dietitian: '营养
       <div>
         <div class="flex items-center justify-between mb-2 ml-1">
           <div class="text-sm font-bold text-gray-900">血压记录</div>
-          <div class="text-[10px] text-gray-400">{{ records.length }} 次</div>
+          <div class="text-[10px] text-gray-400">{{ records.length }} 次 · 按天聚类</div>
         </div>
         <div class="space-y-2">
-          <Card v-for="r in records.slice(0, 12)" :key="r.id" class="p-3 border-0 shadow-sm">
-            <div class="flex items-center gap-2">
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center" :class="r.period === 'morning' ? 'bg-[#1F6A95]/10 text-[#1F6A95]' : 'bg-[#FF976A]/10 text-[#FF976A]'">
-                <HeartPulse class="w-4 h-4" />
-              </div>
-              <div class="min-w-0 flex-1">
-                <div class="text-[11px] font-bold text-gray-900">{{ fmt(r.date) }} · {{ r.period === 'morning' ? '晨起' : '睡前' }}</div>
-                <div class="text-[9px] text-gray-400">{{ r.takenMed ? '已服药' : '未服药' }} · 心率 {{ r.hr }} 次/分</div>
-              </div>
+          <Card v-for="d in groupedDays" :key="d.date" class="p-3 border-0 shadow-sm">
+            <div class="flex items-center justify-between border-b border-gray-50 pb-2">
+              <div class="text-[11px] font-bold text-gray-900">{{ fmt(d.date + ' 00:00') }} <span class="text-[8.5px] font-normal text-gray-400">· {{ d.records.length }} 次</span></div>
               <div class="text-right">
-                <span class="text-[16px] font-black tracking-tight" :class="r.sbp >= 140 || r.dbp >= 90 ? 'text-orange-500' : 'text-gray-900'">{{ r.sbp }}/{{ r.dbp }}</span>
-                <div class="text-[8px] text-gray-400">mmHg</div>
+                <span class="text-[15px] font-black" :class="d.avgSbp >= 140 || d.avgDbp >= 90 ? 'text-orange-500' : 'text-gray-900'">{{ d.avgSbp }}/{{ d.avgDbp }}</span>
+                <span class="text-[8px] text-gray-400 ml-0.5">日均</span>
               </div>
             </div>
-            <div v-for="c in r.comments" :key="c.id" class="mt-2 rounded-lg bg-[#1F6A95]/5 px-2.5 py-2">
+            <div class="mt-1.5 space-y-1">
+              <div v-for="r in d.records" :key="r.id" class="flex items-center gap-2">
+                <span class="w-8 text-[8.5px] font-bold" :class="r.period === 'morning' ? 'text-[#1F6A95]' : 'text-[#E8674F]'">{{ r.period === 'morning' ? '晨起' : '睡前' }}</span>
+                <span class="text-[9px] text-gray-400">{{ r.date.slice(11, 16) }} · HR {{ r.hr }}</span>
+                <span class="ml-auto text-[11px] font-bold" :class="r.sbp >= 140 || r.dbp >= 90 ? 'text-orange-500' : 'text-gray-900'">{{ r.sbp }}/{{ r.dbp }}</span>
+                <span class="text-[8px] text-gray-400">mmHg</span>
+              </div>
+            </div>
+            <div v-for="c in d.records.flatMap((r) => r.comments || [])" :key="c.id" class="mt-2 rounded-lg bg-[#1F6A95]/5 px-2.5 py-2">
               <div class="text-[9px] font-bold text-[#1F6A95]">{{ c.name }} {{ roleLabel[c.role] || '医师' }}</div>
               <div class="text-[10px] text-gray-700 mt-0.5 leading-relaxed">{{ c.text }}</div>
             </div>

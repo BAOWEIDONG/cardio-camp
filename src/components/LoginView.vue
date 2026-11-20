@@ -66,7 +66,19 @@ const handlePhoneSubmit = () => {
   const studentInfo = store.students.find((s) => s.id === account.id);
   if (account.role === 'student') {
     // 演示：跳过 5 步入营问卷，直接进入首页；正式环境由学员真实填写
-    try { localStorage.setItem(questionnaireStorageKey('submitted', account.id), JSON.stringify({ demo: true, submittedAt: new Date().toISOString() })); } catch { /* 忽略 */ }
+    try {
+      localStorage.setItem(questionnaireStorageKey('submitted', account.id), JSON.stringify({
+        demo: true, submittedAt: new Date().toISOString(),
+        name: account.name, gender: studentInfo?.gender || 'male', age: studentInfo?.age || 56,
+        height: 172, weight: 79,
+        medicalReports: [
+          { url: '', type: 'pdf', name: '空腹抽血化验单（三甲医院）' },
+          { url: '', type: 'pdf', name: '12 导联心电图' },
+          { url: '', type: 'pdf', name: '颈动脉超声报告' },
+          { url: '', type: 'pdf', name: '疾病确诊病历' },
+        ],
+      }));
+    } catch { /* 忽略 */ }
   }
   store.setUser({
     id: account.id,

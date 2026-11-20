@@ -124,7 +124,7 @@ export interface ActivityConfig {
   weeklyChallenge: boolean;
   /** 全勤幸运抽奖 */
   luckyDraw: boolean;
-  /** 积分商城开关 */
+  /** 小红花商城开关 */
   pointsMall: boolean;
   /** 连续打卡奖励开关（学员端首页「连续打卡」活动入口按此显示） */
   checkinStreak: boolean;
@@ -217,7 +217,7 @@ export const useAppStore = defineStore('app', () => {
   }
 
   /** 该营期是否有「实际可见」的活动（判定口径与学员端活动页空态完全一致）：
-   *  积分商城开启，或 连续打卡奖励开启且存在对应奖品档(streak tier)，任一即算有活动。
+   *  小红花商城开启，或 连续打卡奖励开启且存在对应奖品档(streak tier)，任一即算有活动。
    *  决定学员端底部菜单是否显示「活动」tab：无活动则隐藏，仅留 首页/消息/档案（三等分）。 */
   function getHasActivity(campId: string | null | undefined): boolean {
     const cfg = getActivityConfig(campId);
@@ -1021,10 +1021,10 @@ export const useAppStore = defineStore('app', () => {
     updateRewardTier(id, { active: tier.active === false });
   }
 
-  // ─── 积分商城 ──────────────────────────────────────────
-  /** 积分商城商品。可绑定营期(campId)；未绑定则全局共享。兑换记录按 exchange.campId 营期隔离。 */
+  // ─── 小红花商城 ──────────────────────────────────────────
+  /** 小红花商城商品。可绑定营期(campId)；未绑定则全局共享。兑换记录按 exchange.campId 营期隔离。 */
   const pointProducts = ref<PointProduct[]>([...MOCK_POINT_PRODUCTS]);
-  /** 积分兑换记录 */
+  /** 小红花兑换记录 */
   const pointExchanges = ref<PointExchangeRecord[]>([...MOCK_POINT_EXCHANGES]);
   /** 营养师手动加减分记录 */
   const manualScoreRecords = ref<ManualScoreRecord[]>([...MOCK_MANUAL_SCORES]);
@@ -1135,7 +1135,7 @@ export const useAppStore = defineStore('app', () => {
 
   function addPointProduct(product: PointProduct) {
     pointProducts.value.push({ ...product, sortValue: product.sortValue ?? 0, productVersion: 1 });
-    recordConfigAudit({ module: 'product', action: '新增', targetName: product.name, campId: product.campId, after: `${product.pointsRequired}积分 · 库存 ${product.stock}` });
+    recordConfigAudit({ module: 'product', action: '新增', targetName: product.name, campId: product.campId, after: `${product.pointsRequired}小红花 · 库存 ${product.stock}` });
     api.createPointProduct(product).catch(() => {});
   }
 
@@ -1158,7 +1158,7 @@ export const useAppStore = defineStore('app', () => {
     api.updatePointProduct(id, updates).catch(() => {});
   }
 
-  /** 删除积分商品。存在非取消（pending/fulfilled）兑换记录时拒绝删除。
+  /** 删除小红花商品。存在非取消（pending/fulfilled）兑换记录时拒绝删除。
    *  返回 {ok, reason}，由调用方提示拦截原因与连带影响。 */
   function deletePointProduct(id: string): { ok: boolean; reason?: string } {
     const open = pointExchanges.value.filter((e) => e.productId === id && e.status !== 'cancelled');
@@ -1167,24 +1167,24 @@ export const useAppStore = defineStore('app', () => {
     }
     const target = pointProducts.value.find((p) => p.id === id);
     pointProducts.value = pointProducts.value.filter((p) => p.id !== id);
-    if (target) recordConfigAudit({ module: 'product', action: '删除', targetName: target.name, campId: target.campId, before: `${target.pointsRequired}积分` });
+    if (target) recordConfigAudit({ module: 'product', action: '删除', targetName: target.name, campId: target.campId, before: `${target.pointsRequired}小红花` });
     api.deletePointProduct(id).catch(() => {});
     return { ok: true };
   }
 
-  /** 计算学员的积分商城可用积分（排行榜总积分 - 已消耗积分，不可为负）
+  /** 计算学员的小红花商城可用小红花（排行榜总小红花 - 已消耗小红花，不可为负）
    *  campId 传入时按营期过滤（与排行榜一致），不传则汇总全部营期
    */
   function getStudentMallPoints(studentId: string, campId?: string): number {
     const earned = getStudentTotalEarnedPoints(studentId, campId);
-    // 已消费也按营期过滤，与 earned 同口径：避免多营期学员在一营期的兑换侵蚀另一营期的可用积分/重复抵扣
+    // 已消费也按营期过滤，与 earned 同口径：避免多营期学员在一营期的兑换侵蚀另一营期的可用小红花/重复抵扣
     const spent = pointExchanges.value
       .filter((e) => e.studentId === studentId && e.status !== 'cancelled' && (!campId || e.campId === campId))
       .reduce((sum, e) => sum + e.pointsSpent, 0);
     return Math.max(0, earned - spent);
   }
 
-  /** 学员总获得积分（饮食分+运动分+手动加减分）
+  /** 学员总获得小红花（饮食分+运动分+手动加减分）
    *  campId 传入时按营期过滤（与排行榜一致），不传则汇总全部营期
    */
   function getStudentTotalEarnedPoints(studentId: string, campId?: string): number {
@@ -1248,7 +1248,7 @@ export const useAppStore = defineStore('app', () => {
       recipientPhone: deliveryInfo?.recipientPhone,
       recipientAddress: deliveryInfo?.recipientAddress,
       campId,
-      // 商品快照：锁定下单时名称/图片/积分/配送/商品版本，之后编辑/下架商品不影响本单历史
+      // 商品快照：锁定下单时名称/图片/小红花/配送/商品版本，之后编辑/下架商品不影响本单历史
       snapshot: {
         productId: fresh.id,
         name: fresh.name,
@@ -1313,7 +1313,7 @@ export const useAppStore = defineStore('app', () => {
   }
 
   /** 更新兑换状态（含审计留痕）。
-   *  operator 操作人，reason 操作原因，写进 audit[] ；取消时自动恢复库存、积分自动返还 */
+   *  operator 操作人，reason 操作原因，写进 audit[] ；取消时自动恢复库存、小红花自动返还 */
   function updateExchangeStatus(id: string, status: PointExchangeRecord['status'], operator?: string, reason?: string) {
     const exchange = pointExchanges.value.find(e => e.id === id);
     if (!exchange) return;
@@ -1347,7 +1347,7 @@ export const useAppStore = defineStore('app', () => {
     api.updatePointExchange(id, status === 'cancelled' ? { status, cancelledAt: pointExchanges.value.find((x) => x.id === id)?.cancelledAt } : { status }).catch(() => {});
   }
 
-  /** 学员取消兑换（发货前可取消，积分自动返还）。operator 默认学员名 */
+  /** 学员取消兑换（发货前可取消，小红花自动返还）。operator 默认学员名 */
   function cancelExchange(id: string, operator?: string) {
     updateExchangeStatus(id, 'cancelled', operator || undefined, '学员取消');
   }

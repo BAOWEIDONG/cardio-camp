@@ -16,7 +16,7 @@
  *    - 当天打卡完成定义 → streak.ts → isDayComplete()
  *    - 连续打卡天数计算   → streak.ts → calculateStreak()
  *    - 奖励解锁/领取判定 → streak.ts → getProjectedRewardDates()
- *    - 饮食/运动积分计算  → scoring.ts → calculateDietScore() / calculateExerciseScore()
+ *    - 饮食/运动小红花计算  → scoring.ts → calculateDietScore() / calculateExerciseScore()
  *    - 学员排名           → scoring.ts → rankStudents()
  * ============================================================================
  */
@@ -164,7 +164,7 @@ export async function updateDietRecord(id: string, updates: Partial<DietRecord>)
  * @returns ExerciseRecord[] — 按 date 升序
  *
  * 业务规则: 运动打卡是"完成当天"的必要条件之一。
- *           积分规则: duration >= 40 分钟记 1 分，否则 0 分。
+ *           小红花规则: duration >= 40 分钟记 1 分，否则 0 分。
  */
 export async function getExerciseRecords(): Promise<ExerciseRecord[]> {
   if (USE_MOCK) return MOCK_EXERCISE_RECORDS;
@@ -584,10 +584,10 @@ export async function deleteAccount(id: string): Promise<void> {
   return request<void>(`/accounts/${id}`, { method: 'DELETE' });
 }
 
-// ============ 积分商城商品 ============
+// ============ 小红花商城商品 ============
 
 /**
- * 获取所有积分商城商品
+ * 获取所有小红花商城商品
  * GET /point-products
  *
  * @returns PointProduct[] - 仅 active=true 的商品对学员可见
@@ -598,7 +598,7 @@ export async function getPointProducts(): Promise<PointProduct[]> {
 }
 
 /**
- * 新增积分商城商品（营养师配置）
+ * 新增小红花商城商品（营养师配置）
  * POST /point-products
  */
 export async function createPointProduct(product: PointProduct): Promise<PointProduct> {
@@ -610,7 +610,7 @@ export async function createPointProduct(product: PointProduct): Promise<PointPr
 }
 
 /**
- * 更新积分商城商品（修改价格/库存/上下架等）
+ * 更新小红花商城商品（修改价格/库存/上下架等）
  * PATCH /point-products/:id
  */
 export async function updatePointProduct(id: string, updates: Partial<PointProduct>): Promise<PointProduct> {
@@ -622,7 +622,7 @@ export async function updatePointProduct(id: string, updates: Partial<PointProdu
 }
 
 /**
- * 删除积分商城商品
+ * 删除小红花商城商品
  * DELETE /point-products/:id
  */
 export async function deletePointProduct(id: string): Promise<void> {
@@ -630,10 +630,10 @@ export async function deletePointProduct(id: string): Promise<void> {
   return request<void>(`/point-products/${id}`, { method: 'DELETE' });
 }
 
-// ============ 积分兑换记录 ============
+// ============ 小红花兑换记录 ============
 
 /**
- * 获取所有积分兑换记录
+ * 获取所有小红花兑换记录
  * GET /point-exchanges
  *
  * @returns PointExchangeRecord[] - 前端按 studentId 过滤当前用户的记录
@@ -644,14 +644,14 @@ export async function getPointExchanges(): Promise<PointExchangeRecord[]> {
 }
 
 /**
- * 创建积分兑换记录（学员兑换商品）
+ * 创建小红花兑换记录（学员兑换商品）
  * POST /point-exchanges
  *
  * @body  PointExchangeRecord - { studentId, productId, pointsSpent, deliveryMethod, recipientInfo, status: 'pending' }
  * @returns PointExchangeRecord
  *
  * 业务规则:
- *   1. 学员可用积分 >= product.pointsRequired（前端已校验）
+ *   1. 学员可用小红花 >= product.pointsRequired（前端已校验）
  *   2. 商品库存 > 0（前端已校验）
  *   3. 后端创建记录后，应同时扣减对应商品的 stock
  */
@@ -668,7 +668,7 @@ export async function createPointExchange(record: PointExchangeRecord): Promise<
  * PATCH /point-exchanges/:id
  *
  * @body  Partial<PointExchangeRecord> - 发货传 { status: 'fulfilled', trackingNumber, shipDate }
- *        取消传 { status: 'cancelled' }，后端应恢复商品库存 + 返还积分
+ *        取消传 { status: 'cancelled' }，后端应恢复商品库存 + 返还小红花
  */
 export async function updatePointExchange(id: string, updates: Partial<PointExchangeRecord>): Promise<PointExchangeRecord> {
   if (USE_MOCK) return { id, ...updates } as PointExchangeRecord;
@@ -765,7 +765,7 @@ export async function updateMealTimeConfigByCamp(campId: string, config: MealTim
 // ============ 营养师手动加减分 ============
 
 /**
- * 创建营养师手动加减分记录（补录线下打卡积分等）
+ * 创建营养师手动加减分记录（补录线下打卡小红花等）
  * POST /manual-score-records
  *
  * @body  ManualScoreRecord - { studentId, points, reason, dietitianName, campId }

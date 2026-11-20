@@ -129,7 +129,7 @@ const rewardMessages = computed<MessageItem[]>(() => {
     });
 });
 
-// ---- 积分商城兑换消息（含发货） ----
+// ---- 小红花商城兑换消息（含发货） ----
 const exchangeMessages = computed<MessageItem[]>(() => {
   if (!store.user) return [];
   const mine = store.getStudentExchanges(store.user.id)
@@ -142,10 +142,10 @@ const exchangeMessages = computed<MessageItem[]>(() => {
         id: `exch-${e.id}`,
         type: 'reward',
         date,
-        title: fulfilled ? '积分兑换已发货' : '积分兑换成功',
+        title: fulfilled ? '小红花兑换已发货' : '小红花兑换成功',
         body: fulfilled
           ? `「${e.productName}」已寄出${e.trackingNumber ? `，快递单号 ${e.trackingNumber}` : ''}，请注意查收`
-          : `你使用 ${e.pointsSpent} 积分兑换了「${e.productName}」，礼品将尽快寄出`,
+          : `你使用 ${e.pointsSpent} 小红花兑换了「${e.productName}」，礼品将尽快寄出`,
         unread: store.isNotifUnread(date, `exch-${e.id}`),
         notifId: `exch-${e.id}`,
         targetView: 'my-rewards',

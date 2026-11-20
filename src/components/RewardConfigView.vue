@@ -158,8 +158,8 @@ const streakTiers = computed(() =>
 );
 const { items: pagedStreakTiers, hasMore: hasMoreTiers, remaining: remainingTiers, loadMore: loadMoreTiers } = usePaged(streakTiers, 10);
 
-// ─── 积分商城商品管理 ───
-/** 积分商城商品：按当前营期过滤（未绑定 campId 视为全局共享，与连续打卡档口径一致） */
+// ─── 小红花商城商品管理 ───
+/** 小红花商城商品：按当前营期过滤（未绑定 campId 视为全局共享，与连续打卡档口径一致） */
 const allMallProducts = computed(() => store.pointProducts.filter((p) => !p.campId || p.campId === selectedCampId.value));
 const { items: pagedMallProducts, hasMore: hasMoreProducts, remaining: remainingProducts, loadMore: loadMoreProducts } = usePaged(allMallProducts, 10);
 const allExchanges = computed(() =>
@@ -174,7 +174,7 @@ const editingProduct = ref<Partial<PointProduct> | null>(null);
 const productFormError = ref('');
 const productPhotoInputRef = ref<HTMLInputElement | null>(null);
 
-// ─── 积分商品：库存按「总数量」录入，下方小字展示「库存/已领取」 ───
+// ─── 小红花商品：库存按「总数量」录入，下方小字展示「库存/已领取」 ───
 /** 编辑弹窗里输入的总数量（= 剩余库存 + 已领取/已兑换）；新建默认 50 */
 const productTotal = ref(50);
 /** 已兑换（非取消）数：编辑既有商品时固定不变；新建为 0 */
@@ -217,7 +217,7 @@ const saveProduct = () => {
   if (!editingProduct.value) return;
   if (!editingProduct.value.name?.trim()) { productFormError.value = '请输入商品名称'; return; }
   if (!editingProduct.value.imageUrl) { productFormError.value = '请上传商品图片'; return; }
-  if (!editingProduct.value.pointsRequired || editingProduct.value.pointsRequired <= 0) { productFormError.value = '请输入有效的积分'; return; }
+  if (!editingProduct.value.pointsRequired || editingProduct.value.pointsRequired <= 0) { productFormError.value = '请输入有效的小红花'; return; }
   if (productTotal.value === undefined || productTotal.value < 0) { productFormError.value = '请输入有效的总数量'; return; }
   if (editingProduct.value.id) {
     const c = getProductClaimCount(editingProduct.value.id);
@@ -335,11 +335,11 @@ function toggleDeliveryOption(option: 'shipped' | 'in-person') {
                   <span v-if="tier.sortValue" class="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">排序 {{ tier.sortValue }}</span>
                   <span v-if="tier.version && tier.version > 1" class="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">v{{ tier.version }}</span>
                 </div>
-                <!-- 礼品描述（营养师配置，与积分商品一致，单行截断） -->
+                <!-- 礼品描述（营养师配置，与小红花商品一致，单行截断） -->
                 <div v-if="tier.description" class="text-[10px] text-gray-500 mt-1 truncate">{{ tier.description }}</div>
                 <div class="flex items-center gap-2">
                   <div class="text-xs text-gray-500 font-medium">库存: <span :class="tier.stock > 0 ? 'text-gray-900' : 'text-red-500'">{{ tier.stock }}</span> 件</div>
-                  <!-- 已领取橙色标识，样式与积分商品一致（位于库存右侧） -->
+                  <!-- 已领取橙色标识，样式与小红花商品一致（位于库存右侧） -->
                   <span v-if="getClaimCount(tier.id) > 0" class="text-[10px] font-bold text-[#FF6B35] bg-[#FFF4ED] px-1.5 py-0.5 rounded-full">已领取 {{ getClaimCount(tier.id) }} 件</span>
                 </div>
               </div>
@@ -351,18 +351,18 @@ function toggleDeliveryOption(option: 'shipped' | 'in-person') {
         </button>
       </div>
 
-      <!-- 积分商城商品（按当前营期过滤；未绑定营期视为全局共享） -->
+      <!-- 小红花商城商品（按当前营期过滤；未绑定营期视为全局共享） -->
       <div>
         <div class="flex items-center justify-between mb-3">
           <h3 class="text-sm font-bold text-gray-900 flex items-center gap-1.5">
             <div class="w-1.5 h-4 bg-[#E8674F] rounded-full"></div>
-            积分商城商品
+            小红花商城商品
           </h3>
           <button @click="handleEditProduct()" class="text-xs font-bold text-[#E8674F] flex items-center gap-0.5">
             <Plus class="w-3.5 h-3.5" /> 添加
           </button>
         </div>
-        <p class="text-[10px] text-gray-400 mb-3">商品随当前营期展示，各营期可配置不同商品。新增商品绑定当前营期。学员通过打卡累积积分兑换当前营期商品。</p>
+        <p class="text-[10px] text-gray-400 mb-3">商品随当前营期展示，各营期可配置不同商品。新增商品绑定当前营期。学员通过打卡累积小红花兑换当前营期商品。</p>
         <div v-if="allMallProducts.length === 0" class="text-center py-8 text-gray-400 text-xs bg-white rounded-xl border border-gray-100">暂无商品，请添加</div>
         <div class="space-y-3">
           <Card v-for="product in pagedMallProducts" :key="product.id" class="p-4 flex gap-4">
@@ -382,7 +382,7 @@ function toggleDeliveryOption(option: 'shipped' | 'in-person') {
                 <div class="flex items-center gap-1 mt-1">
                   <Coins class="w-3.5 h-3.5 text-[#E8674F]" />
                   <span class="text-xs font-black text-[#FF6B35]">{{ product.pointsRequired }}</span>
-                  <span class="text-[10px] text-gray-400">积分</span>
+                  <span class="text-[10px] text-gray-400">小红花</span>
                   <!-- 上架/下架状态纯标签展示，与连续打卡一致（操作在其右侧单独按钮） -->
                   <span class="inline-block text-[10px] px-1.5 py-0.5 rounded font-bold" :class="product.active === false ? 'bg-gray-200 text-gray-500' : 'bg-[#1F6A95]/10 text-[#1F6A95]'">{{ product.active === false ? '已下架' : '上架中' }}</span>
                   <span v-if="product.sortValue" class="ml-1 text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">排序 {{ product.sortValue }}</span>
@@ -536,7 +536,7 @@ function toggleDeliveryOption(option: 'shipped' | 'in-person') {
             <textarea placeholder="简要描述商品特点" rows="2" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-[#E8674F] text-sm resize-none" v-model="editingProduct.description"></textarea>
           </div>
           <div>
-            <label class="text-sm font-medium text-gray-700 block mb-1">所需积分 <span class="text-red-500">*</span></label>
+            <label class="text-sm font-medium text-gray-700 block mb-1">所需小红花 <span class="text-red-500">*</span></label>
             <input type="number" inputmode="numeric" placeholder="如：200" min="1" class="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-[#E8674F] text-sm" :value="editingProduct.pointsRequired" @input="editingProduct.pointsRequired = parseInt(($event.target as HTMLInputElement).value) || 0; productFormError = ''" />
           </div>
           <div>

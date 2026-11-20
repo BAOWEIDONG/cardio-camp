@@ -379,7 +379,7 @@ for (let i = -(PAST_DAYS_S4 - 1); i <= 0; i++) {
   MOCK_WEIGHT_RECORDS.push({ id: `w_${idSuffix}`, date: iso(i, '07:00:00'), weight: w, studentId: 's4', campId: 'camp1' });
 }
 
-// s5 (camp1): 连续 7 天打卡，积分中等
+// s5 (camp1): 连续 7 天打卡，小红花中等
 const PAST_DAYS_S5 = 7;
 for (let i = -(PAST_DAYS_S5 - 1); i <= 0; i++) {
   const idSuffix = `s5_${Math.abs(i).toString().padStart(2, '0')}`;
@@ -901,7 +901,7 @@ export const MOCK_ACCOUNTS: Account[] = [
   { id: 's12', phone: '13800000012', name: '陈曦', role: 'student', campIds: ['camp2'], active: true, createdAt: iso(-10, '08:00:00') },
 ];
 
-/** 积分商城商品 */
+/** 小红花商城商品 */
 export const MOCK_POINT_PRODUCTS: PointProduct[] = [
   // 按营期分流：camp1 = 水杯/瑜伽垫/筋膜枪；camp2 = 跳绳/体脂秤/蛋白粉（camp3 新营期默认空，营养师可自行新增）
   { id: 'pp1', name: '运动水杯', imageUrl: rewardImg('运动水杯', '🥤', '#2C7DA0', '#0099CC'), description: '便携运动水杯 500ml，BPA-free 材质，健康饮水好搭档', pointsRequired: 30, stock: 50, active: true, deliveryOptions: ['shipped', 'in-person'], maxExchange: 2, campId: 'camp1' },
@@ -912,7 +912,7 @@ export const MOCK_POINT_PRODUCTS: PointProduct[] = [
   { id: 'pp6', name: '筋膜枪', imageUrl: rewardImg('筋膜枪', '🔫', '#EC4899', '#DB2777'), description: '迷你筋膜枪，4档力度调节，运动后放松肌肉', pointsRequired: 200, stock: 5, active: true, deliveryOptions: ['shipped'], maxExchange: 1, campId: 'camp1' },
 ];
 
-/** 积分兑换记录 */
+/** 小红花兑换记录 */
 export const MOCK_POINT_EXCHANGES: PointExchangeRecord[] = [
   // campId 与对应商品 pp1(camp1)/pp2(camp2)/pp3(camp1) 一致，避免无归属导致营期视图口径不一致
   { id: 'pe1', studentId: 's1', studentName: '李明', productId: 'pp1', productName: '运动水杯', productImage: rewardImg('运动水杯', '🥤', '#2C7DA0', '#0099CC'), pointsSpent: 30, exchangeDate: iso(-3, '14:30:00'), status: 'fulfilled', deliveryMethod: 'shipped', trackingNumber: 'SF1024567890', shipDate: iso(-2, '10:00:00'), recipientName: '李明', recipientPhone: '13800001111', recipientAddress: '北京市海淀区中关村大街1号', campId: 'camp1' },
@@ -921,7 +921,7 @@ export const MOCK_POINT_EXCHANGES: PointExchangeRecord[] = [
   { id: 'pe4', studentId: 's7', studentName: '郑爽', productId: 'pp2', productName: '跳绳', productImage: rewardImg('跳绳', '🤸', '#E8674F', '#FF6B35'), pointsSpent: 50, exchangeDate: iso(-1, '11:00:00'), status: 'cancelled', deliveryMethod: 'shipped', recipientName: '郑爽', recipientPhone: '13800000007', recipientAddress: '上海市浦东新区张江路100号', cancelledAt: iso(-1, '12:34:00'), campId: 'camp2' },
 ];
 
-/** 营养师手动加减分记录（补录线下打卡积分等） */
+/** 营养师手动加减分记录（补录线下打卡小红花等） */
 export const MOCK_MANUAL_SCORES: ManualScoreRecord[] = [
   { id: 'ms1', studentId: 's1', points: 10, reason: '营前线下打卡补录（5天饮食+运动）', dietitianName: '营养师小王', createdAt: iso(-2, '10:00:00'), date: dateStr(-7), campId: 'camp1' },
   { id: 'ms2', studentId: 's2', points: 6, reason: '线下运动打卡补录', dietitianName: '营养师小王', createdAt: iso(-2, '10:05:00'), date: dateStr(-5), campId: 'camp1' },
@@ -1220,8 +1220,8 @@ MOCK_POINT_EXCHANGES.push(
   { id: 'pe8', studentId: 's13', studentName: '体验学员', productId: 'pp2', productName: '跳绳', productImage: rewardImg('跳绳', '🤸', '#E8674F', '#FF6B35'), pointsSpent: 50, exchangeDate: iso(0, '09:10:00'), status: 'pending', deliveryMethod: 'shipped', recipientName: '体验学员', recipientPhone: '13900000009', recipientAddress: '北京市朝阳区建国路 88 号', campId: 'camp2' },
 );
 
-// 演示积分：饮食/运动分依赖营养师逐条评分，演示账号可用积分容易为 0，导致积分商城无法兑换。
-// 这里按营期为学员补录「开营前线下打卡」积分，保证每人至少能兑换一档商品；不影响已消费记录口径。
+// 演示小红花：饮食/运动分依赖营养师逐条评分，演示账号可用小红花容易为 0，导致小红花商城无法兑换。
+// 这里按营期为学员补录「开营前线下打卡」小红花，保证每人至少能兑换一档商品；不影响已消费记录口径。
 const demoPointSeeds: { sid: string; name: string; campId: string; points: number }[] = [
   { sid: 's13', name: '体验学员', campId: 'camp1', points: 100 },
   { sid: 's13', name: '体验学员', campId: 'camp2', points: 150 },
