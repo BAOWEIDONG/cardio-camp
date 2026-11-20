@@ -505,23 +505,23 @@ export const MOCK_REWARD_TIERS: RewardTier[] = [
   {
     id: 't0',
     campId: 'camp1',
-    name: '运动跳绳',
+    name: '七日分药盒',
     requiredDays: 5,
-    imageUrl: rewardImg('运动跳绳', '🏃', '#4A90D9', '#357ABD'),
+    imageUrl: rewardImg('七日分药盒', '药', '#1F6A95', '#164864'),
     stock: 100,
     source: 'streak',
-    description: '专业计数跳绳，防滑手柄，轴承顺滑，每日燃脂好搭档',
+    description: '早中晚三格，便携防潮，提醒按时用药',
     deliveryMethods: ['shipped', 'in-person'],
   },
   {
     id: 't1',
     campId: 'camp1',
-    name: '运动水杯',
+    name: '低钠盐礼盒',
     requiredDays: 10,
-    imageUrl: rewardImg('运动水杯', '🥤', '#1F6A95', '#06A952'),
+    imageUrl: rewardImg('低钠盐礼盒', '盐', '#1F6A95', '#2C7DA0'),
     stock: 50,
     source: 'streak',
-    description: '便携运动水杯 500ml，BPA-free 材质，健康饮水好搭档',
+    description: '低钠盐 6 袋 + 2g 限盐勺，控盐更方便',
     deliveryMethods: ['shipped', 'in-person'],
   },
   {
@@ -529,7 +529,7 @@ export const MOCK_REWARD_TIERS: RewardTier[] = [
     campId: 'camp1',
     name: '瑜伽垫',
     requiredDays: 21,
-    imageUrl: rewardImg('瑜伽垫', '🧘', '#8B5CF6', '#7C3AED'),
+    imageUrl: rewardImg('瑜伽垫', '🧘', '#2C7DA0', '#1A577C'),
     stock: 20,
     source: 'streak',
     description: '加厚防滑瑜伽垫 6mm，TPE 环保材质，健身塑形更舒适',
@@ -538,9 +538,9 @@ export const MOCK_REWARD_TIERS: RewardTier[] = [
   {
     id: 't3',
     campId: 'camp1',
-    name: '智能体脂秤',
+    name: '心血管健康礼包',
     requiredDays: 28,
-    imageUrl: rewardImg('智能体脂秤', '⚖️', '#374151', '#1F2937'),
+    imageUrl: rewardImg('健康礼包', '礼', '#1E3A52', '#123B53'),
     stock: 5,
     source: 'streak',
     description: '智能体脂秤，连接手机同步记录，28 项身体数据科学管理',
@@ -904,12 +904,12 @@ export const MOCK_ACCOUNTS: Account[] = [
 /** 小红花商城商品 */
 export const MOCK_POINT_PRODUCTS: PointProduct[] = [
   // 按营期分流：camp1 = 水杯/瑜伽垫/筋膜枪；camp2 = 跳绳/体脂秤/蛋白粉（camp3 新营期默认空，营养师可自行新增）
-  { id: 'pp1', name: '运动水杯', imageUrl: rewardImg('运动水杯', '🥤', '#2C7DA0', '#0099CC'), description: '便携运动水杯 500ml，BPA-free 材质，健康饮水好搭档', pointsRequired: 30, stock: 50, active: true, deliveryOptions: ['shipped', 'in-person'], maxExchange: 2, campId: 'camp1' },
-  { id: 'pp2', name: '跳绳', imageUrl: rewardImg('跳绳', '🤸', '#E8674F', '#FF6B35'), description: '专业计数跳绳，防滑手柄，轴承顺滑，燃脂利器', pointsRequired: 50, stock: 29, active: true, deliveryOptions: ['shipped', 'in-person'], campId: 'camp2' },
-  { id: 'pp3', name: '瑜伽垫', imageUrl: rewardImg('瑜伽垫', '🧘', '#1F6A95', '#164864'), description: '加厚防滑瑜伽垫 6mm，TPE 环保材质，运动更舒适', pointsRequired: 80, stock: 20, active: true, deliveryOptions: ['shipped'], campId: 'camp1' },
-  { id: 'pp4', name: '电子体脂秤', imageUrl: rewardImg('体脂秤', '⚖️', '#8B5CF6', '#6D28D9'), description: '智能体脂秤，13项身体数据监测，蓝牙连接APP', pointsRequired: 120, stock: 10, active: true, deliveryOptions: ['shipped'], campId: 'camp2' },
-  { id: 'pp5', name: '蛋白粉', imageUrl: rewardImg('蛋白粉', '💪', '#F59E0B', '#D97706'), description: '乳清蛋白粉 500g，运动后补充蛋白质，助力恢复', pointsRequired: 100, stock: 15, active: true, deliveryOptions: ['shipped', 'in-person'], campId: 'camp2' },
-  { id: 'pp6', name: '筋膜枪', imageUrl: rewardImg('筋膜枪', '🔫', '#EC4899', '#DB2777'), description: '迷你筋膜枪，4档力度调节，运动后放松肌肉', pointsRequired: 200, stock: 5, active: true, deliveryOptions: ['shipped'], maxExchange: 1, campId: 'camp1' },
+  { id: 'pp1', name: '低钠盐礼盒', imageUrl: rewardImg('低钠盐礼盒', '盐', '#2C7DA0', '#1F6A95'), description: '低钠盐 6 袋 + 2g 限盐勺，控盐更方便', pointsRequired: 30, stock: 50, active: true, deliveryOptions: ['shipped', 'in-person'], maxExchange: 2, campId: 'camp1' },
+  { id: 'pp2', name: '七日分药盒', imageUrl: rewardImg('七日分药盒', '药', '#E8674F', '#FF6B35'), description: '早中晚三格，便携防潮，提醒按时用药', pointsRequired: 50, stock: 29, active: true, deliveryOptions: ['shipped', 'in-person'], campId: 'camp2' },
+  { id: 'pp3', name: '电子血压计', imageUrl: rewardImg('电子血压计', '压', '#1F6A95', '#164864'), description: '上臂式电子血压计，双人记忆，语音播报', pointsRequired: 80, stock: 20, active: true, deliveryOptions: ['shipped'], campId: 'camp1' },
+  { id: 'pp4', name: '心血管健康礼包', imageUrl: rewardImg('健康礼包', '礼', '#2C7DA0', '#1A577C'), description: '分药盒、血压记录本、低钠食谱、运动毛巾', pointsRequired: 120, stock: 10, active: true, deliveryOptions: ['shipped'], campId: 'camp2' },
+  { id: 'pp5', name: '低芥酸菜籽油 2L', imageUrl: rewardImg('菜籽油', '油', '#F59E0B', '#D97706'), description: '富含不饱和脂肪酸，适合日常烹调', pointsRequired: 100, stock: 15, active: true, deliveryOptions: ['shipped', 'in-person'], campId: 'camp2' },
+  { id: 'pp6', name: '家庭急救药盒', imageUrl: rewardImg('急救药盒', '盒', '#EC4899', '#DB2777'), description: '硝酸甘油避光存放格 + 用药卡', pointsRequired: 200, stock: 5, active: true, deliveryOptions: ['shipped'], maxExchange: 1, campId: 'camp1' },
 ];
 
 /** 小红花兑换记录 */
@@ -1206,10 +1206,10 @@ MOCK_MANUAL_SCORES.push(
 // 第二期打卡奖励档位（原种子只有第一期档位，导致第二期学员「我的奖励」为空）
 if (!MOCK_REWARD_TIERS.some((t) => t.campId === 'camp2')) {
   MOCK_REWARD_TIERS.push(
-    { id: 't4', campId: 'camp2', name: '运动毛巾', requiredDays: 3, imageUrl: rewardImg('运动毛巾', '🧴', '#2C7DA0', '#0B6BCB'), stock: 60, source: 'streak', description: '速干运动毛巾，健身通勤两用', deliveryMethods: ['shipped', 'in-person'] },
-    { id: 't5', campId: 'camp2', name: '运动水杯', requiredDays: 7, imageUrl: rewardImg('运动水杯', '🥤', '#1F6A95', '#06A952'), stock: 40, source: 'streak', description: '便携运动水杯 500ml，BPA-free 材质', deliveryMethods: ['shipped', 'in-person'] },
-    { id: 't6', campId: 'camp2', name: '瑜伽垫', requiredDays: 14, imageUrl: rewardImg('瑜伽垫', '🧘', '#8B5CF6', '#7C3AED'), stock: 20, source: 'streak', description: '加厚防滑瑜伽垫 6mm，TPE 环保材质', deliveryMethods: ['shipped', 'in-person'] },
-    { id: 't7', campId: 'camp2', name: '智能体脂秤', requiredDays: 28, imageUrl: rewardImg('智能体脂秤', '⚖️', '#374151', '#1F2937'), stock: 5, source: 'streak', description: '智能体脂秤，连接手机同步记录', deliveryMethods: ['shipped'] },
+    { id: 't4', campId: 'camp2', name: '限盐勺套装', requiredDays: 3, imageUrl: rewardImg('限盐勺', '盐', '#2C7DA0', '#0B6BCB'), stock: 60, source: 'streak', description: '2g 限盐勺 + 控盐打卡表', deliveryMethods: ['shipped', 'in-person'] },
+    { id: 't5', campId: 'camp2', name: '低钠盐礼盒', requiredDays: 7, imageUrl: rewardImg('低钠盐礼盒', '盐', '#1F6A95', '#2C7DA0'), stock: 40, source: 'streak', description: '低钠盐 6 袋 + 2g 限盐勺', deliveryMethods: ['shipped', 'in-person'] },
+    { id: 't6', campId: 'camp2', name: '七日分药盒', requiredDays: 14, imageUrl: rewardImg('七日分药盒', '药', '#2C7DA0', '#1A577C'), stock: 20, source: 'streak', description: '早中晚三格，便携防潮', deliveryMethods: ['shipped', 'in-person'] },
+    { id: 't7', campId: 'camp2', name: '电子血压计', requiredDays: 28, imageUrl: rewardImg('电子血压计', '压', '#1E3A52', '#123B53'), stock: 5, source: 'streak', description: '上臂式电子血压计，双人记忆', deliveryMethods: ['shipped'] },
   );
 }
 MOCK_REWARD_CLAIMS.push(
