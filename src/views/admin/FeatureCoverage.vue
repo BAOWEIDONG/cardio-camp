@@ -12,6 +12,11 @@ const kw = ref('');
 const detail = ref<FeatureItem | null>(null);
 const show = ref(false);
 const roles = computed(() => ['全部', ...Array.from(new Set(FEATURES.map((f) => f.role)))]);
+const roleShort = (r: string) => {
+  if (r.includes('二级机构')) return '机构管理员';
+  if (r.includes('超级管理员')) return '超级管理员';
+  return r.replace('端', '');
+};
 const list = computed(() => FEATURES.filter((f) =>
   (phase.value === '全部' || f.phase === phase.value) &&
   (role.value === '全部' || f.role === role.value) &&
@@ -67,7 +72,7 @@ const routeMap: Record<string, any> = {
           <button v-for="p in ['全部', '一期', '二期', '三期']" :key="p" class="shrink-0 rounded-full px-3 py-1.5 text-[9.5px] font-bold" :class="phase === p ? 'bg-brand-600 text-white' : 'bg-white/70 text-muted'" @click="phase = p as any">{{ p }}</button>
         </div>
         <div class="no-scrollbar mt-1.5 flex gap-1.5 overflow-x-auto pb-1">
-          <button v-for="r in roles" :key="r" class="shrink-0 rounded-full px-2.5 py-1.5 text-[9px] font-bold" :class="role === r ? 'bg-[#1D5250] text-white' : 'bg-white/70 text-muted'" @click="role = r">{{ r }}</button>
+          <button v-for="r in roles" :key="r" class="shrink-0 rounded-full px-2.5 py-1.5 text-[9px] font-bold" :class="role === r ? 'bg-[#1D5250] text-white' : 'bg-white/70 text-muted'" @click="role = r">{{ roleShort(r) }}</button>
         </div>
       </div>
 

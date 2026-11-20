@@ -130,7 +130,7 @@ const ACCOUNTS: Account[] = [
   { id: 'c2', phone: '13700000002', name: '刘畅', role: 'coach', orgId: 'org1', title: '运动康复师', dept: '心脏康复中心', campIds: ['camp1'], active: true, employeeNo: 'C0002', createdAt: '2026-10-01 09:00' },
   { id: 'n1', phone: '13600000001', name: '陈静', role: 'dietitian', orgId: 'org1', title: '注册营养师', dept: '临床营养科', campIds: ['camp1'], active: true, employeeNo: 'N0001', createdAt: '2026-10-01 09:00' },
   { id: 'n2', phone: '13600000002', name: '赵倩', role: 'dietitian', orgId: 'org1', title: '注册营养师', dept: '临床营养科', campIds: ['camp1'], active: true, employeeNo: 'N0002', createdAt: '2026-10-01 09:00' },
-  { id: 'o1', phone: '13500000001', name: '王丽', role: 'org_admin', orgId: 'org2', title: '机构运营管理员', dept: '健康管理部', campIds: ['camp1', 'camp2'], active: true, groups: ['康复医院 A 组', '康复医院 B 组'], createdAt: '2026-09-20 09:00' },
+  { id: 'o1', phone: '13500000001', name: '王丽', role: 'org_admin', orgId: 'org1', title: '机构运营管理员', dept: '健康管理中心', campIds: ['camp1', 'camp2'], active: true, groups: ['国际医院总部组', '康复医院 A 组'], createdAt: '2026-09-20 09:00' },
   { id: 'o2', phone: '13500000002', name: '刘强', role: 'org_admin', orgId: 'org1', title: '机构运营管理员', dept: '健康管理中心', campIds: ['camp1'], active: true, groups: ['国际医院总部组'], createdAt: '2026-09-20 09:00' },
   { id: 'a1', phone: '13400000001', name: '李项目', role: 'super_admin', orgId: 'org1', title: '项目超级管理员', dept: '健康事业部', campIds: ['camp1', 'camp2'], active: true, employeeNo: 'A0001', createdAt: '2026-09-01 09:00' },
 ];
@@ -588,7 +588,7 @@ export const DEMO_LOGINS = [
   { role: 'doctor', label: '医师 · 李建国', phone: '13800000001', desc: '心内科主任医师', color: '#0F5C6B' },
   { role: 'coach', label: '运动师 · 王凯', phone: '13700000001', desc: '心脏康复中心', color: '#D9553E' },
   { role: 'dietitian', label: '营养师 · 陈静', phone: '13600000001', desc: '临床营养科', color: '#2C7DA0' },
-  { role: 'org_admin', label: '机构管理员 · 王丽', phone: '13500000001', desc: '康复医院 · 二级运营', color: '#7A5C3E' },
+  { role: 'org_admin', label: '机构管理员 · 王丽', phone: '13500000001', desc: '国际医院 · 二级运营', color: '#7A5C3E' },
   { role: 'super_admin', label: '超级管理员 · 李项目', phone: '13400000001', desc: '北医国际 · 全局管控', color: '#1D5250' },
 ] as const;
 
