@@ -18,7 +18,7 @@ const med = computed(() => store.data.medications.find((m) => m.studentId === si
 const next = computed(() => records.value[0]);
 const showOnline = ref(false);
 const typeTone: Record<string, string> = {
-  入企面诊: 'bg-[#EAF3F5] text-[#0F5C6B]',
+  入企面诊: 'bg-[#EDF3F8] text-[#144E73]',
   线上随访: 'bg-brand-50 text-brand-700',
   电话随访: 'bg-amber-50 text-amber-700',
   绿色通道: 'bg-coral-50 text-coral-500',
@@ -67,7 +67,7 @@ const emergency = () => showDialog({
         <SectionHead title="我的三师团队" sub="多对一服务 · 消息全程留痕" />
         <div class="glass-card divide-y divide-black/[0.045] overflow-hidden rounded-2xl">
           <div v-for="m in team" :key="m.id" class="flex items-center gap-2.5 px-3.5 py-3">
-            <span class="flex h-9 w-9 items-center justify-center rounded-full" :class="m.role === 'doctor' ? 'bg-[#EAF3F5] text-[#0F5C6B]' : m.role === 'coach' ? 'bg-coral-50 text-coral-500' : 'bg-[#EDF5FA] text-[#2C7DA0]'">
+            <span class="flex h-9 w-9 items-center justify-center rounded-full" :class="m.role === 'doctor' ? 'bg-[#EDF3F8] text-[#144E73]' : m.role === 'coach' ? 'bg-coral-50 text-coral-500' : 'bg-[#EDF5FA] text-[#2C7DA0]'">
               <component :is="m.role === 'doctor' ? Stethoscope : m.role === 'coach' ? Dumbbell : Leaf" class="h-4 w-4" />
             </span>
             <div class="min-w-0 flex-1">
@@ -130,10 +130,10 @@ const emergency = () => showDialog({
               <div class="mt-1.5 text-[11px] font-extrabold text-brand-800">图文问诊</div>
               <div class="mt-0.5 text-[8.5px] text-brand-600">上传报告，48 小时内回复</div>
             </button>
-            <button class="tap rounded-xl border border-[#0F5C6B]/12 bg-[#EAF3F5] p-3 text-left" @click="openOnline('视频问诊')">
-              <Video class="h-5 w-5 text-[#0F5C6B]" />
-              <div class="mt-1.5 text-[11px] font-extrabold text-[#0F5C6B]">视频问诊</div>
-              <div class="mt-0.5 text-[8.5px] text-[#0F5C6B]/65">与医师面对面，需预约</div>
+            <button class="tap rounded-xl border border-[#144E73]/12 bg-[#EDF3F8] p-3 text-left" @click="openOnline('视频问诊')">
+              <Video class="h-5 w-5 text-[#144E73]" />
+              <div class="mt-1.5 text-[11px] font-extrabold text-[#144E73]">视频问诊</div>
+              <div class="mt-0.5 text-[8.5px] text-[#144E73]/65">与医师面对面，需预约</div>
             </button>
           </div>
           <div class="mt-2 flex items-start gap-1.5 rounded-xl bg-mist px-2.5 py-2 text-[8.5px] leading-relaxed text-muted">

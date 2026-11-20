@@ -130,7 +130,7 @@ const keyMetrics = computed(() => {
         </div>
 
         <div class="glass-card rounded-2xl p-3.5">
-          <div class="flex items-center gap-2 text-[11.5px] font-extrabold text-ink"><ClipboardList class="h-4 w-4 text-[#0F5C6B]" /> 最近随访结论</div>
+          <div class="flex items-center gap-2 text-[11.5px] font-extrabold text-ink"><ClipboardList class="h-4 w-4 text-[#144E73]" /> 最近随访结论</div>
           <div v-if="fus[0]" class="mt-1.5 text-[10px] leading-relaxed text-ink/80">{{ fus[0].conclusion }}</div>
           <div v-if="fus[0]" class="mt-1 text-[9.5px] leading-relaxed text-muted">方案：{{ fus[0].plan }}</div>
           <div v-if="fus[0]" class="mt-2 flex items-center gap-1 text-[8.5px] text-muted"><CalendarClock class="h-3 w-3" /> {{ fus[0].date.slice(0, 10) }} · {{ fus[0].doctorName }} · 下次 {{ fmtShort(fus[0].nextDate) }}</div>
@@ -152,7 +152,7 @@ const keyMetrics = computed(() => {
         <div class="glass-card rounded-2xl p-3.5">
           <div class="text-[11.5px] font-extrabold text-ink">三师团队</div>
           <div v-for="m in store.careTeam(s.id)" :key="m.id" class="mt-2 flex items-center gap-2 text-[10px]">
-            <span class="flex h-6 w-6 items-center justify-center rounded-full" :class="m.role === 'doctor' ? 'bg-[#EAF3F5] text-[#0F5C6B]' : m.role === 'coach' ? 'bg-coral-50 text-coral-500' : 'bg-[#EDF5FA] text-[#2C7DA0]'">
+            <span class="flex h-6 w-6 items-center justify-center rounded-full" :class="m.role === 'doctor' ? 'bg-[#EDF3F8] text-[#144E73]' : m.role === 'coach' ? 'bg-coral-50 text-coral-500' : 'bg-[#EDF5FA] text-[#2C7DA0]'">
               <component :is="m.role === 'doctor' ? Stethoscope : m.role === 'coach' ? Dumbbell : Leaf" class="h-3 w-3" />
             </span>
             <span class="font-semibold text-ink">{{ m.name }}</span><span class="text-muted">{{ m.label }}</span>

@@ -42,7 +42,7 @@ function resetDemo() {
   <div class="app-page flat-bg">
     <div class="page-scroll pb-[112px]">
       <div class="flex items-center gap-3 px-4 pb-3 pt-4">
-        <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#1D5250] text-white"><ShieldCheck class="h-5 w-5" /></div>
+        <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#1E3A52] text-white"><ShieldCheck class="h-5 w-5" /></div>
         <div class="min-w-0 flex-1">
           <div class="text-[10px] text-muted">北京大学国际医院 · 健康事业部</div>
           <div class="text-[15px] font-extrabold text-ink">{{ u.name }} 超级管理员</div>

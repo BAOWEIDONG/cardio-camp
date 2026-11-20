@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 const props = withDefaults(defineProps<{
   points: number[]; width?: number; height?: number; color?: string; fill?: boolean; strokeWidth?: number;
-}>(), { width: 120, height: 36, color: '#0E7C6B', fill: true, strokeWidth: 2 });
+}>(), { width: 120, height: 36, color: '#1F6A95', fill: true, strokeWidth: 2 });
 
 const geometry = computed(() => {
   const arr = props.points.filter((n) => Number.isFinite(n));

@@ -19,12 +19,12 @@ const error = ref('');
 const loading = ref(false);
 
 const roles: { key: Role; label: string; sub: string; icon: unknown; color: string; bg: string }[] = [
-  { key: 'student', label: '学员', sub: '营员端', icon: GraduationCap, color: '#0E7C6B', bg: '#EAF7F3' },
-  { key: 'doctor', label: '医师', sub: '诊疗与随访', icon: Stethoscope, color: '#0F5C6B', bg: '#EAF3F5' },
+  { key: 'student', label: '学员', sub: '营员端', icon: GraduationCap, color: '#1F6A95', bg: '#EDF6FC' },
+  { key: 'doctor', label: '医师', sub: '诊疗与随访', icon: Stethoscope, color: '#144E73', bg: '#EDF3F8' },
   { key: 'coach', label: '运动师', sub: '评估与处方', icon: Dumbbell, color: '#D9553E', bg: '#FDF1ED' },
   { key: 'dietitian', label: '营养师', sub: '营养与批注', icon: Leaf, color: '#2C7DA0', bg: '#EDF5FA' },
   { key: 'org_admin', label: '机构管理员', sub: '二级运营', icon: Building2, color: '#96703F', bg: '#F8F2E9' },
-  { key: 'super_admin', label: '超级管理员', sub: '北医国际', icon: ShieldCheck, color: '#1D5250', bg: '#EDF3F2' },
+  { key: 'super_admin', label: '超级管理员', sub: '北医国际', icon: ShieldCheck, color: '#1E3A52', bg: '#EDF3F2' },
 ];
 
 const activeRole = computed(() => roles.find((r) => r.key === role.value)!);
@@ -76,7 +76,7 @@ const privacy = () => showDialog({
   <div class="app-page">
     <div class="page-scroll no-tabbar">
       <!-- 顶部品牌区 -->
-      <div class="relative overflow-hidden rounded-b-[34px] bg-[linear-gradient(150deg,#083F39_0%,#0B6558_46%,#0E7C6B_100%)] px-5 pb-7 pt-9 text-white">
+      <div class="relative overflow-hidden rounded-b-[34px] bg-[linear-gradient(150deg,#123B53_0%,#1A577C_46%,#1F6A95_100%)] px-5 pb-7 pt-9 text-white">
         <div class="absolute -right-16 -top-14 h-52 w-52 rounded-full border border-white/10" />
         <div class="absolute -right-8 -top-6 h-36 w-36 rounded-full border border-white/10" />
         <svg class="pointer-events-none absolute inset-x-0 bottom-14 h-16 opacity-25" viewBox="0 0 360 64" preserveAspectRatio="none">

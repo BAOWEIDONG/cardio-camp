@@ -64,7 +64,7 @@ function publish() {
         <div class="text-[9.5px] font-bold text-muted">选择学员</div>
         <div class="no-scrollbar mt-1.5 flex gap-1.5 overflow-x-auto pb-1">
           <button v-for="p in store.myStudents" :key="p.id" class="tap flex shrink-0 items-center gap-1.5 rounded-full border px-2.5 py-1.5" :class="sid === p.id ? 'border-[#2C7DA0]/40 bg-[#EDF5FA]' : 'border-black/[0.06] bg-white/70'" @click="sid = p.id">
-            <span class="text-[10px] font-bold" :class="sid === p.id ? 'text-[#22678A]' : 'text-ink'">{{ p.name }}</span>
+            <span class="text-[10px] font-bold" :class="sid === p.id ? 'text-[#1A577C]' : 'text-ink'">{{ p.name }}</span>
             <RiskBadge :risk="p.risk" />
           </button>
         </div>

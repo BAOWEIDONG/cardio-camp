@@ -34,7 +34,7 @@ function mini(sid: string) { return store.bpOf(sid).filter((r) => r.period === '
   <div class="app-page flat-bg">
     <div class="page-scroll pb-[112px]">
       <div class="flex items-center gap-3 px-4 pb-3 pt-4">
-        <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#0F5C6B] text-white"><Stethoscope class="h-5 w-5" /></div>
+        <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#144E73] text-white"><Stethoscope class="h-5 w-5" /></div>
         <div class="min-w-0 flex-1">
           <div class="text-[10px] text-muted">{{ weekdayCN(DEMO_TODAY) }} · {{ fmtShort(DEMO_TODAY) }}</div>
           <div class="text-[15px] font-extrabold text-ink">{{ u.name }} 主任医师</div>
@@ -74,7 +74,7 @@ function mini(sid: string) { return store.bpOf(sid).filter((r) => r.period === '
       <!-- 快捷 -->
       <div class="mt-3 grid grid-cols-4 gap-2 px-4">
         <button v-for="a in [
-          { l: '患者列表', i: Users, v: 'd-patients' as const, tone: 'bg-[#EAF3F5] text-[#0F5C6B]' },
+          { l: '患者列表', i: Users, v: 'd-patients' as const, tone: 'bg-[#EDF3F8] text-[#144E73]' },
           { l: '随访计划', i: CalendarClock, v: 'd-followup' as const, tone: 'bg-brand-50 text-brand-700' },
           { l: '预警中心', i: Siren, v: 'd-alerts' as const, tone: 'bg-coral-50 text-coral-500' },
           { l: '入营审核', i: ClipboardCheck, v: 'd-review' as const, tone: 'bg-amber-50 text-amber-600' },
@@ -87,13 +87,13 @@ function mini(sid: string) { return store.bpOf(sid).filter((r) => r.period === '
       <!-- 待随访 -->
       <div class="mt-4 px-4">
         <SectionHead title="待随访患者" sub="按计划日期排序 · 逾期标红">
-          <template #icon><CalendarClock class="h-4 w-4 text-[#0F5C6B]" /></template>
+          <template #icon><CalendarClock class="h-4 w-4 text-[#144E73]" /></template>
           <template #action><button class="text-[10.5px] font-bold text-brand-700" @click="store.setView('d-followup')">全部</button></template>
         </SectionHead>
         <div class="space-y-2">
           <button v-for="d in dueList" :key="d.s.id" class="tap soft-card w-full rounded-2xl p-3 text-left" @click="store.openStudent(d.s.id, 'd-patient')">
             <div class="flex items-center gap-2.5">
-              <div class="flex h-9 w-9 items-center justify-center rounded-full bg-[#EAF3F5] text-[10px] font-extrabold text-[#0F5C6B]">{{ d.s.name.slice(0, 1) }}</div>
+              <div class="flex h-9 w-9 items-center justify-center rounded-full bg-[#EDF3F8] text-[10px] font-extrabold text-[#144E73]">{{ d.s.name.slice(0, 1) }}</div>
               <div class="min-w-0 flex-1">
                 <div class="flex items-center gap-1.5"><span class="text-[12px] font-extrabold text-ink">{{ d.s.name }}</span><RiskBadge :risk="d.s.risk" /></div>
                 <div class="mt-0.5 text-[9px] text-muted">上次{{ d.fu?.type }} {{ fmtShort(d.fu?.date || '') }} · 下次 {{ fmtShort(d.fu?.nextDate || '') }}</div>
@@ -130,7 +130,7 @@ function mini(sid: string) { return store.bpOf(sid).filter((r) => r.period === '
       <!-- 心电监测 -->
       <div class="mt-4 px-4">
         <SectionHead title="72 小时心电监测" sub="入营评估期 · 异常自动预警">
-          <template #icon><Activity class="h-4 w-4 text-[#0F5C6B]" /></template>
+          <template #icon><Activity class="h-4 w-4 text-[#144E73]" /></template>
         </SectionHead>
         <div class="glass-card rounded-2xl p-3.5">
           <div v-for="p in ecgPatients" :key="p.id" class="border-b border-black/[0.04] py-2 first:pt-0 last:border-0 last:pb-0">
@@ -140,7 +140,7 @@ function mini(sid: string) { return store.bpOf(sid).filter((r) => r.period === '
               <span class="ml-auto text-[8.5px] text-muted">佩戴 {{ p.id === 's2' ? 46 : 22 }} 小时</span>
             </div>
             <div class="mt-1 flex items-center gap-2">
-              <svg viewBox="0 0 180 24" class="h-6 flex-1 text-[#0F5C6B]" preserveAspectRatio="none">
+              <svg viewBox="0 0 180 24" class="h-6 flex-1 text-[#144E73]" preserveAspectRatio="none">
                 <path d="M0 12 H30 L34 12 L38 4 L42 20 L46 9 L50 12 H78 L82 12 L86 6 L90 18 L94 10 L98 12 H128 L132 12 L136 5 L140 19 L144 9 L148 12 H180" fill="none" stroke="currentColor" stroke-width="1.2" />
               </svg>
               <span class="text-[8px] font-bold" :class="p.id === 's2' ? 'text-coral-500' : 'text-brand-600'">{{ p.id === 's2' ? '偶发房早 12 次' : '未见异常' }}</span>
@@ -155,7 +155,7 @@ function mini(sid: string) { return store.bpOf(sid).filter((r) => r.period === '
         <div class="glass-card rounded-2xl p-3.5">
           <div class="flex gap-1.5">
             <div v-for="r in [
-              { l: '低危', n: patients.filter((p) => p.risk === 'low').length, c: 'bg-[#2FA36B]' },
+              { l: '低危', n: patients.filter((p) => p.risk === 'low').length, c: 'bg-[#2C7DA0]' },
               { l: '中危', n: patients.filter((p) => p.risk === 'medium').length, c: 'bg-[#D99A2B]' },
               { l: '高危', n: patients.filter((p) => p.risk === 'high').length, c: 'bg-[#D9553E]' },
               { l: '很高危', n: patients.filter((p) => p.risk === 'very_high').length, c: 'bg-[#B2382B]' },
@@ -168,10 +168,10 @@ function mini(sid: string) { return store.bpOf(sid).filter((r) => r.period === '
       </div>
 
       <div class="mt-4 px-4 pb-4">
-        <button class="tap flex w-full items-center gap-2.5 rounded-2xl border border-[#0F5C6B]/15 bg-[#EAF3F5]/70 px-3.5 py-3 text-left" @click="store.setView('d-review')">
-          <ClipboardCheck class="h-4 w-4 text-[#0F5C6B]" />
-          <div class="flex-1 text-[10px] text-[#0F5C6B]"><b>3 份入营材料待审核</b> · 含 1 份动态心电异常</div>
-          <ArrowUpRight class="h-4 w-4 text-[#0F5C6B]/50" />
+        <button class="tap flex w-full items-center gap-2.5 rounded-2xl border border-[#144E73]/15 bg-[#EDF3F8]/70 px-3.5 py-3 text-left" @click="store.setView('d-review')">
+          <ClipboardCheck class="h-4 w-4 text-[#144E73]" />
+          <div class="flex-1 text-[10px] text-[#144E73]"><b>3 份入营材料待审核</b> · 含 1 份动态心电异常</div>
+          <ArrowUpRight class="h-4 w-4 text-[#144E73]/50" />
         </button>
       </div>
     </div>

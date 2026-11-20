@@ -10,10 +10,13 @@ import { Button, Input, NavBar, SectionHead, Sheet, Sparkline } from '../../comp
 import { DEMO_TODAY, fmtMD, weekdayCN } from '../../lib/date';
 import type { CheckinComment } from '../../types';
 
+type CheckinTab = 'bp' | 'exercise' | 'diet' | 'med' | 'weight';
+const props = withDefaults(defineProps<{ initialTab?: CheckinTab; standalone?: boolean }>(), { initialTab: 'bp', standalone: false });
 const store = useAppStore();
 const s = computed(() => store.currentStudent!);
 const sid = computed(() => s.value.id);
-const tab = ref<'bp' | 'exercise' | 'diet' | 'med' | 'weight'>('bp');
+const tab = ref<CheckinTab>(props.initialTab);
+const pageTitle = computed(() => ({ bp: '血压打卡', exercise: '运动打卡', diet: '饮食打卡', med: '用药打卡', weight: '体重打卡' } as Record<CheckinTab, string>)[tab.value]);
 const show = ref(false);
 const saving = ref(false);
 
@@ -123,7 +126,7 @@ const roleLabel: Record<CheckinComment['role'], string> = { doctor: '医师', co
 
 <template>
   <div class="app-page flat-bg">
-    <NavBar title="健康打卡" :on-back="store.back">
+    <NavBar :title="standalone ? pageTitle : '健康打卡'" :on-back="store.back">
       <template #right>
         <span class="text-[10px] font-bold text-brand-700">{{ DEMO_TODAY }} · 第 {{ store.campDay }} 天</span>
       </template>
@@ -148,7 +151,7 @@ const roleLabel: Record<CheckinComment['role'], string> = { doctor: '医师', co
         </div>
       </div>
 
-      <div class="mt-3 px-4">
+      <div v-if="!standalone" class="mt-3 px-4">
         <div class="seg-tabs overflow-x-auto no-scrollbar">
           <button v-for="t in tabs" :key="t.key" class="seg-tab !px-1" :class="tab === t.key ? 'active' : ''" @click="tab = t.key">
             <component :is="t.icon" class="h-3.5 w-3.5" /> {{ t.label }}
@@ -355,7 +358,7 @@ const roleLabel: Record<CheckinComment['role'], string> = { doctor: '医师', co
                 <span class="mb-1 ml-1 text-[10px] font-bold text-brand-600">↓{{ store.weightChange(sid) }} kg</span>
               </div>
             </div>
-            <Sparkline :points="wtList.map((r) => r.weight).reverse()" :width="110" :height="40" color="#0E7C6B" />
+            <Sparkline :points="wtList.map((r) => r.weight).reverse()" :width="110" :height="40" color="#1F6A95" />
           </div>
           <Button class="mt-3 w-full" variant="secondary" @click="openWeight"><Plus class="h-4 w-4" /> 记录体重</Button>
         </div>

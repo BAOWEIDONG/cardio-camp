@@ -83,7 +83,7 @@ function openBatch() {
           <template #action><button class="text-[10.5px] font-bold text-brand-700" @click="store.setView('n-accounts')">管理</button></template>
         </SectionHead>
         <div class="grid grid-cols-3 gap-2">
-          <div v-for="r in [{ l: '医师', n: roleCounts.doctor, c: 'text-[#0F5C6B] bg-[#EAF3F5]' }, { l: '运动师', n: roleCounts.coach, c: 'text-coral-500 bg-coral-50' }, { l: '营养师', n: roleCounts.dietitian, c: 'text-[#2C7DA0] bg-[#EDF5FA]' }]" :key="r.l" class="soft-card rounded-xl p-2.5 text-center">
+          <div v-for="r in [{ l: '医师', n: roleCounts.doctor, c: 'text-[#144E73] bg-[#EDF3F8]' }, { l: '运动师', n: roleCounts.coach, c: 'text-coral-500 bg-coral-50' }, { l: '营养师', n: roleCounts.dietitian, c: 'text-[#2C7DA0] bg-[#EDF5FA]' }]" :key="r.l" class="soft-card rounded-xl p-2.5 text-center">
             <div class="mx-auto flex h-7 w-7 items-center justify-center rounded-full" :class="r.c"><Users class="h-3.5 w-3.5" /></div>
             <div class="mt-1 text-[15px] font-extrabold text-ink">{{ r.n }}</div><div class="text-[8px] text-muted">{{ r.l }}</div>
           </div>

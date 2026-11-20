@@ -584,12 +584,12 @@ export function createSeedData(): AppData {
 
 /** 登录页一键体验账号 */
 export const DEMO_LOGINS = [
-  { role: 'student', label: '学员 · 张伟', phone: '13900000001', desc: '高危 · 高血压 + 斑块', color: '#0E7C6B' },
-  { role: 'doctor', label: '医师 · 李建国', phone: '13800000001', desc: '心内科主任医师', color: '#0F5C6B' },
+  { role: 'student', label: '学员 · 张伟', phone: '13900000001', desc: '高危 · 高血压 + 斑块', color: '#1F6A95' },
+  { role: 'doctor', label: '医师 · 李建国', phone: '13800000001', desc: '心内科主任医师', color: '#144E73' },
   { role: 'coach', label: '运动师 · 王凯', phone: '13700000001', desc: '心脏康复中心', color: '#D9553E' },
   { role: 'dietitian', label: '营养师 · 陈静', phone: '13600000001', desc: '临床营养科', color: '#2C7DA0' },
   { role: 'org_admin', label: '机构管理员 · 王丽', phone: '13500000001', desc: '国际医院 · 二级运营', color: '#7A5C3E' },
-  { role: 'super_admin', label: '超级管理员 · 李项目', phone: '13400000001', desc: '北医国际 · 全局管控', color: '#1D5250' },
+  { role: 'super_admin', label: '超级管理员 · 李项目', phone: '13400000001', desc: '北医国际 · 全局管控', color: '#1E3A52' },
 ] as const;
 
 export const CAMP_START = '2026-12-01';

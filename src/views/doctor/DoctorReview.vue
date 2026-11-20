@@ -58,7 +58,7 @@ const materials = [
       <div class="mt-3 space-y-2 px-4 pb-8">
         <button v-for="q in list" :key="q.id" class="tap w-full rounded-2xl border border-black/[0.05] bg-white/85 p-3.5 text-left" @click="open(q)">
           <div class="flex items-center gap-2">
-            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-[#EAF3F5] text-[11px] font-extrabold text-[#0F5C6B]">{{ q.student.name.slice(0, 1) }}</span>
+            <span class="flex h-9 w-9 items-center justify-center rounded-full bg-[#EDF3F8] text-[11px] font-extrabold text-[#144E73]">{{ q.student.name.slice(0, 1) }}</span>
             <div class="min-w-0 flex-1">
               <div class="flex items-center gap-1.5"><span class="text-[12px] font-extrabold text-ink">{{ q.student.name }}</span><RiskBadge :risk="q.risk" /><span class="text-[9px] text-muted">{{ q.student.age }} 岁</span></div>
               <div class="mt-0.5 text-[9px] text-muted">{{ q.student.riskTags.join(' / ') }}</div>

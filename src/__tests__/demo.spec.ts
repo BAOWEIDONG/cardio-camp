@@ -73,7 +73,7 @@ describe('学员端核心链路', () => {
     const bpTask = w.findAll('button').find((b) => b.text().includes('家庭血压'));
     expect(bpTask).toBeTruthy();
     await bpTask!.trigger('click');
-    expect(store.currentView).toBe('s-checkin');
+    expect(store.currentView).toBe('s-bp');
     w.unmount();
   });
 

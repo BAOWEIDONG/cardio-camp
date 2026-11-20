@@ -31,6 +31,9 @@ function openDetail(a: ActivityDef) {
   detail.value = a;
   show.value = true;
 }
+function goStreak() {
+  document.getElementById('streak')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 const navItems = [
   { key: 's-home' as const, label: '首页', icon: Home },
   { key: 's-activity' as const, label: '活动', icon: Trophy },
@@ -73,8 +76,28 @@ const navItems = [
         </div>
       </div>
 
+      <!-- 活动中心四大入口（对齐 versionall ActivityHub） -->
+      <div class="mt-3 grid grid-cols-4 gap-2 px-4">
+        <button class="tap flex flex-col items-center gap-1.5 rounded-2xl border border-black/[0.04] bg-white/80 py-2.5" @click="goStreak">
+          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-50 text-amber-600"><Flame class="h-4 w-4" /></span>
+          <span class="text-[9px] font-bold text-ink">连续打卡</span>
+        </button>
+        <button class="tap flex flex-col items-center gap-1.5 rounded-2xl border border-black/[0.04] bg-white/80 py-2.5" @click="store.setView('s-mall')">
+          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><Flower2 class="h-4 w-4" /></span>
+          <span class="text-[9px] font-bold text-ink">小红花商城</span>
+        </button>
+        <button class="tap flex flex-col items-center gap-1.5 rounded-2xl border border-black/[0.04] bg-white/80 py-2.5" @click="store.setView('s-rewards')">
+          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-coral-50 text-coral-500"><Gift class="h-4 w-4" /></span>
+          <span class="text-[9px] font-bold text-ink">我的奖励</span>
+        </button>
+        <button class="tap flex flex-col items-center gap-1.5 rounded-2xl border border-black/[0.04] bg-white/80 py-2.5" @click="openDetail(store.data.activities.find((x) => x.id === 'act10')!)">
+          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-[#EDF5FA] text-[#2C7DA0]"><Footprints class="h-4 w-4" /></span>
+          <span class="text-[9px] font-bold text-ink">一起走</span>
+        </button>
+      </div>
+
       <!-- 连续打卡 -->
-      <div class="mt-4 px-4">
+      <div id="streak" class="mt-4 px-4">
         <SectionHead title="连续打卡挑战" sub="21 / 45 / 90 天三档，断卡重新累计">
           <template #icon><Flame class="h-4 w-4 text-amber-500" /></template>
         </SectionHead>

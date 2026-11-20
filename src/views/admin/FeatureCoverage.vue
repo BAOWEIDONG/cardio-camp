@@ -72,7 +72,7 @@ const routeMap: Record<string, any> = {
           <button v-for="p in ['全部', '一期', '二期', '三期']" :key="p" class="shrink-0 rounded-full px-3 py-1.5 text-[9.5px] font-bold" :class="phase === p ? 'bg-brand-600 text-white' : 'bg-white/70 text-muted'" @click="phase = p as any">{{ p }}</button>
         </div>
         <div class="no-scrollbar mt-1.5 flex gap-1.5 overflow-x-auto pb-1">
-          <button v-for="r in roles" :key="r" class="shrink-0 rounded-full px-2.5 py-1.5 text-[9px] font-bold" :class="role === r ? 'bg-[#1D5250] text-white' : 'bg-white/70 text-muted'" @click="role = r">{{ roleShort(r) }}</button>
+          <button v-for="r in roles" :key="r" class="shrink-0 rounded-full px-2.5 py-1.5 text-[9px] font-bold" :class="role === r ? 'bg-[#1E3A52] text-white' : 'bg-white/70 text-muted'" @click="role = r">{{ roleShort(r) }}</button>
         </div>
       </div>
 

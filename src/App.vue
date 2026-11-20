@@ -11,6 +11,8 @@ const lazy = (loader: () => Promise<{ default: Component }>) =>
 const StudentHome = lazy(() => import('./views/student/StudentHome.vue'));
 const StudentProfile = lazy(() => import('./views/student/StudentProfile.vue'));
 const StudentCheckin = lazy(() => import('./views/student/StudentCheckin.vue'));
+const StudentCheckinHub = lazy(() => import('./views/student/StudentCheckinHub.vue'));
+const StudentJourney = lazy(() => import('./views/student/StudentJourney.vue'));
 const StudentPrescription = lazy(() => import('./views/student/StudentPrescription.vue'));
 const StudentActivity = lazy(() => import('./views/student/StudentActivity.vue'));
 const StudentMall = lazy(() => import('./views/student/StudentMall.vue'));
@@ -52,12 +54,19 @@ const viewMap: Record<string, Component> = {
   onboarding: OnboardingView,
   's-home': StudentHome,
   's-profile': StudentProfile,
-  's-checkin': StudentCheckin,
+  's-checkin': StudentCheckinHub,
+  's-bp': h(StudentCheckin, { initialTab: 'bp', standalone: true }),
+  's-exercise': h(StudentCheckin, { initialTab: 'exercise', standalone: true }),
+  's-diet': h(StudentCheckin, { initialTab: 'diet', standalone: true }),
+  's-med': h(StudentCheckin, { initialTab: 'med', standalone: true }),
+  's-weight': h(StudentCheckin, { initialTab: 'weight', standalone: true }),
   's-prescription': StudentPrescription,
   's-activity': StudentActivity,
   's-mall': StudentMall,
+  's-rewards': h(StudentMall, { initialTab: 'rewards', standalone: true }),
   's-messages': StudentMessages,
   's-report': StudentReport,
+  's-journey': StudentJourney,
   's-followup': StudentFollowup,
   's-calendar': StudentCalendar,
   's-points': StudentPoints,

@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 const props = withDefaults(defineProps<{
   value: number; max?: number; size?: number; stroke?: number; color?: string; track?: string;
-}>(), { max: 100, size: 92, stroke: 8, color: '#0E7C6B', track: 'rgba(14,124,107,.12)' });
+}>(), { max: 100, size: 92, stroke: 8, color: '#1F6A95', track: 'rgba(31,106,149,.12)' });
 const r = computed(() => (props.size - props.stroke) / 2);
 const c = computed(() => 2 * Math.PI * r.value);
 const pct = computed(() => Math.max(0, Math.min(1, props.value / props.max)));

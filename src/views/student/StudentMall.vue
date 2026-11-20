@@ -8,10 +8,11 @@ import { useAppStore } from '../../store/app';
 import { Button, Input, NavBar, ProgressBar, Sheet } from '../../components/ui';
 import type { Product } from '../../types';
 
+const props = withDefaults(defineProps<{ initialTab?: 'mall' | 'rewards'; standalone?: boolean }>(), { initialTab: 'mall', standalone: false });
 const store = useAppStore();
 const s = computed(() => store.currentStudent!);
 const sid = computed(() => s.value.id);
-const tab = ref<'mall' | 'rewards'>('mall');
+const tab = ref<'mall' | 'rewards'>(props.initialTab);
 const cat = ref('全部');
 const balance = computed(() => store.flowers(sid.value));
 const cats = computed(() => ['全部', ...Array.from(new Set(store.data.products.map((p) => p.category)))]);
@@ -45,7 +46,7 @@ const statusText: Record<string, string> = { pending: '待发放', shipped: '已
 
 <template>
   <div class="app-page flat-bg">
-    <NavBar title="小红花商城" :on-back="store.back">
+    <NavBar :title="standalone && tab === 'rewards' ? '我的奖励' : '小红花商城'" :on-back="store.back">
       <template #right>
         <span class="flex items-center gap-1 text-[11px] font-extrabold text-brand-700"><Flower2 class="h-3.5 w-3.5" /> {{ balance }}</span>
       </template>
@@ -67,7 +68,7 @@ const statusText: Record<string, string> = { pending: '待发放', shipped: '已
         </div>
       </div>
 
-      <div class="mt-3 px-4">
+      <div v-if="!standalone" class="mt-3 px-4">
         <div class="seg-tabs">
           <button class="seg-tab" :class="tab === 'mall' ? 'active' : ''" @click="tab = 'mall'">小红花商城</button>
           <button class="seg-tab" :class="tab === 'rewards' ? 'active' : ''" @click="tab = 'rewards'">我的奖励</button>
@@ -81,7 +82,7 @@ const statusText: Record<string, string> = { pending: '待发放', shipped: '已
         </div>
         <div class="mt-3 grid grid-cols-2 gap-2.5">
           <button v-for="p in products" :key="p.id" class="tap soft-card overflow-hidden rounded-2xl text-left" @click="openProduct(p)">
-            <div class="flex h-[92px] items-center justify-center bg-[radial-gradient(circle_at_30%_20%,#eaf7f3,#f8fbfa)] text-[28px] font-extrabold text-brand-700">{{ p.icon }}</div>
+            <div class="flex h-[92px] items-center justify-center bg-[radial-gradient(circle_at_30%_20%,#edf6fc,#f8fbfa)] text-[28px] font-extrabold text-brand-700">{{ p.icon }}</div>
             <div class="p-2.5">
               <div class="line-clamp-1 text-[11px] font-extrabold text-ink">{{ p.name }}</div>
               <div class="mt-0.5 line-clamp-1 text-[8.5px] text-muted">{{ p.desc }}</div>

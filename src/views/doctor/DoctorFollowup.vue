@@ -57,7 +57,7 @@ const types = ['线上随访', '电话随访', '入企面诊', '绿色通道'] a
       <div class="mt-3 px-4">
         <div class="glass-card rounded-2xl p-3.5">
           <div class="flex items-center gap-2">
-            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EAF3F5] text-[#0F5C6B]"><Stethoscope class="h-4 w-4" /></span>
+            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EDF3F8] text-[#144E73]"><Stethoscope class="h-4 w-4" /></span>
             <div class="min-w-0 flex-1">
               <div class="text-[12px] font-extrabold text-ink">{{ s.name }} · 随访记录</div>
               <div class="text-[9px] text-muted">{{ s.age }} 岁 · 7 日平均 {{ bp?.sbp }}/{{ bp?.dbp }} mmHg</div>

@@ -15,7 +15,8 @@ export type View =
   | 'onboarding'
   // 学员
   | 's-home' | 's-profile' | 's-checkin' | 's-prescription' | 's-activity'
-  | 's-mall' | 's-messages' | 's-report' | 's-followup' | 's-service' | 's-calendar'
+  | 's-bp' | 's-exercise' | 's-diet' | 's-med' | 's-weight'
+  | 's-mall' | 's-rewards' | 's-messages' | 's-report' | 's-journey' | 's-followup' | 's-service' | 's-calendar'
   | 's-points' | 's-team'
   // 医师
   | 'd-home' | 'd-patients' | 'd-patient' | 'd-followup' | 'd-alerts' | 'd-review' | 'd-messages'

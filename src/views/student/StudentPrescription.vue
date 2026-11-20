@@ -86,7 +86,7 @@ const pct = computed(() => 68);
               </div>
             </div>
             <div class="mt-2.5">
-              <div class="relative h-2 rounded-full bg-[linear-gradient(90deg,#d9efe9_0%,#7fcbba_38%,#0e7c6b_60%,#e8674f_100%)]">
+              <div class="relative h-2 rounded-full bg-[linear-gradient(90deg,#d9efe9_0%,#7fcbba_38%,#1f6a95_60%,#e8674f_100%)]">
                 <div class="absolute -top-1 h-4 w-4 -translate-x-1/2 rounded-full border-2 border-white bg-brand-700 shadow" :style="{ left: '60%' }" />
               </div>
               <div class="mt-1 flex justify-between text-[8px] text-muted"><span>热身</span><span>目标区间</span><span>高强度</span></div>
@@ -194,9 +194,9 @@ const pct = computed(() => 68);
         </div>
 
         <div class="rounded-2xl border border-[#2C7DA0]/15 bg-[#EDF5FA]/70 p-3.5">
-          <div class="flex items-center gap-1.5 text-[11px] font-extrabold text-[#22678A]"><Info class="h-4 w-4" /> 饮食原则</div>
+          <div class="flex items-center gap-1.5 text-[11px] font-extrabold text-[#1A577C]"><Info class="h-4 w-4" /> 饮食原则</div>
           <ul class="mt-1.5 space-y-1">
-            <li v-for="p in rxNu.precautions" :key="p" class="flex items-start gap-1.5 text-[10px] leading-relaxed text-[#22678A]/80">
+            <li v-for="p in rxNu.precautions" :key="p" class="flex items-start gap-1.5 text-[10px] leading-relaxed text-[#1A577C]/80">
               <span class="mt-1 h-1 w-1 shrink-0 rounded-full bg-[#2C7DA0]" />{{ p }}
             </li>
           </ul>

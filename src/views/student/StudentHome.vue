@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import {
   Activity, Bell, CalendarDays, ChevronRight, ClipboardCheck, Droplets, Dumbbell,
-  Flame, Flower2, HeartPulse, Home, Leaf, MessageCircle, Pill, Salad, Scale, Stethoscope,
+  Flame, Flower2, Gift, HeartPulse, Home, Leaf, MessageCircle, Pill, Salad, Scale, Stethoscope,
   Target, TrendingDown, Trophy, UtensilsCrossed, FileHeart, Siren, ArrowUpRight,
 } from 'lucide-vue-next';
 import { useAppStore } from '../../store/app';
@@ -30,10 +30,10 @@ const bpSeries = computed(() => store.bpOf(s.value.id).filter((r) => r.period ==
 const weightSeries = computed(() => store.weightOf(s.value.id).slice(-10).map((r) => r.weight));
 
 const tasks = computed(() => [
-  { key: 'bp', label: '家庭血压', desc: done.value.bp ? '今日已记录' : '早晚各一次', icon: HeartPulse, done: done.value.bp, view: 's-checkin' as const, tone: 'text-coral-500 bg-coral-50' },
-  { key: 'med', label: '按时用药', desc: done.value.med ? '今日已服药' : '晨服 / 睡前', icon: Pill, done: done.value.med, view: 's-checkin' as const, tone: 'text-[#2C7DA0] bg-[#EDF5FA]' },
-  { key: 'ex', label: '运动处方', desc: done.value.ex ? '今日已完成' : '快走 30 分钟', icon: Dumbbell, done: done.value.ex, view: 's-checkin' as const, tone: 'text-brand-700 bg-brand-50' },
-  { key: 'diet', label: '三餐打卡', desc: done.value.diet ? '三餐已完成' : '低盐 DASH 饮食', icon: Salad, done: done.value.diet, view: 's-checkin' as const, tone: 'text-amber-600 bg-[#fbf3e2]' },
+  { key: 'bp', label: '家庭血压', desc: done.value.bp ? '今日已记录' : '早晚各一次', icon: HeartPulse, done: done.value.bp, view: 's-bp' as const, tone: 'text-coral-500 bg-coral-50' },
+  { key: 'med', label: '按时用药', desc: done.value.med ? '今日已服药' : '晨服 / 睡前', icon: Pill, done: done.value.med, view: 's-med' as const, tone: 'text-[#2C7DA0] bg-[#EDF5FA]' },
+  { key: 'ex', label: '运动处方', desc: done.value.ex ? '今日已完成' : '快走 30 分钟', icon: Dumbbell, done: done.value.ex, view: 's-exercise' as const, tone: 'text-brand-700 bg-brand-50' },
+  { key: 'diet', label: '三餐打卡', desc: done.value.diet ? '三餐已完成' : '低盐 DASH 饮食', icon: Salad, done: done.value.diet, view: 's-diet' as const, tone: 'text-amber-600 bg-[#fbf3e2]' },
 ]);
 
 const navItems = [
@@ -110,9 +110,12 @@ const latestNotice = computed(() => store.noticesFor(s.value.id).find((n) => !n.
         <SectionHead title="今日任务" :sub="`${doneCount}/4 已完成 · 完成后自动累计小红花`">
           <template #icon><ClipboardCheck class="h-4 w-4 text-brand-600" /></template>
           <template #action>
-            <button class="tap flex items-center gap-0.5 text-[11px] font-bold text-brand-700" @click="store.setView('s-calendar')">
-              日历 <CalendarDays class="h-3.5 w-3.5" />
-            </button>
+            <div class="flex items-center gap-2">
+              <button class="tap text-[10.5px] font-bold text-brand-700" @click="store.setView('s-checkin')">打卡中心</button>
+              <button class="tap flex items-center gap-0.5 text-[10.5px] font-bold text-brand-700" @click="store.setView('s-calendar')">
+                日历 <CalendarDays class="h-3.5 w-3.5" />
+              </button>
+            </div>
           </template>
         </SectionHead>
         <div class="grid grid-cols-2 gap-2">
@@ -134,6 +137,35 @@ const latestNotice = computed(() => store.noticesFor(s.value.id).find((n) => !n.
           <div class="flex-1"><ProgressBar :value="todayPct" :height="5" /></div>
           <div class="text-[11px] font-extrabold text-brand-700 tabular">{{ todayPct }}%</div>
         </div>
+      </div>
+
+      <!-- 常用入口（对齐 versionall 首页 2×2 入口） -->
+      <div class="mt-4 grid grid-cols-4 gap-2 px-4">
+        <button v-for="q in [
+          { l: '打卡日历', v: 's-calendar' as const, i: CalendarDays },
+          { l: '运动打卡', v: 's-exercise' as const, i: Dumbbell },
+          { l: '我的奖励', v: 's-rewards' as const, i: Gift },
+          { l: '健康报告', v: 's-report' as const, i: FileHeart },
+        ]" :key="q.l" class="tap flex flex-col items-center gap-1.5 rounded-2xl border border-black/[0.04] bg-white/80 py-2.5" @click="store.setView(q.v)">
+          <span class="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><component :is="q.i" class="h-4 w-4" /></span>
+          <span class="text-[9px] font-bold text-ink">{{ q.l }}</span>
+        </button>
+      </div>
+
+      <!-- 个人历程长卡（对齐 versionall 首页） -->
+      <div class="mt-3 px-4">
+        <button class="tap soft-card flex w-full items-center gap-3 rounded-2xl p-3.5 text-left" @click="store.setView('s-journey')">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-700"><Activity class="h-5 w-5" /></div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5"><span class="text-[12px] font-extrabold text-ink">个人历程</span><span class="pill pill-brand">第 {{ store.campDay }} 天</span></div>
+            <div class="mt-1 grid grid-cols-3 gap-2">
+              <span class="text-[9px] text-muted">连续 <b class="text-ink">{{ sum.streak }}</b> 天</span>
+              <span class="text-[9px] text-muted">↓SBP <b class="text-brand-700">{{ Math.abs(sum.sbpDrop || 0) }}</b></span>
+              <span class="text-[9px] text-muted">↓体重 <b class="text-brand-700">{{ Math.abs(sum.weightDrop || 0) }}</b>kg</span>
+            </div>
+          </div>
+          <ChevronRight class="h-4 w-4 text-muted/30" />
+        </button>
       </div>
 
       <!-- 指标趋势 -->
@@ -234,7 +266,7 @@ const latestNotice = computed(() => store.noticesFor(s.value.id).find((n) => !n.
         </SectionHead>
         <div class="glass-card flex rounded-2xl p-2">
           <button v-for="m in team" :key="m.id" class="tap flex flex-1 flex-col items-center gap-1 rounded-xl py-2" @click="store.setView('s-followup')">
-            <div class="flex h-9 w-9 items-center justify-center rounded-full" :class="m.role === 'doctor' ? 'bg-[#EAF3F5] text-[#0F5C6B]' : m.role === 'coach' ? 'bg-coral-50 text-coral-500' : 'bg-[#EDF5FA] text-[#2C7DA0]'">
+            <div class="flex h-9 w-9 items-center justify-center rounded-full" :class="m.role === 'doctor' ? 'bg-[#EDF3F8] text-[#144E73]' : m.role === 'coach' ? 'bg-coral-50 text-coral-500' : 'bg-[#EDF5FA] text-[#2C7DA0]'">
               <component :is="m.role === 'doctor' ? Stethoscope : m.role === 'coach' ? Dumbbell : Leaf" class="h-4 w-4" />
             </div>
             <div class="text-[10.5px] font-extrabold text-ink">{{ m.name }}</div>

@@ -2,17 +2,17 @@
 @import "vant/lib/index.css" layer(base);
 
 @theme {
-  --color-brand-50: #eaf7f3;
-  --color-brand-100: #d2eee7;
-  --color-brand-200: #a9dfd4;
-  --color-brand-300: #74c9ba;
-  --color-brand-400: #3aac9b;
-  --color-brand-500: #169c8a;
-  --color-brand-600: #0e7c6b;
-  --color-brand-700: #0b6558;
-  --color-brand-800: #0a5047;
-  --color-brand-900: #083f39;
-  --color-brand-950: #052b28;
+  --color-brand-50: #edf6fc;
+  --color-brand-100: #d6eaf7;
+  --color-brand-200: #add5ee;
+  --color-brand-300: #7bb9df;
+  --color-brand-400: #4b99c8;
+  --color-brand-500: #2c7da0;
+  --color-brand-600: #1f6a95;
+  --color-brand-700: #1a577c;
+  --color-brand-800: #164864;
+  --color-brand-900: #123b53;
+  --color-brand-950: #0b2634;
 
   --color-coral-50: #fdf1ed;
   --color-coral-100: #fadfd7;
@@ -52,12 +52,12 @@
     -moz-osx-font-smoothing: grayscale;
     font-family: var(--font-sans);
     color: var(--color-ink);
-    background-color: #f4f9f7;
+    background-color: #f3f8fc;
     background-image:
-      radial-gradient(ellipse 62% 40% at 12% 0%, rgba(14, 124, 107, 0.16), transparent 66%),
+      radial-gradient(ellipse 62% 40% at 12% 0%, rgba(31, 106, 149, 0.16), transparent 66%),
       radial-gradient(ellipse 48% 34% at 92% 8%, rgba(232, 103, 79, 0.10), transparent 66%),
-      radial-gradient(ellipse 70% 48% at 50% 104%, rgba(14, 124, 107, 0.08), transparent 72%),
-      linear-gradient(180deg, #f1faf6 0%, #f8fbfa 46%, #ffffff 100%);
+      radial-gradient(ellipse 70% 48% at 50% 104%, rgba(31, 106, 149, 0.09), transparent 72%),
+      linear-gradient(180deg, #f0f7fc 0%, #f8fbfd 46%, #ffffff 100%);
     background-attachment: fixed;
   }
   * { box-sizing: border-box; }
@@ -66,8 +66,8 @@
 }
 
 :root {
-  --van-primary-color: #0e7c6b;
-  --van-success-color: #0e7c6b;
+  --van-primary-color: #1f6a95;
+  --van-success-color: #1f6a95;
   --van-danger-color: #d9553e;
   --van-warning-color: #d99a2b;
   --van-text-color: #14302e;
@@ -75,32 +75,32 @@
 
 /* ── role backgrounds ─────────────────────────────────────────── */
 body.role-doctor {
-  background-color: #eef7f8;
+  background-color: #eef5fb;
   background-image:
-    radial-gradient(ellipse 60% 38% at 88% 0%, rgba(15, 92, 107, 0.14), transparent 64%),
+    radial-gradient(ellipse 60% 38% at 88% 0%, rgba(20, 78, 115, 0.15), transparent 64%),
     radial-gradient(ellipse 55% 40% at 6% 22%, rgba(232, 103, 79, 0.07), transparent 68%),
-    linear-gradient(180deg, #eff8f8 0%, #f8fbfb 52%, #ffffff 100%);
+    linear-gradient(180deg, #eef5fb 0%, #f7fafd 52%, #ffffff 100%);
 }
 body.role-coach {
   background-color: #fdf7f2;
   background-image:
     radial-gradient(ellipse 58% 36% at 14% 0%, rgba(232, 103, 79, 0.13), transparent 64%),
-    radial-gradient(ellipse 50% 38% at 94% 16%, rgba(14, 124, 107, 0.08), transparent 68%),
+    radial-gradient(ellipse 50% 38% at 94% 16%, rgba(31, 106, 149, 0.08), transparent 68%),
     linear-gradient(180deg, #fdf7f2 0%, #fbfaf7 52%, #ffffff 100%);
 }
 body.role-dietitian {
-  background-color: #f1f7fb;
+  background-color: #eef7fb;
   background-image:
-    radial-gradient(ellipse 58% 36% at 10% 0%, rgba(44, 125, 160, 0.14), transparent 64%),
-    radial-gradient(ellipse 52% 38% at 92% 18%, rgba(14, 124, 107, 0.07), transparent 68%),
-    linear-gradient(180deg, #f1f7fb 0%, #f8fbfb 52%, #ffffff 100%);
+    radial-gradient(ellipse 58% 36% at 10% 0%, rgba(44, 125, 160, 0.16), transparent 64%),
+    radial-gradient(ellipse 52% 38% at 92% 18%, rgba(31, 106, 149, 0.08), transparent 68%),
+    linear-gradient(180deg, #eef7fb 0%, #f8fbfd 52%, #ffffff 100%);
 }
 body.role-admin {
-  background-color: #f5f7f8;
+  background-color: #f2f6f9;
   background-image:
-    radial-gradient(ellipse 56% 34% at 8% 0%, rgba(11, 101, 88, 0.13), transparent 64%),
-    radial-gradient(ellipse 48% 34% at 92% 10%, rgba(20, 48, 46, 0.07), transparent 66%),
-    linear-gradient(180deg, #f5f8f8 0%, #fafcfc 54%, #ffffff 100%);
+    radial-gradient(ellipse 56% 34% at 8% 0%, rgba(22, 56, 79, 0.14), transparent 64%),
+    radial-gradient(ellipse 48% 34% at 92% 10%, rgba(20, 48, 46, 0.06), transparent 66%),
+    linear-gradient(180deg, #f2f6f9 0%, #f9fbfc 54%, #ffffff 100%);
 }
 body.role-doctor .flat-bg,
 body.role-coach .flat-bg,
@@ -147,8 +147,8 @@ body.role-admin .flat-bg { background-color: transparent !important; }
   color: #fff;
   background:
     radial-gradient(ellipse 80% 90% at 100% 0%, rgba(255, 255, 255, 0.16), transparent 58%),
-    linear-gradient(135deg, #0b6558 0%, #0e7c6b 52%, #12907d 100%);
-  box-shadow: 0 18px 36px -18px rgba(11, 101, 88, 0.55);
+    linear-gradient(135deg, #123b53 0%, #1a577c 52%, #1f6a95 100%);
+  box-shadow: 0 18px 36px -18px rgba(18, 59, 83, 0.55);
 }
 .hero-card::after {
   content: "";
@@ -165,8 +165,8 @@ body.role-admin .flat-bg { background-color: transparent !important; }
 .hero-doctor {
   background:
     radial-gradient(ellipse 80% 90% at 100% 0%, rgba(255, 255, 255, 0.14), transparent 58%),
-    linear-gradient(135deg, #0a4a54 0%, #0f5c6b 55%, #157083 100%);
-  box-shadow: 0 18px 36px -18px rgba(10, 74, 84, 0.55);
+    linear-gradient(135deg, #0b2e44 0%, #144e73 55%, #1a628c 100%);
+  box-shadow: 0 18px 36px -18px rgba(11, 46, 68, 0.55);
 }
 .hero-coach {
   background:
@@ -183,8 +183,8 @@ body.role-admin .flat-bg { background-color: transparent !important; }
 .hero-admin {
   background:
     radial-gradient(ellipse 80% 90% at 100% 0%, rgba(255, 255, 255, 0.10), transparent 58%),
-    linear-gradient(135deg, #163e3b 0%, #1d5250 55%, #24645f 100%);
-  box-shadow: 0 18px 36px -18px rgba(22, 62, 59, 0.5);
+    linear-gradient(135deg, #142f45 0%, #1b4056 55%, #22506a 100%);
+  box-shadow: 0 18px 36px -18px rgba(20, 47, 69, 0.5);
 }
 .ecg-deco {
   position: absolute;
@@ -212,8 +212,8 @@ body.role-admin .flat-bg { background-color: transparent !important; }
 .pill-slate { background: #f1f4f4; color: #526663; }
 .pill-white { background: rgba(255, 255, 255, 0.18); color: #fff; border: 1px solid rgba(255, 255, 255, 0.24); }
 .pill-red { background: #fdeceb; color: #b2382b; }
-.pill-blue { background: #eaf3f9; color: #22678a; }
-.pill-green { background: #e9f7ef; color: #1c7a4a; }
+.pill-blue { background: #eaf3f9; color: #1a577c; }
+.pill-green { background: #eaf5fb; color: #1a577c; }
 
 /* ── segmented controls ─────────────────────────────────────── */
 .seg-tabs {
@@ -287,7 +287,7 @@ body.role-admin .flat-bg { background-color: transparent !important; }
 .bar-fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #169c8a, #0e7c6b);
+  background: linear-gradient(90deg, #2c7da0, #1f6a95);
   transition: width 0.4s ease;
 }
 .bar-fill-coral { background: linear-gradient(90deg, #ee9581, #d9553e); }
@@ -320,7 +320,7 @@ body.role-admin .flat-bg { background-color: transparent !important; }
 .custom-input .van-field__control::placeholder { color: #9ca3af; }
 .custom-input.van-cell:focus-within {
   border-color: var(--color-brand-600);
-  box-shadow: 0 0 0 3px rgba(14, 124, 107, 0.10);
+  box-shadow: 0 0 0 3px rgba(31, 106, 149, 0.10);
 }
 .custom-nav.van-nav-bar {
   --van-nav-bar-height: 54px;
@@ -364,13 +364,13 @@ body.liquid-glass .custom-tabbar.van-tabbar {
 .custom-tabbar .van-tabbar-item--active { color: var(--color-brand-700); background: transparent !important; }
 .custom-tabbar .van-tabbar-item--active .van-tabbar-item__icon {
   transform: scale(1.14) translateY(-1px);
-  filter: drop-shadow(0 3px 7px rgba(14, 124, 107, 0.32));
+  filter: drop-shadow(0 3px 7px rgba(31, 106, 149, 0.32));
 }
 .custom-tabbar .van-tabbar-item__icon { transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .custom-tabbar .van-tabbar-item__text { font-size: 9px; font-weight: 700; letter-spacing: 0.04em; }
 .custom-tabbar.tabbar-coral .van-tabbar-item--active { color: var(--color-coral-500); }
 .custom-tabbar.tabbar-blue .van-tabbar-item--active { color: #2c7da0; }
-.custom-tabbar.tabbar-ink .van-tabbar-item--active { color: #1d5250; }
+.custom-tabbar.tabbar-ink .van-tabbar-item--active { color: #1e3a52; }
 
 .custom-popup.van-popup--bottom {
   border-radius: 24px 24px 0 0;

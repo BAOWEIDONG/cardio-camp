@@ -279,9 +279,9 @@ function submit() {
   color: #526663;
 }
 .chip-on {
-  border-color: rgba(14, 124, 107, 0.4);
-  background: #eaf7f3;
-  color: #0b6558;
+  border-color: rgba(31, 106, 149, 0.4);
+  background: #edf6fc;
+  color: #1a577c;
   font-weight: 800;
 }
 </style>

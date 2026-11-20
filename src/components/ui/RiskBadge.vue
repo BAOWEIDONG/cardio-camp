@@ -4,7 +4,7 @@ import type { RiskLevel } from '../../types';
 
 const props = defineProps<{ risk: RiskLevel; size?: 'sm' | 'md' }>();
 const map: Record<RiskLevel, { label: string; cls: string; dot: string }> = {
-  low: { label: '低危', cls: 'bg-[#e9f7ef] text-[#1c7a4a]', dot: 'bg-[#2fa36b]' },
+  low: { label: '低危', cls: 'bg-[#eaf5fb] text-[#1a577c]', dot: 'bg-[#2c7da0]' },
   medium: { label: '中危', cls: 'bg-[#fbf3e2] text-[#96651a]', dot: 'bg-[#d99a2b]' },
   high: { label: '高危', cls: 'bg-[#fdeeea] text-[#bd4430]', dot: 'bg-[#d9553e]' },
   very_high: { label: '很高危', cls: 'bg-[#b2382b] text-white', dot: 'bg-white' },

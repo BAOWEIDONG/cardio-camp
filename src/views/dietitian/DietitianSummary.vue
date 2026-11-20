@@ -108,7 +108,7 @@ function exportReport() {
           <div class="mt-2 flex items-end gap-3 px-2">
             <div v-for="w in weekBars" :key="w.l" class="flex flex-1 flex-col items-center gap-1">
               <div class="text-[9px] font-bold text-brand-700">{{ w.v }}%</div>
-              <div class="w-full rounded-t-lg bg-[linear-gradient(180deg,#3AAC9B,#0E7C6B)]" :style="{ height: (w.v * 0.9) + 'px' }" />
+              <div class="w-full rounded-t-lg bg-[linear-gradient(180deg,#4B99C8,#1F6A95)]" :style="{ height: (w.v * 0.9) + 'px' }" />
               <div class="text-[8px] text-muted">{{ w.l }}</div>
             </div>
           </div>

@@ -113,7 +113,7 @@ function exportImage() {
       <div class="mt-3 px-4">
         <div class="glass-card rounded-2xl p-3.5">
           <div class="flex items-center gap-2">
-            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[#EAF3F5] text-[#0F5C6B]"><Stethoscope class="h-4 w-4" /></span>
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-[#EDF3F8] text-[#144E73]"><Stethoscope class="h-4 w-4" /></span>
             <div>
               <div class="text-[11.5px] font-extrabold text-ink">医师结论</div>
               <div class="text-[8.5px] text-muted">{{ latestFu?.doctorName }} 主任医师 · {{ latestFu?.date.slice(0, 10) }} · {{ latestFu?.type }}</div>

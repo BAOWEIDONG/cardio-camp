@@ -107,7 +107,7 @@ function save() {
           </div>
           <div class="mt-2 rounded-xl bg-[#EDF5FA]/70 p-2.5">
             <div class="text-[9px] text-[#2C7DA0]">饮食模式</div>
-            <div class="mt-0.5 text-[11px] font-bold text-[#22678A]">{{ rx?.pattern }}</div>
+            <div class="mt-0.5 text-[11px] font-bold text-[#1A577C]">{{ rx?.pattern }}</div>
           </div>
           <div class="mt-2 grid grid-cols-4 gap-1.5">
             <div class="rounded-lg bg-mist p-2 text-center"><div class="text-[13px] font-extrabold">{{ rx?.targets.energy }}</div><div class="text-[7.5px] text-muted">kcal</div></div>

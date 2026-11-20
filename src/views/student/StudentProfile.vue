@@ -115,7 +115,7 @@ const reports = [
               <span class="pill pill-brand">kg</span>
             </div>
             <div class="mt-1 text-[23px] font-extrabold tabular text-ink">{{ store.latestWeight(s.id)?.weight }}</div>
-            <Sparkline :points="wtSeries" :width="130" :height="34" color="#0E7C6B" class="mt-1" />
+            <Sparkline :points="wtSeries" :width="130" :height="34" color="#1F6A95" class="mt-1" />
           </div>
         </div>
       </div>
@@ -219,14 +219,18 @@ const reports = [
       </div>
 
       <!-- 快捷 -->
-      <div class="mt-4 grid grid-cols-2 gap-2 px-4">
-        <button class="tap soft-card flex items-center gap-2 rounded-2xl p-3 text-left" @click="store.setView('s-report')">
+      <div class="mt-4 grid grid-cols-3 gap-2 px-4">
+        <button class="tap soft-card flex flex-col items-center gap-1 rounded-2xl p-2.5" @click="store.setView('s-report')">
           <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600"><FileHeart class="h-4 w-4" /></span>
-          <div><div class="text-[11px] font-extrabold text-ink">个人营期报告</div><div class="text-[9px] text-muted">阶段数据已生成</div></div>
+          <span class="text-[9.5px] font-extrabold text-ink">营期报告</span>
         </button>
-        <button class="tap soft-card flex items-center gap-2 rounded-2xl p-3 text-left" @click="store.setView('s-prescription')">
-          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700"><Leaf class="h-4 w-4" /></span>
-          <div><div class="text-[11px] font-extrabold text-ink">双处方</div><div class="text-[9px] text-muted">运动 + 营养</div></div>
+        <button class="tap soft-card flex flex-col items-center gap-1 rounded-2xl p-2.5" @click="store.setView('s-journey')">
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700"><Activity class="h-4 w-4" /></span>
+          <span class="text-[9.5px] font-extrabold text-ink">个人历程</span>
+        </button>
+        <button class="tap soft-card flex flex-col items-center gap-1 rounded-2xl p-2.5" @click="store.setView('s-prescription')">
+          <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#EDF5FA] text-[#2C7DA0]"><Leaf class="h-4 w-4" /></span>
+          <span class="text-[9.5px] font-extrabold text-ink">双处方</span>
         </button>
       </div>
 

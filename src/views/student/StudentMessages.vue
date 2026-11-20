@@ -27,7 +27,7 @@ const noticeIcon: Record<Notice['category'], any> = {
 };
 const noticeTone: Record<Notice['category'], string> = {
   comment: 'bg-brand-50 text-brand-700', prescription: 'bg-[#EDF5FA] text-[#2C7DA0]',
-  system: 'bg-black/[0.04] text-muted', followup: 'bg-[#EAF3F5] text-[#0F5C6B]',
+  system: 'bg-black/[0.04] text-muted', followup: 'bg-[#EDF3F8] text-[#144E73]',
   alert: 'bg-coral-50 text-coral-500', activity: 'bg-amber-50 text-amber-600',
 };
 
@@ -61,7 +61,7 @@ function threadIcon(t: Thread) {
   return Leaf;
 }
 function threadTone(t: Thread) {
-  if (t.members.some((m) => m.role === 'doctor')) return 'bg-[#EAF3F5] text-[#0F5C6B]';
+  if (t.members.some((m) => m.role === 'doctor')) return 'bg-[#EDF3F8] text-[#144E73]';
   if (t.members.some((m) => m.role === 'coach')) return 'bg-coral-50 text-coral-500';
   return 'bg-[#EDF5FA] text-[#2C7DA0]';
 }
@@ -121,7 +121,7 @@ function roleName(r: Message['fromRole']) {
               </div>
               <div class="mt-0.5 line-clamp-1 text-[10px] text-muted">
                 <span v-if="lastMsg(t)?.kind === 'prescription'" class="font-semibold text-brand-700">[处方] </span>
-                <span v-if="lastMsg(t)?.kind === 'record'" class="font-semibold text-[#0F5C6B]">[随访记录] </span>
+                <span v-if="lastMsg(t)?.kind === 'record'" class="font-semibold text-[#144E73]">[随访记录] </span>
                 {{ lastMsg(t)?.text }}
               </div>
             </div>
