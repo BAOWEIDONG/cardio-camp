@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-    <div class="w-9 h-9 rounded-full border-4 border-brand-600/20 border-t-brand-600 animate-spin"></div>
+    <div class="w-9 h-9 rounded-full border-4 border-[#E8674F]/20 border-t-[#E8674F] animate-spin"></div>
     <p class="text-xs text-gray-400">页面加载中…</p>
   </div>
 </template>

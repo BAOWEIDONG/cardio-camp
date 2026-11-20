@@ -5,7 +5,9 @@ import path from 'path';
 import { defineConfig, loadEnv } from 'vite';
 
 export default defineConfig(({ mode }) => {
+  // 从 .env 读取配置（.env / .env.production 等），VITE_ 前缀以外系统变量亦可访问
   const env = loadEnv(mode, process.cwd(), '');
+  // 部署基础路径：默认 /versionall/（GitHub Pages 子路径），部署到根目录或自定义域名时通过 .env 的 VITE_BASE 覆盖
   const base: string = env.VITE_BASE || process.env.VITE_BASE || '/cardio-camp/';
   return {
     base,
@@ -15,10 +17,10 @@ export default defineConfig(({ mode }) => {
       VitePWA({
         registerType: 'autoUpdate',
         manifest: {
-          name: '心脑血管健康营',
-          short_name: '心脑血管营',
+          name: '心脑血管防治营',
+          short_name: '心脑血管防治营',
           description: '北大医疗国际医院 · 心脑血管防治营',
-          theme_color: '#1F6A95',
+          theme_color: '#1A577C',
           background_color: '#F3F8FC',
           display: 'standalone',
           scope: base,
@@ -26,6 +28,8 @@ export default defineConfig(({ mode }) => {
           icons: [
             { src: 'icon-192.png', sizes: '192x192', type: 'image/png' },
             { src: 'icon-512.png', sizes: '512x512', type: 'image/png' },
+            { src: 'icon-maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+            { src: 'icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
           ],
         },
         workbox: {
@@ -36,8 +40,13 @@ export default defineConfig(({ mode }) => {
       }),
     ],
     resolve: {
-      alias: { '@': path.resolve(__dirname, '.') },
+      alias: {
+        '@': path.resolve(__dirname, '.'),
+      },
     },
-    server: { hmr: true },
+    server: {
+      hmr: process.env.DISABLE_HMR !== 'true',
+      watch: process.env.DISABLE_HMR === 'true' ? null : {},
+    },
   };
 });

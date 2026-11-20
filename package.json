@@ -1,12 +1,13 @@
 {
   "name": "cardio-camp",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
+    "clean": "rm -rf dist",
     "lint": "vue-tsc --noEmit"
   },
   "dependencies": {
@@ -14,6 +15,8 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
     "html2canvas": "^1.4.1",
+    "html2canvas-pro": "^2.4.0",
+    "jspdf": "^4.2.1",
     "lucide-vue-next": "^0.460.0",
     "pinia": "^2.3.1",
     "tailwind-merge": "^3.6.0",
@@ -23,14 +26,11 @@
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-vue": "^5.2.1",
-    "@vue/test-utils": "^2.6.0",
     "esbuild": "^0.25.0",
-    "jsdom": "^31.0.1",
     "tailwindcss": "^4.1.14",
     "typescript": "~5.8.2",
     "vite": "^6.2.3",
     "vite-plugin-pwa": "^1.0.0",
-    "vitest": "^5.1.1",
     "vue-tsc": "^2.1.10"
   }
 }

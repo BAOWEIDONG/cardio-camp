@@ -6,7 +6,7 @@ import { cn } from '../../lib/utils';
 defineOptions({ inheritAttrs: false });
 
 const props = defineProps<{ value?: string | number }>();
-const emit = defineEmits<{ (e: 'input', event: Event): void; (e: 'update:value', v: string): void }>();
+const emit = defineEmits<{ (e: 'input', event: Event): void }>();
 
 const attrs = useAttrs();
 
@@ -24,7 +24,6 @@ const passthrough = computed(() => {
 // （调用方仍用 @input="x = $event.target.value"），这里构造等价的 target.value
 const onUpdate = (val: string | number) => {
   emit('input', { target: { value: String(val) } } as unknown as Event);
-  emit('update:value', String(val));
 };
 </script>
 

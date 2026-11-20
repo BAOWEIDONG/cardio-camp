@@ -1,597 +1,1294 @@
-import type {
-  Account, ActivityDef, AlertItem, AppData, BpRecord, Camp, CheckinComment, DietRecord,
-  ExerciseRecord, ExerciseRx, FollowupRecord, GlobalConfig, MedicationPlan, MetricDef,
-  MetricSnapshot, NutritionRx, Org, PermissionRow, Student, Thread, WeightRecord,
-} from '../types';
-import { addDays, DEMO_TODAY, rel, relTime } from '../lib/date';
+import type { WeightRecord, BpRecord, ExerciseRecord, DietRecord, CoachActivityRecord, RewardTier, RewardClaim, MealTimeConfig, MetricConfig, Camp, Account, PointProduct, PointExchangeRecord, ManualScoreRecord } from '../types';
+import type { MetricValue } from '../lib/medicalData';
 
-// ============================================================================
-//  基础字典
-// ============================================================================
-
-export const METRIC_DEFS: MetricDef[] = [
-  { key: 'sbp', name: '收缩压', shortName: '收缩压', unit: 'mmHg', category: '血压心率', refText: '<130', refHigh: 130, direction: 'lower', target: 130 },
-  { key: 'dbp', name: '舒张压', shortName: '舒张压', unit: 'mmHg', category: '血压心率', refText: '<80', refHigh: 80, direction: 'lower', target: 80 },
-  { key: 'hr', name: '静息心率', shortName: '心率', unit: '次/分', category: '血压心率', refText: '60–100', refLow: 60, refHigh: 100, direction: 'range' },
-  { key: 'ldl', name: '低密度脂蛋白胆固醇', shortName: 'LDL-C', unit: 'mmol/L', category: '血脂', refText: '<1.8（高危）', refHigh: 1.8, direction: 'lower', target: 1.8, decimals: 2 },
-  { key: 'tc', name: '总胆固醇', shortName: 'TC', unit: 'mmol/L', category: '血脂', refText: '<5.2', refHigh: 5.2, direction: 'lower', decimals: 2 },
-  { key: 'tg', name: '甘油三酯', shortName: 'TG', unit: 'mmol/L', category: '血脂', refText: '<1.7', refHigh: 1.7, direction: 'lower', decimals: 2 },
-  { key: 'hdl', name: '高密度脂蛋白胆固醇', shortName: 'HDL-C', unit: 'mmol/L', category: '血脂', refText: '>1.04', refLow: 1.04, direction: 'higher', decimals: 2 },
-  { key: 'hba1c', name: '糖化血红蛋白', shortName: 'HbA1c', unit: '%', category: '血糖', refText: '<6.5', refHigh: 6.5, direction: 'lower', decimals: 1 },
-  { key: 'fpg', name: '空腹血糖', shortName: 'FPG', unit: 'mmol/L', category: '血糖', refText: '3.9–6.1', refLow: 3.9, refHigh: 6.1, direction: 'range', decimals: 1 },
-  { key: 'weight', name: '体重', shortName: '体重', unit: 'kg', category: '身体测量', refText: '—', direction: 'range', decimals: 1 },
-  { key: 'bmi', name: '体质指数', shortName: 'BMI', unit: 'kg/m²', category: '身体测量', refText: '<24', refHigh: 24, direction: 'lower', decimals: 1 },
-  { key: 'waist', name: '腰围', shortName: '腰围', unit: 'cm', category: '身体测量', refText: '男<90 / 女<85', refHigh: 90, direction: 'lower' },
-  { key: 'bodyFat', name: '体脂率', shortName: '体脂率', unit: '%', category: '身体测量', refText: '男<25 / 女<32', refHigh: 25, direction: 'lower', decimals: 1 },
-  { key: 'imt', name: '颈动脉内中膜厚度', shortName: 'IMT', unit: 'mm', category: '血管与炎症', refText: '<1.0', refHigh: 1.0, direction: 'lower', decimals: 2 },
-  { key: 'hcy', name: '同型半胱氨酸', shortName: 'Hcy', unit: 'μmol/L', category: '血管与炎症', refText: '<15', refHigh: 15, direction: 'lower', decimals: 1 },
-  { key: 'crp', name: '超敏C反应蛋白', shortName: 'hs-CRP', unit: 'mg/L', category: '血管与炎症', refText: '<3.0', refHigh: 3.0, direction: 'lower', decimals: 1 },
-  { key: 'alt', name: '丙氨酸氨基转移酶', shortName: 'ALT', unit: 'U/L', category: '肝肾功能', refText: '7–40', refLow: 7, refHigh: 40, direction: 'range' },
-  { key: 'cr', name: '肌酐', shortName: 'Cr', unit: 'μmol/L', category: '肝肾功能', refText: '57–97', refLow: 57, refHigh: 97, direction: 'range' },
-  { key: 'ua', name: '尿酸', shortName: 'UA', unit: 'μmol/L', category: '肝肾功能', refText: '男<420 / 女<360', refHigh: 420, direction: 'lower' },
-];
-
-export const ORGS: Org[] = [
-  { id: 'org1', name: '北京大学国际医院', shortName: '北医国际', type: 'head', city: '北京', contact: '李项目', accountCount: 18, studentCount: 96 },
-  { id: 'org2', name: '北大医疗康复医院', shortName: '康复医院', type: 'hospital', city: '北京', contact: '王主任', accountCount: 12, studentCount: 48 },
-  { id: 'org3', name: '北大医疗石油医院', shortName: '石油医院', type: 'hospital', city: '北京', contact: '刘主任', accountCount: 8, studentCount: 32 },
-];
-
-const camp: Camp = {
-  id: 'camp1',
-  name: '心脑血管防治营 · 第一期',
-  orgId: 'org1',
-  startDate: '2026-12-01',
-  endDate: '2027-11-30',
-  status: 'active',
-  batch: '2026 冬季批次',
-  intensiveEnd: '2026-12-21',
-  checkpoints: [
-    { key: 'baseline', label: '开营筛查', date: '2026-12-01', status: 'done' },
-    { key: 'month6', label: '第 6 个月复筛', date: '2027-05-20', status: 'upcoming' },
-    { key: 'closing', label: '结营复查', date: '2027-11-25', status: 'upcoming' },
-  ],
-  studentCount: 12,
-};
-
-const camp2: Camp = {
-  id: 'camp2',
-  name: '心脑血管防治营 · 第二期（筹备）',
-  orgId: 'org2',
-  startDate: '2027-03-01',
-  endDate: '2028-02-29',
-  status: 'upcoming',
-  batch: '2027 春季批次',
-  intensiveEnd: '2027-03-21',
-  checkpoints: [
-    { key: 'baseline', label: '开营筛查', date: '2027-03-01', status: 'upcoming' },
-    { key: 'month6', label: '第 6 个月复筛', date: '2027-08-20', status: 'upcoming' },
-    { key: 'closing', label: '结营复查', date: '2028-02-25', status: 'upcoming' },
-  ],
-  studentCount: 0,
-};
-
-const STUDENT_SEED = [
-  { id: 's1', name: '张伟', gender: 'male', age: 56, risk: 'high', tags: ['高血压 3 级', '颈动脉斑块', 'LDL-C 偏高'], height: 172, weight: 82, waist: 98, job: '项目经理', phone: '13900000001' },
-  { id: 's2', name: '李秀兰', gender: 'female', age: 62, risk: 'very_high', tags: ['冠心病史', '高血压', '2 型糖尿病'], height: 158, weight: 68, waist: 92, job: '退休教师', phone: '13900000002' },
-  { id: 's3', name: '王建国', gender: 'male', age: 58, risk: 'high', tags: ['高血压', '吸烟史', '腹型肥胖'], height: 176, weight: 88, waist: 102, job: '工程师', phone: '13900000003' },
-  { id: 's4', name: '赵敏', gender: 'female', age: 49, risk: 'medium', tags: ['LDL-C 偏高', '超重'], height: 163, weight: 66, waist: 86, job: '财务主管', phone: '13900000004' },
-  { id: 's5', name: '陈志强', gender: 'male', age: 61, risk: 'very_high', tags: ['脑梗史', '高血压', '房颤'], height: 170, weight: 76, waist: 96, job: '退休干部', phone: '13900000005' },
-  { id: 's6', name: '刘芳', gender: 'female', age: 54, risk: 'high', tags: ['高血压', '颈动脉斑块'], height: 160, weight: 64, waist: 88, job: '行政经理', phone: '13900000006' },
-  { id: 's7', name: '孙海', gender: 'male', age: 47, risk: 'medium', tags: ['血脂异常', '脂肪肝'], height: 178, weight: 86, waist: 98, job: '销售总监', phone: '13900000007' },
-  { id: 's8', name: '周慧', gender: 'female', age: 65, risk: 'high', tags: ['高血压', '骨质疏松'], height: 156, weight: 60, waist: 86, job: '退休医生', phone: '13900000008' },
-  { id: 's9', name: '吴刚', gender: 'male', age: 52, risk: 'high', tags: ['高血压', '高尿酸'], height: 174, weight: 80, waist: 96, job: '个体经营', phone: '13900000009' },
-  { id: 's10', name: '郑丽', gender: 'female', age: 57, risk: 'medium', tags: ['LDL-C 偏高', '失眠'], height: 161, weight: 62, waist: 84, job: '教师', phone: '13900000010' },
-  { id: 's11', name: '冯涛', gender: 'male', age: 44, risk: 'medium', tags: ['肥胖', '血脂异常', '久坐'], height: 180, weight: 95, waist: 104, job: '程序员', phone: '13900000011' },
-  { id: 's12', name: '何静', gender: 'female', age: 50, risk: 'low', tags: ['血压正常高值', '家族史'], height: 165, weight: 58, waist: 78, job: '设计师', phone: '13900000012' },
-] as const;
-
-function careTeam(i: number) {
-  return {
-    doctorId: i % 2 === 0 ? 'd1' : 'd2',
-    coachId: i % 2 === 0 ? 'c1' : 'c2',
-    dietitianId: i % 2 === 0 ? 'n1' : 'n2',
-  };
+/** 生成奖品展示图 SVG data URI */
+function rewardImg(name: string, emoji: string, c1: string, c2: string): string {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${c1}"/><stop offset="100%" stop-color="${c2}"/></linearGradient></defs><rect width="400" height="400" fill="url(#g)" rx="20"/><text x="200" y="180" font-size="130" text-anchor="middle" dominant-baseline="central">${emoji}</text><text x="200" y="320" font-size="34" font-weight="bold" fill="white" text-anchor="middle" font-family="system-ui,sans-serif">${name}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }
 
-const STUDENTS: Student[] = STUDENT_SEED.map((s, i) => ({
-  id: s.id,
-  name: s.name,
-  gender: s.gender,
-  age: s.age,
-  phone: s.phone,
-  orgId: 'org1',
-  campId: 'camp1',
-  cohort: '2026 冬季批次',
-  risk: s.risk,
-  riskTags: [...s.tags],
-  height: s.height,
-  weight: s.weight,
-  bmi: +(s.weight / ((s.height / 100) ** 2)).toFixed(1),
-  waist: s.waist,
-  occupation: s.job,
-  enrolledAt: '2026-11-26',
-  status: 'active',
-  careTeam: careTeam(i),
-  targets: { sbp: 130, ldl: 1.8, weight: +(s.weight - 6).toFixed(1) },
-  materialsReady: true,
-  consentSigned: true,
-  questionnaireDone: true,
-}));
+function dateStr(offsetDays: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() + offsetDays);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
-const ACCOUNTS: Account[] = [
-  ...STUDENTS.map((s) => ({
-    id: s.id, phone: s.phone, name: s.name, role: 'student' as const, orgId: 'org1',
-    campIds: ['camp1'], active: true, title: '营员', createdAt: '2026-11-26 10:00',
-  })),
-  { id: 'd1', phone: '13800000001', name: '李建国', role: 'doctor', orgId: 'org1', title: '主任医师', dept: '心内科', campIds: ['camp1'], active: true, employeeNo: 'D0001', createdAt: '2026-10-01 09:00' },
-  { id: 'd2', phone: '13800000002', name: '周敏', role: 'doctor', orgId: 'org1', title: '副主任医师', dept: '心内科', campIds: ['camp1'], active: true, employeeNo: 'D0002', createdAt: '2026-10-01 09:00' },
-  { id: 'c1', phone: '13700000001', name: '王凯', role: 'coach', orgId: 'org1', title: '运动康复师', dept: '心脏康复中心', campIds: ['camp1'], active: true, employeeNo: 'C0001', createdAt: '2026-10-01 09:00' },
-  { id: 'c2', phone: '13700000002', name: '刘畅', role: 'coach', orgId: 'org1', title: '运动康复师', dept: '心脏康复中心', campIds: ['camp1'], active: true, employeeNo: 'C0002', createdAt: '2026-10-01 09:00' },
-  { id: 'n1', phone: '13600000001', name: '陈静', role: 'dietitian', orgId: 'org1', title: '注册营养师', dept: '临床营养科', campIds: ['camp1'], active: true, employeeNo: 'N0001', createdAt: '2026-10-01 09:00' },
-  { id: 'n2', phone: '13600000002', name: '赵倩', role: 'dietitian', orgId: 'org1', title: '注册营养师', dept: '临床营养科', campIds: ['camp1'], active: true, employeeNo: 'N0002', createdAt: '2026-10-01 09:00' },
-  { id: 'o1', phone: '13500000001', name: '王丽', role: 'org_admin', orgId: 'org1', title: '机构运营管理员', dept: '健康管理中心', campIds: ['camp1', 'camp2'], active: true, groups: ['国际医院总部组', '康复医院 A 组'], createdAt: '2026-09-20 09:00' },
-  { id: 'o2', phone: '13500000002', name: '刘强', role: 'org_admin', orgId: 'org1', title: '机构运营管理员', dept: '健康管理中心', campIds: ['camp1'], active: true, groups: ['国际医院总部组'], createdAt: '2026-09-20 09:00' },
-  { id: 'a1', phone: '13400000001', name: '李项目', role: 'super_admin', orgId: 'org1', title: '项目超级管理员', dept: '健康事业部', campIds: ['camp1', 'camp2'], active: true, employeeNo: 'A0001', createdAt: '2026-09-01 09:00' },
+function iso(offsetDays: number, time: string): string {
+  return `${dateStr(offsetDays)} ${time}`;
+}
+
+export const MOCK_STUDENTS: { id: string; name: string; age: number; gender: 'male' | 'female'; phone: string }[] = [
+  { id: 's1', name: '张伟', age: 56, gender: 'male', phone: '13800000001' },
+  { id: 's2', name: '李秀兰', age: 62, gender: 'female', phone: '13800000002' },
+  { id: 's3', name: '王建国', age: 58, gender: 'male', phone: '13800000003' },
+  { id: 's4', name: '赵敏', age: 49, gender: 'female', phone: '13800000004' },
+  { id: 's5', name: '陈志强', age: 61, gender: 'male', phone: '13800000005' },
+  { id: 's6', name: '刘芳', age: 54, gender: 'female', phone: '13800000006' },
+  { id: 's7', name: '孙海', age: 47, gender: 'male', phone: '13800000007' },
+  { id: 's8', name: '周慧', age: 65, gender: 'female', phone: '13800000008' },
+  { id: 's9', name: '刘梅', age: 33, gender: 'female', phone: '13800000009' },
+  { id: 's10', name: '孙悟空', age: 30, gender: 'male', phone: '13800000010' },
+  { id: 's11', name: '钱多多', age: 27, gender: 'male', phone: '13800000011' },
+  // s12：演示用——每天只完成部分打卡(1-2项)，用于展示「打卡率」与「打卡全部完成率」区别
+  { id: 's12', name: '陈曦', age: 30, gender: 'female', phone: '13800000012' },
+  // 体验账号：同一手机号可按学员/营养师/教练三种角色登录（登录时选择角色）
+  { id: 's13', name: '体验学员', age: 30, gender: 'female', phone: '13900000009' },
 ];
 
-// ============================================================================
-//  指标快照
-// ============================================================================
+// 完整打卡天数：今天往前连续 N 天，三餐+运动都完成
+const COMPLETE_DAYS = 11;
 
-const BASE_VALUES: Record<string, Record<string, number>> = {
-  s1: { sbp: 158, dbp: 96, hr: 78, ldl: 4.62, tc: 6.35, tg: 2.41, hdl: 0.98, hba1c: 6.4, fpg: 6.8, weight: 82, bmi: 27.7, waist: 98, bodyFat: 29.2, imt: 1.21, hcy: 16.8, crp: 3.8, alt: 32, cr: 88, ua: 452 },
-  s2: { sbp: 165, dbp: 92, hr: 84, ldl: 3.21, tc: 5.86, tg: 2.02, hdl: 1.12, hba1c: 7.6, fpg: 8.2, weight: 68, bmi: 27.2, waist: 92, bodyFat: 34.1, imt: 1.08, hcy: 14.2, crp: 4.6, alt: 28, cr: 72, ua: 338 },
-  s3: { sbp: 152, dbp: 98, hr: 88, ldl: 3.86, tc: 6.02, tg: 2.88, hdl: 0.92, hba1c: 6.1, fpg: 6.2, weight: 88, bmi: 28.4, waist: 102, bodyFat: 27.8, imt: 1.14, hcy: 18.2, crp: 4.1, alt: 46, cr: 91, ua: 486 },
-  s4: { sbp: 128, dbp: 82, hr: 76, ldl: 4.12, tc: 6.12, tg: 1.66, hdl: 1.28, hba1c: 5.8, fpg: 5.6, weight: 66, bmi: 24.8, waist: 86, bodyFat: 31.2, imt: 0.92, hcy: 12.1, crp: 2.1, alt: 22, cr: 64, ua: 302 },
-  s5: { sbp: 148, dbp: 90, hr: 96, ldl: 2.92, tc: 5.22, tg: 1.82, hdl: 1.02, hba1c: 6.8, fpg: 7.1, weight: 76, bmi: 26.3, waist: 96, bodyFat: 26.2, imt: 1.32, hcy: 17.5, crp: 5.2, alt: 35, cr: 96, ua: 412 },
-  s6: { sbp: 146, dbp: 94, hr: 80, ldl: 3.72, tc: 5.92, tg: 1.92, hdl: 1.18, hba1c: 6.0, fpg: 5.9, weight: 64, bmi: 25.0, waist: 88, bodyFat: 33.4, imt: 1.12, hcy: 13.8, crp: 3.1, alt: 24, cr: 60, ua: 286 },
-  s7: { sbp: 136, dbp: 88, hr: 82, ldl: 4.32, tc: 6.52, tg: 3.12, hdl: 0.88, hba1c: 5.9, fpg: 5.8, weight: 86, bmi: 27.1, waist: 98, bodyFat: 26.8, imt: 0.96, hcy: 15.8, crp: 3.6, alt: 58, cr: 82, ua: 468 },
-  s8: { sbp: 156, dbp: 88, hr: 72, ldl: 3.42, tc: 5.62, tg: 1.52, hdl: 1.32, hba1c: 6.2, fpg: 6.3, weight: 60, bmi: 24.7, waist: 86, bodyFat: 32.6, imt: 1.06, hcy: 12.6, crp: 2.8, alt: 20, cr: 58, ua: 312 },
-  s9: { sbp: 150, dbp: 96, hr: 86, ldl: 3.62, tc: 5.78, tg: 2.62, hdl: 0.96, hba1c: 6.3, fpg: 6.6, weight: 80, bmi: 26.4, waist: 96, bodyFat: 25.6, imt: 1.04, hcy: 17.2, crp: 3.4, alt: 42, cr: 90, ua: 512 },
-  s10: { sbp: 132, dbp: 84, hr: 74, ldl: 4.02, tc: 5.98, tg: 1.72, hdl: 1.24, hba1c: 5.9, fpg: 5.7, weight: 62, bmi: 23.9, waist: 84, bodyFat: 30.8, imt: 0.88, hcy: 11.8, crp: 1.9, alt: 19, cr: 55, ua: 268 },
-  s11: { sbp: 138, dbp: 90, hr: 80, ldl: 3.92, tc: 6.18, tg: 2.92, hdl: 0.94, hba1c: 6.0, fpg: 5.9, weight: 95, bmi: 29.3, waist: 104, bodyFat: 30.2, imt: 0.94, hcy: 15.2, crp: 3.2, alt: 62, cr: 78, ua: 438 },
-  s12: { sbp: 124, dbp: 78, hr: 70, ldl: 3.32, tc: 5.12, tg: 1.18, hdl: 1.46, hba1c: 5.6, fpg: 5.2, weight: 58, bmi: 21.3, waist: 78, bodyFat: 27.4, imt: 0.82, hcy: 10.2, crp: 1.2, alt: 18, cr: 52, ua: 246 },
-};
-
-const PLAQUES: Record<string, string> = {
-  s1: '左侧颈动脉分叉处斑块 3.2×1.6 mm，低回声',
-  s2: '双侧颈动脉多发斑块，右侧最大 4.1×2.0 mm',
-  s3: '左侧颈动脉斑块 2.8×1.4 mm',
-  s5: '右侧颈动脉斑块 3.6×1.8 mm，伴陈旧性脑梗',
-  s6: '左侧颈动脉斑块 2.4×1.2 mm',
-  s8: '右侧颈动脉斑块 2.9×1.5 mm',
-};
-
-const SNAPSHOTS: MetricSnapshot[] = STUDENTS.map((s) => ({
-  id: `snap_${s.id}_baseline`,
-  studentId: s.id,
-  campId: 'camp1',
-  checkpoint: 'baseline',
-  date: '2026-12-01',
-  values: BASE_VALUES[s.id],
-  plaque: PLAQUES[s.id] || '未见明显斑块',
-  note: '开营入企筛查 · 三甲医院空腹检查报告',
-}));
-
-// 第 6 个月复筛：仅 s1 预留一条“演示预览”数据（页面标注为演示），其余待采集
-SNAPSHOTS.push({
-  id: 'snap_s1_month6',
-  studentId: 's1',
-  campId: 'camp1',
-  checkpoint: 'month6',
-  date: '2027-05-20',
-  values: { sbp: 132, dbp: 84, hr: 72, ldl: 2.42, tc: 4.86, tg: 1.62, hdl: 1.14, hba1c: 6.0, fpg: 5.9, weight: 76.8, bmi: 26.0, waist: 92, bodyFat: 25.6, imt: 1.12, hcy: 13.2, crp: 2.4, alt: 28, cr: 86, ua: 402 },
-  plaque: '左侧颈动脉斑块 3.0×1.4 mm，较前缩小',
-  note: '演示预览数据，实际以第 6 个月入企复筛为准',
-});
+export const MOCK_DIET_RECORDS: DietRecord[] = [];
 
 // ============================================================================
-//  打卡记录（围绕演示日生成，确定性）
+//  家庭血压记录（心脑血管营核心指标）
 // ============================================================================
-
-const BP_RECORDS: BpRecord[] = [];
-const WEIGHT_RECORDS: WeightRecord[] = [];
-const EXERCISE_RECORDS: ExerciseRecord[] = [];
-const DIET_RECORDS: DietRecord[] = [];
-const MED_RECORDS: { id: string; studentId: string; campId: string; date: string; period: 'morning' | 'evening'; taken: boolean; time?: string }[] = [];
-
-const EX_TYPES = ['快走', '室内骑行', '太极', '弹力带上肢训练', '八段锦', '慢跑'];
-const BREAKFASTS = ['燕麦牛奶 + 水煮蛋 + 凉拌菠菜', '全麦面包 + 无糖豆浆 + 小番茄', '杂粮粥 + 鸡蛋 + 清炒时蔬', '玉米 + 低脂奶 + 黄瓜'];
-const LUNCHES = ['糙米饭 + 清蒸鲈鱼 + 西兰花', '荞麦面 + 鸡胸肉 + 生菜', '杂粮饭 + 番茄牛腩 + 油麦菜', '藜麦饭 + 虾仁豆腐 + 西葫芦'];
-const DINNERS = ['小米粥 + 清炒虾仁 + 菠菜', '红薯 + 香菇鸡片 + 娃娃菜', '杂粮饭 + 清蒸鳕鱼 + 芦笋', '南瓜 + 豆腐羹 + 凉拌木耳'];
-
-function sbpFor(i: number, d: number) {
-  const base = BASE_VALUES[`s${i}`].sbp;
-  const drop = i === 1 ? 26 : i % 3 === 0 ? 14 : 8;
-  return Math.round(base - (drop * d) / 17 + ((d * 7 + i * 3) % 5) - 2);
-}
-
-function dbpFor(i: number, d: number) {
-  const base = BASE_VALUES[`s${i}`].dbp;
-  const drop = i === 1 ? 12 : 6;
-  return Math.round(base - (drop * d) / 17 + ((d * 3 + i) % 3) - 1);
-}
-
-for (let i = 1; i <= 12; i++) {
-  const sid = `s${i}`;
-  const startW = BASE_VALUES[sid].weight;
-  for (let d = 0; d <= 17; d++) {
-    const date = addDays('2026-12-01', d);
-    const morning = d % 2 === 0 || i === 1;
-    if (morning) {
-      BP_RECORDS.push({
-        id: `bp_${sid}_${d}_m`, studentId: sid, campId: 'camp1', date: `${date} 07:${20 + (i % 3) * 5}`,
-        period: 'morning', sbp: sbpFor(i, d), dbp: dbpFor(i, d), hr: 68 + ((d + i) % 12),
-        takenMed: !(d === 6 && i === 3),
+export const MOCK_BP_RECORDS: BpRecord[] = [];
+const BP_SEEDS = [
+  { id: 's1', sbp: 158, dbp: 96, drop: 22 },
+  { id: 's2', sbp: 165, dbp: 92, drop: 18 },
+  { id: 's3', sbp: 152, dbp: 98, drop: 16 },
+  { id: 's4', sbp: 128, dbp: 82, drop: 6 },
+  { id: 's5', sbp: 176, dbp: 104, drop: 12 },
+  { id: 's6', sbp: 146, dbp: 94, drop: 14 },
+  { id: 's7', sbp: 136, dbp: 88, drop: 8 },
+  { id: 's8', sbp: 156, dbp: 88, drop: 12 },
+];
+BP_SEEDS.forEach((seed, si) => {
+  for (let d = -15; d <= 0; d++) {
+    const progress = (d + 15) / 15;
+    const sbp = Math.round(seed.sbp - seed.drop * progress + ((d + si) % 4) - 1);
+    const dbp = Math.round(seed.dbp - (seed.drop * 0.55) * progress + ((d + si) % 3) - 1);
+    const hr = 70 + ((d + si * 2) % 12);
+    if (si === 0 || d % 2 === 0) {
+      MOCK_BP_RECORDS.push({
+        id: `bp_${seed.id}_${d}_m`, studentId: seed.id, campId: 'camp1',
+        date: iso(d, '07:25:00'), period: 'morning', sbp, dbp, hr, takenMed: true,
       });
     }
-    if (d % 2 === 1 || i === 1) {
-      BP_RECORDS.push({
-        id: `bp_${sid}_${d}_e`, studentId: sid, campId: 'camp1', date: `${date} 20:${10 + (i % 4) * 6}`,
-        period: 'evening', sbp: sbpFor(i, d) + 3, dbp: dbpFor(i, d) + 2, hr: 72 + ((d + i) % 10),
-        takenMed: true,
-      });
-    }
-    if (d % 2 === 0) {
-      WEIGHT_RECORDS.push({
-        id: `wt_${sid}_${d}`, studentId: sid, campId: 'camp1', date,
-        weight: +(startW - (i === 1 ? 3.4 : 1.2) * (d / 17) + ((d + i) % 3) * 0.1).toFixed(1),
-        bodyFat: i === 1 ? +(29.2 - 1.8 * (d / 17)).toFixed(1) : undefined,
-        waist: i === 1 ? Math.round(98 - 3 * (d / 17)) : undefined,
-      });
-    }
-    if (d <= 9) {
-      MED_RECORDS.push({ id: `med_${sid}_${d}_m`, studentId: sid, campId: 'camp1', date, period: 'morning', taken: !(i === 3 && d === 6), time: `${date} 07:35` });
-      if (d % 2 === 0) MED_RECORDS.push({ id: `med_${sid}_${d}_e`, studentId: sid, campId: 'camp1', date, period: 'evening', taken: true, time: `${date} 21:10` });
-    }
-    // 运动：s1 高频，其他隔天
-    if (i === 1 || (d + i) % 2 === 0) {
-      const exIdx = (d + i) % EX_TYPES.length;
-      const rec: ExerciseRecord = {
-        id: `ex_${sid}_${d}`, studentId: sid, campId: 'camp1', date: `${date} ${d % 2 === 0 ? '17:30' : '07:10'}`,
-        type: EX_TYPES[exIdx], duration: 25 + ((d * 5 + i) % 20), intensity: (2 + ((d + i) % 3)) as 1 | 2 | 3 | 4 | 5,
-        hrAvg: 102 + ((d * 3 + i) % 14), fatigue: (1 + ((d + i) % 2)) as 1 | 2 | 3,
-        symptoms: d === 5 && i === 2 ? ['轻微胸闷'] : [],
-        note: d % 4 === 0 ? '按处方完成，运动后无不适' : '',
-      };
-      if (i <= 3 && d >= 14) {
-        rec.coachScore = (d % 3 === 0 ? 2 : 1) as 0 | 1 | 2;
-        rec.comments = [{
-          id: `exc_${sid}_${d}`, role: 'coach', name: i === 1 ? '王凯' : '刘畅',
-          text: d % 3 === 0 ? '强度控制得不错，心率在目标区间内，继续保持。' : '时长略短，下次可在热身充分后补足 30 分钟。',
-          date: `${date} 19:00`,
-        }];
-      }
-      EXERCISE_RECORDS.push(rec);
-    }
-    // 饮食：s1 最近 7 天三餐，其他隔天
-    if (i === 1 ? d >= 11 : (d + i) % 3 === 0) {
-      const meals: { meal: DietRecord['meal']; desc: string; salt: DietRecord['salt'] }[] = [
-        { meal: 'breakfast', desc: BREAKFASTS[(d + i) % 4], salt: 'low' },
-        { meal: 'lunch', desc: LUNCHES[(d + 1) % 4], salt: d === 14 ? 'high' : 'low' },
-        { meal: 'dinner', desc: DINNERS[(d + 2) % 4], salt: 'medium' },
-      ];
-      meals.forEach((m, mi) => {
-        const rec: DietRecord = {
-          id: `diet_${sid}_${d}_${mi}`, studentId: sid, campId: 'camp1', date: `${date} ${['08:00', '12:20', '18:40'][mi]}`,
-          meal: m.meal, desc: m.desc, salt: m.salt,
-        };
-        if (i <= 4 && d >= 15) {
-          rec.dietitianScore = (mi === 1 && d === 14 ? 0 : 1) as 0 | 1 | 2;
-          rec.comments = [{
-            id: `dc_${sid}_${d}_${mi}`, role: 'dietitian', name: i <= 2 ? '陈静' : '赵倩',
-            text: m.salt === 'high'
-              ? '这餐钠摄入偏高，腌制品和酱油要减量，建议用柠檬汁、香醋提味。'
-              : '结构合理，主食选了粗粮，蛋白质和蔬菜比例不错，继续保持。',
-            date: `${date} ${['09:10', '13:05', '19:30'][mi]}`,
-          }];
-        }
-        DIET_RECORDS.push(rec);
+    if (si === 0 || d % 2 === 1) {
+      MOCK_BP_RECORDS.push({
+        id: `bp_${seed.id}_${d}_e`, studentId: seed.id, campId: 'camp1',
+        date: iso(d, '20:15:00'), period: 'evening', sbp: sbp + 3, dbp: dbp + 2, hr: hr + 4, takenMed: true,
       });
     }
   }
+});
+// 医师批注示例
+const bpCommentTarget = MOCK_BP_RECORDS.find((r) => r.studentId === 's1' && r.date.startsWith(dateStr(-1)) && r.period === 'morning');
+if (bpCommentTarget) {
+  bpCommentTarget.comments = [{
+    id: 'bpc1', role: 'doctor', name: '李建国',
+    text: '血压较开营明显下降，继续当前用药与低盐饮食；如晨起头晕先坐位休息再复测。',
+    date: iso(-1, '09:30:00'),
+  }];
+  bpCommentTarget.doctorComment = bpCommentTarget.comments[0].text;
+  bpCommentTarget.doctorName = '李建国';
+  bpCommentTarget.doctorCommentDate = iso(-1, '09:30:00');
 }
 
-// ============================================================================
-//  处方 / 用药 / 随访 / 预警
-// ============================================================================
+export const MOCK_EXERCISE_RECORDS: ExerciseRecord[] = [];
 
-const EXERCISE_RXS: ExerciseRx[] = STUDENTS.map((s, i) => ({
-  id: `rx_ex_${s.id}`,
-  studentId: s.id,
-  campId: 'camp1',
-  coachId: i % 2 === 0 ? 'c1' : 'c2',
-  coachName: i % 2 === 0 ? '王凯' : '刘畅',
-  date: '2026-12-02',
-  status: 'published',
-  goal: i === 1 ? '控制血压、改善心肺耐力，12 周内六分钟步行距离提升 50 米' : '提高心肺耐力，稳定血压，养成规律运动习惯',
-  assessment: {
-    sixMinWalk: 420 + (i % 5) * 18,
-    hrmax: 164 - (s.age - 40),
-    bpRest: `${BASE_VALUES[s.id].sbp}/${BASE_VALUES[s.id].dbp} mmHg`,
-    ecg: i === 1 ? '窦性心律，偶发房早，未见 ST 段压低' : '窦性心律，未见明显异常',
-    risk: i === 1 || i === 4 ? '运动风险中高危，需心电监护下起始' : '运动风险中危，可居家自主训练',
-  },
-  aerobic: {
-    mode: i === 1 ? '快走（平地）' : '快走 / 室内骑行',
-    freq: 5,
-    minutes: i === 1 ? 30 : 35,
-    hrLow: 96,
-    hrHigh: 112,
-    rpe: '11–13（稍累，可说话）',
-  },
-  resistance: { freq: 2, sets: 2, reps: '10–12 次/组', mode: '弹力带、自重训练（避免憋气）' },
-  flexibility: '每次运动后 5 分钟拉伸，重点下肢与肩背',
-  precautions: ['避免清晨 6 点前户外运动', '运动前测血压，≥180/110 暂停', '出现胸闷、胸痛、头晕立即停止并联系医师', '不在饱餐后 1 小时内运动'],
-  reviewDate: '2026-12-25',
-}));
+// 生成连续完成打卡数据
+for (let i = -(COMPLETE_DAYS - 1); i <= 0; i++) {
+  const idSuffix = Math.abs(i).toString().padStart(2, '0');
+  MOCK_DIET_RECORDS.push(
+    {
+      id: `d_b_${idSuffix}`,
+      studentId: 's1',
+      campId: 'camp1',
+      date: iso(i, '08:00:00'),
+      meal: 'breakfast',
+      description: '燕麦粥一碗，白煮蛋两个，一杯牛奶',
+      photos: ['https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=400&q=80'],
+      dietitianComment: i < 0 && i % 3 === 0 ? '早餐搭配很不错，继续保持！' : undefined,
+      dietitianCommentDate: i < 0 && i % 3 === 0 ? iso(i, '10:00:00') : undefined,
+      dietitianName: i < 0 && i % 3 === 0 ? '王营养师' : undefined,
+      dietitianScore: i < 0 ? (i === -1 ? 1 : 2) : undefined,
+      hasStaple: i < 0 ? true : undefined,
+      hasProtein: i < 0 ? true : undefined,
+      hasVegetable: i < 0 ? false : undefined,
+    },
+    {
+      id: `d_l_${idSuffix}`,
+      studentId: 's1',
+      campId: 'camp1',
+      date: iso(i, '12:30:00'),
+      meal: 'lunch',
+      description: '香煎鸡胸肉沙拉，油醋汁',
+      photos: ['https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80'],
+      dietitianComment: i < 0 && i % 4 === 0 ? '非常标准的减脂餐。' : undefined,
+      dietitianCommentDate: i < 0 && i % 4 === 0 ? iso(i, '14:00:00') : undefined,
+      dietitianName: i < 0 && i % 4 === 0 ? '王营养师' : undefined,
+      dietitianScore: i < 0 ? 2 : undefined,
+      hasStaple: i < 0 ? false : undefined,
+      hasProtein: i < 0 ? (i === -3 ? false : true) : undefined,
+      hasVegetable: i < 0 ? true : undefined,
+    },
+    {
+      id: `d_d_${idSuffix}`,
+      studentId: 's1',
+      campId: 'camp1',
+      date: iso(i, '18:30:00'),
+      meal: 'dinner',
+      description: '紫薯、牛肉、西兰花',
+      photos: ['https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80'],
+      dietitianComment: i < 0 && i % 5 === 0 ? '晚餐注意控制主食量。' : undefined,
+      dietitianCommentDate: i < 0 && i % 5 === 0 ? iso(i, '20:00:00') : undefined,
+      dietitianName: i < 0 && i % 5 === 0 ? '王营养师' : undefined,
+      dietitianScore: i < 0 ? 2 : undefined,
+      hasStaple: i < 0 ? true : undefined,
+      hasProtein: i < 0 ? true : undefined,
+      hasVegetable: i < 0 ? true : undefined,
+    },
+  );
+  MOCK_EXERCISE_RECORDS.push({
+    id: `e_${idSuffix}`,
+    studentId: 's1',
+    campId: 'camp1',
+    date: iso(i, '19:00:00'),
+    type: i % 2 === 0 ? '跑步' : '力量训练',
+    duration: 35 + (i % 3) * 5,
+    intensity: 3 + (i % 2),
+    photos: i % 2 === 0 ? ['https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=400&q=80'] : undefined,
+    coachComment: i < 0 ? (i % 2 === 0 ? '配速不错，继续保持。' : '动作标准，力量稳步提升。') : undefined,
+    coachCommentDate: i < 0 ? iso(i, '21:00:00') : undefined,
+    coachName: i < 0 ? '李教练' : undefined,
+    coachScore: i < 0 ? 2 : undefined,
+  });
+}
 
-const NUTRITION_RXS: NutritionRx[] = STUDENTS.map((s, i) => ({
-  id: `rx_nu_${s.id}`,
-  studentId: s.id,
-  campId: 'camp1',
-  dietitianId: i % 2 === 0 ? 'n1' : 'n2',
-  dietitianName: i % 2 === 0 ? '陈静' : '赵倩',
-  date: '2026-12-02',
-  status: 'published',
-  assessment: {
-    energy: 1800 - (i % 3) * 100,
-    bmi: s.bmi,
-    waist: s.waist,
-    egfr: 82 - (i % 4) * 3,
-    note: i === 1 ? '合并 2 型糖尿病，需兼顾血糖波动与低盐低脂' : '超重/腹型肥胖，合并血脂异常，以 DASH 饮食为基础',
+// s1 每日体重记录（与打卡天数一致，确保5项全部完成）
+export const MOCK_WEIGHT_RECORDS: WeightRecord[] = [
+  // 入营初始记录（在连续打卡周期之外）
+  {
+    id: 'w0_5',
+    date: iso(-15, '07:00:00'),
+    weight: 66.8,
+    studentId: 's1',
+    campId: 'camp1',
+    photos: ['https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&q=80'],
+    dietitianComment: '入营初始体重，建议每日晨起空腹称重，保持同一时间点记录更准确。',
+    dietitianName: '王营养师',
+    dietitianCommentDate: iso(-15, '10:30:00'),
   },
-  targets: { energy: 1800 - (i % 3) * 100, sodium: 2000, protein: 18, fatPct: 25, carbPct: 50 },
-  pattern: i === 1 ? 'DASH 饮食 + 糖尿病低GI 主食替换' : 'DASH 饮食 + 低盐低脂',
-  sampleMenu: [
-    { meal: '早餐', dishes: '燕麦牛奶 250ml、水煮蛋 1 个、凉拌菠菜 100g' },
-    { meal: '午餐', dishes: '糙米饭 75g、清蒸鲈鱼 100g、西兰花 150g' },
-    { meal: '加餐', dishes: '无糖酸奶 100g 或苹果半个' },
-    { meal: '晚餐', dishes: '小米粥 200ml、虾仁豆腐 100g、油麦菜 150g' },
+  {
+    id: 'w0_4',
+    date: iso(-12, '07:10:00'),
+    weight: 66.3,
+    studentId: 's1',
+    campId: 'camp1',
+    dietitianComment: '下降0.5kg，趋势良好，注意保证每日饮水量2000ml以上。',
+    dietitianName: '王营养师',
+    dietitianCommentDate: iso(-12, '14:20:00'),
+  },
+];
+
+// 生成连续打卡期间的每日体重记录
+for (let i = -(COMPLETE_DAYS - 1); i <= 0; i++) {
+  const idSuffix = Math.abs(i).toString().padStart(2, '0');
+  // 体重从 66.0 (day -10) 线性下降到 64.7 (day 0)，每日约 -0.13kg
+  const weight = parseFloat((66.0 - (i + COMPLETE_DAYS - 1) * 0.13).toFixed(1));
+  let comment: string | undefined;
+  let commentDate: string | undefined;
+  if (i === -7) {
+    comment = '累计下降1.3kg，趋势稳定，建议增加蛋白质摄入防止肌肉流失。';
+    commentDate = iso(-7, '11:00:00');
+  } else if (i === -4) {
+    comment = '体重持续下降，继续保持饮食和运动的配合！';
+    commentDate = iso(-4, '10:00:00');
+  } else if (i === -1) {
+    comment = '今日体重创新低！累计下降2.1kg，脂肪燃烧效率很好，继续保持！';
+    commentDate = iso(-1, '09:45:00');
+  }
+  MOCK_WEIGHT_RECORDS.push({
+    id: `w_${idSuffix}`,
+    date: iso(i, '07:05:00'),
+    weight,
+    studentId: 's1',
+    campId: 'camp1',
+    photos: i === -1 ? [
+      'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&q=80',
+      'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?w=400&q=80',
+    ] : undefined,
+    dietitianComment: comment,
+    dietitianName: comment ? '王营养师' : undefined,
+    dietitianCommentDate: commentDate,
+  });
+}
+
+// 其他学员今日/昨日数据（用于排行榜、批注等）
+MOCK_DIET_RECORDS.push(
+  {
+    id: 'd6',
+    studentId: 's2',
+    campId: 'camp1',
+    date: iso(0, '07:30:00'),
+    meal: 'breakfast',
+    description: '全麦面包两片，无糖豆浆一杯，蓝莓一小把',
+    photos: ['https://images.unsplash.com/photo-1525648199074-cee30ba79a4a?w=400&q=80'],
+  },
+  {
+    id: 'd7',
+    studentId: 's2',
+    campId: 'camp1',
+    date: iso(0, '12:40:00'),
+    meal: 'lunch',
+    description: '水煮虾10只，西兰花，藜麦饭半碗',
+    photos: ['https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80'],
+  },
+  {
+    id: 'd8',
+    studentId: 's3',
+    campId: 'camp1',
+    date: iso(0, '08:15:00'),
+    meal: 'breakfast',
+    description: '未进食',
+    isFasted: true,
+    photos: ['https://images.unsplash.com/photo-1517673132405-a56a62b18caf?w=400&q=80'],
+  },
+  {
+    id: 'd9',
+    studentId: 's3',
+    campId: 'camp1',
+    date: iso(0, '12:00:00'),
+    meal: 'lunch',
+    description: '鸡胸肉沙拉',
+    photos: ['https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80'],
+    dietitianComment: '鸡胸肉沙拉很棒，注意沙拉酱的热量。',
+    dietitianScore: 2,
+  },
+  {
+    id: 'd10',
+    studentId: 's3',
+    campId: 'camp1',
+    date: iso(0, '18:00:00'),
+    meal: 'dinner',
+    description: '紫薯、牛肉',
+    photos: ['https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80'],
+    dietitianComment: '牛肉补充蛋白质很好。',
+    dietitianScore: 2,
+  },
+);
+
+MOCK_EXERCISE_RECORDS.push(
+  {
+    id: 'e_s2_1',
+    studentId: 's2',
+    campId: 'camp1',
+    date: iso(0, '17:30:00'),
+    type: '跑步',
+    duration: 20,
+    intensity: 3,
+    // 未批注 - 出现在待批注列表
+  },
+  {
+    id: 'e_s3_1',
+    studentId: 's3',
+    campId: 'camp1',
+    date: iso(0, '20:00:00'),
+    type: '瑜伽',
+    duration: 40,
+    intensity: 2,
+    coachComment: '核心收紧得很好，拉伸很到位，继续保持！',
+    coachName: '李教练',
+    coachCommentDate: iso(0, '20:30:00'),
+  },
+  {
+    id: 'e_s1_video',
+    studentId: 's1',
+    campId: 'camp1',
+    date: iso(0, '19:30:00'),
+    type: '跑步',
+    duration: 45,
+    intensity: 4,
+    notes: '今天尝试了新的跑步路线，感觉不错！',
+    videoUrls: ['http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'],
+    // 未批注 - 出现在待批注列表
+  },
+);
+
+// 为 s2, s3, s4 生成历史打卡数据（用于结营报告统计）
+// 注意：循环不含今天(i<0)，今日数据由下方单独 push 的记录提供，避免重复
+const PAST_DAYS_S2 = 8; // s2 连续完成 8 天（含今日）
+const PAST_DAYS_S3 = 5; // s3 连续完成 5 天（含今日）
+const PAST_DAYS_S4 = 10; // s4 连续完成 10 天（含今日）
+
+for (let i = -(PAST_DAYS_S2 - 1); i < 0; i++) {
+  const idSuffix = `s2_${Math.abs(i).toString().padStart(2, '0')}`;
+  MOCK_DIET_RECORDS.push(
+    { id: `d_b_${idSuffix}`, studentId: 's2', campId: 'camp1', date: iso(i, '07:30:00'), meal: 'breakfast', description: '全麦面包+牛奶', photos: [], dietitianScore: 2 },
+    { id: `d_l_${idSuffix}`, studentId: 's2', campId: 'camp1', date: iso(i, '12:00:00'), meal: 'lunch', description: '鸡胸肉沙拉+糙米饭', photos: [], dietitianScore: 2 },
+    { id: `d_d_${idSuffix}`, studentId: 's2', campId: 'camp1', date: iso(i, '18:00:00'), meal: 'dinner', description: '清蒸鱼+西兰花', photos: [], dietitianScore: 2 },
+  );
+  MOCK_EXERCISE_RECORDS.push({ id: `e_${idSuffix}`, studentId: 's2', campId: 'camp1', date: iso(i, '17:30:00'), type: '跑步', duration: 45, intensity: 3, coachScore: i === -1 ? 1 : 2 });
+}
+
+for (let i = -(PAST_DAYS_S3 - 1); i < 0; i++) {
+  const idSuffix = `s3_${Math.abs(i).toString().padStart(2, '0')}`;
+  MOCK_DIET_RECORDS.push(
+    { id: `d_b_${idSuffix}`, studentId: 's3', campId: 'camp1', date: iso(i, '08:00:00'), meal: 'breakfast', description: '燕麦粥+鸡蛋', photos: [], dietitianScore: i === -2 ? 1 : 2 },
+    { id: `d_l_${idSuffix}`, studentId: 's3', campId: 'camp1', date: iso(i, '12:30:00'), meal: 'lunch', description: '牛肉+紫薯+蔬菜', photos: [], dietitianScore: i === -2 ? 1 : 2 },
+    { id: `d_d_${idSuffix}`, studentId: 's3', campId: 'camp1', date: iso(i, '18:30:00'), meal: 'dinner', description: '鸡胸肉+蔬菜汤', photos: [], dietitianScore: i === -2 ? 1 : 2 },
+  );
+  MOCK_EXERCISE_RECORDS.push({ id: `e_${idSuffix}`, studentId: 's3', campId: 'camp1', date: iso(i, '19:00:00'), type: '力量训练', duration: 45, intensity: 4, coachScore: 2 });
+}
+
+for (let i = -(PAST_DAYS_S4 - 1); i < 0; i++) {
+  const idSuffix = `s4_${Math.abs(i).toString().padStart(2, '0')}`;
+  MOCK_DIET_RECORDS.push(
+    { id: `d_b_${idSuffix}`, studentId: 's4', campId: 'camp1', date: iso(i, '07:20:00'), meal: 'breakfast', description: '杂粮粥+煮蛋', photos: [], dietitianScore: 2 },
+    { id: `d_l_${idSuffix}`, studentId: 's4', campId: 'camp1', date: iso(i, '12:00:00'), meal: 'lunch', description: '虾仁+藜麦+蔬菜', photos: [], dietitianScore: 2 },
+    { id: `d_d_${idSuffix}`, studentId: 's4', campId: 'camp1', date: iso(i, '18:00:00'), meal: 'dinner', description: '豆腐+蔬菜+少量主食', photos: [], dietitianScore: 2 },
+  );
+  MOCK_EXERCISE_RECORDS.push({ id: `e_${idSuffix}`, studentId: 's4', campId: 'camp1', date: iso(i, '18:30:00'), type: i % 2 === 0 ? '瑜伽' : '游泳', duration: i === -1 ? 35 : 40, intensity: 3, coachScore: i === -1 ? 1 : 2 });
+}
+
+// s2 今日晚餐（单独 push 的 d6/d7 只有早午餐，补晚餐使今日打卡完整）
+MOCK_DIET_RECORDS.push({
+  id: 'd_s2_dinner_today',
+  studentId: 's2',
+  campId: 'camp1',
+  date: iso(0, '18:20:00'),
+  meal: 'dinner',
+  description: '清蒸鲈鱼+凉拌菠菜+小米粥',
+  photos: ['https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80'],
+  dietitianScore: 2,
+});
+
+// s2/s3/s4 体重记录（与打卡天数对齐，确保 isDayComplete 五项齐全）
+// s2: 58.0 -> 56.2 (8天，减重约3.1%，达3%里程碑)
+for (let i = -(PAST_DAYS_S2 - 1); i <= 0; i++) {
+  const idSuffix = `s2_${Math.abs(i).toString().padStart(2, '0')}`;
+  const w = parseFloat((58.0 - (i + PAST_DAYS_S2 - 1) * 0.25).toFixed(1));
+  MOCK_WEIGHT_RECORDS.push({ id: `w_${idSuffix}`, date: iso(i, '07:10:00'), weight: w, studentId: 's2', campId: 'camp1' });
+}
+// s3: 75.0 -> 72.7 (5天，减重约3.1%，达3%里程碑)
+for (let i = -(PAST_DAYS_S3 - 1); i <= 0; i++) {
+  const idSuffix = `s3_${Math.abs(i).toString().padStart(2, '0')}`;
+  const w = parseFloat((75.0 - (i + PAST_DAYS_S3 - 1) * 0.57).toFixed(1));
+  MOCK_WEIGHT_RECORDS.push({ id: `w_${idSuffix}`, date: iso(i, '07:15:00'), weight: w, studentId: 's3', campId: 'camp1' });
+}
+// s4: 55.0 -> 53.3 (10天，减重约3.1%，达3%里程碑)
+for (let i = -(PAST_DAYS_S4 - 1); i <= 0; i++) {
+  const idSuffix = `s4_${Math.abs(i).toString().padStart(2, '0')}`;
+  const w = parseFloat((55.0 - (i + PAST_DAYS_S4 - 1) * 0.19).toFixed(1));
+  MOCK_WEIGHT_RECORDS.push({ id: `w_${idSuffix}`, date: iso(i, '07:00:00'), weight: w, studentId: 's4', campId: 'camp1' });
+}
+
+// s5 (camp1): 连续 7 天打卡，积分中等
+const PAST_DAYS_S5 = 7;
+for (let i = -(PAST_DAYS_S5 - 1); i <= 0; i++) {
+  const idSuffix = `s5_${Math.abs(i).toString().padStart(2, '0')}`;
+  MOCK_DIET_RECORDS.push(
+    { id: `d_b_${idSuffix}`, studentId: 's5', campId: 'camp1', date: iso(i, '07:45:00'), meal: 'breakfast', description: '玉米+鸡蛋+豆浆', photos: [], dietitianScore: i % 2 === 0 ? 2 : 1 },
+    { id: `d_l_${idSuffix}`, studentId: 's5', campId: 'camp1', date: iso(i, '12:15:00'), meal: 'lunch', description: '鸡腿肉+糙米饭+青菜', photos: [], dietitianScore: 2 },
+    { id: `d_d_${idSuffix}`, studentId: 's5', campId: 'camp1', date: iso(i, '18:30:00'), meal: 'dinner', description: '豆腐+蔬菜汤', photos: [], dietitianScore: 1 },
+  );
+  MOCK_EXERCISE_RECORDS.push({ id: `e_${idSuffix}`, studentId: 's5', campId: 'camp1', date: iso(i, '19:30:00'), type: '骑车', duration: 40, intensity: 3, coachScore: 1 });
+  const w = parseFloat((70.0 - (i + PAST_DAYS_S5 - 1) * 0.21).toFixed(1));
+  MOCK_WEIGHT_RECORDS.push({ id: `w_${idSuffix}`, date: iso(i, '07:20:00'), weight: w, studentId: 's5', campId: 'camp1' });
+}
+
+// s6 (camp1+camp2): 连续 6 天打卡
+const PAST_DAYS_S6 = 6;
+for (let i = -(PAST_DAYS_S6 - 1); i <= 0; i++) {
+  const idSuffix = `s6_${Math.abs(i).toString().padStart(2, '0')}`;
+  MOCK_DIET_RECORDS.push(
+    { id: `d_b_${idSuffix}`, studentId: 's6', campId: i < -2 ? 'camp1' : 'camp2', date: iso(i, '08:00:00'), meal: 'breakfast', description: '全麦三明治+牛奶', photos: [], dietitianScore: 2 },
+    { id: `d_l_${idSuffix}`, studentId: 's6', campId: i < -2 ? 'camp1' : 'camp2', date: iso(i, '12:30:00'), meal: 'lunch', description: '牛肉面+蔬菜沙拉', photos: [], dietitianScore: 1 },
+    { id: `d_d_${idSuffix}`, studentId: 's6', campId: i < -2 ? 'camp1' : 'camp2', date: iso(i, '18:00:00'), meal: 'dinner', description: '鸡胸肉+西兰花', photos: [], dietitianScore: 2 },
+  );
+  MOCK_EXERCISE_RECORDS.push({ id: `e_${idSuffix}`, studentId: 's6', campId: i < -2 ? 'camp1' : 'camp2', date: iso(i, '20:00:00'), type: '跑步', duration: 45, intensity: 3, coachScore: 2 });
+  const w = parseFloat((65.0 - (i + PAST_DAYS_S6 - 1) * 0.16).toFixed(1));
+  MOCK_WEIGHT_RECORDS.push({ id: `w_${idSuffix}`, date: iso(i, '07:30:00'), weight: w, studentId: 's6', campId: i < -2 ? 'camp1' : 'camp2' });
+}
+
+// s7 (camp2): 连续 3 天打卡（第二期新学员）
+const PAST_DAYS_S7 = 3;
+for (let i = -(PAST_DAYS_S7 - 1); i <= 0; i++) {
+  const idSuffix = `s7_${Math.abs(i).toString().padStart(2, '0')}`;
+  MOCK_DIET_RECORDS.push(
+    { id: `d_b_${idSuffix}`, studentId: 's7', campId: 'camp2', date: iso(i, '07:30:00'), meal: 'breakfast', description: '燕麦+牛奶+蓝莓', photos: [], dietitianScore: 2 },
+    { id: `d_l_${idSuffix}`, studentId: 's7', campId: 'camp2', date: iso(i, '12:00:00'), meal: 'lunch', description: '三文鱼+藜麦+蔬菜', photos: [], dietitianScore: 2 },
+    { id: `d_d_${idSuffix}`, studentId: 's7', campId: 'camp2', date: iso(i, '18:00:00'), meal: 'dinner', description: '蔬菜汤+鸡蛋', photos: [], dietitianScore: 1 },
+  );
+  MOCK_EXERCISE_RECORDS.push({ id: `e_${idSuffix}`, studentId: 's7', campId: 'camp2', date: iso(i, '18:30:00'), type: '瑜伽', duration: 50, intensity: 2, coachScore: 2 });
+  const w = parseFloat((52.0 - (i + PAST_DAYS_S7 - 1) * 0.1).toFixed(1));
+  MOCK_WEIGHT_RECORDS.push({ id: `w_${idSuffix}`, date: iso(i, '07:15:00'), weight: w, studentId: 's7', campId: 'camp2' });
+}
+
+// s8 (camp2): 连续 2 天打卡
+const PAST_DAYS_S8 = 2;
+for (let i = -(PAST_DAYS_S8 - 1); i <= 0; i++) {
+  const idSuffix = `s8_${Math.abs(i).toString().padStart(2, '0')}`;
+  MOCK_DIET_RECORDS.push(
+    { id: `d_b_${idSuffix}`, studentId: 's8', campId: 'camp2', date: iso(i, '08:00:00'), meal: 'breakfast', description: '包子+豆浆', photos: [], dietitianScore: 1 },
+    { id: `d_l_${idSuffix}`, studentId: 's8', campId: 'camp2', date: iso(i, '12:30:00'), meal: 'lunch', description: '鸡胸肉+米饭+蔬菜', photos: [], dietitianScore: 2 },
+    { id: `d_d_${idSuffix}`, studentId: 's8', campId: 'camp2', date: iso(i, '19:00:00'), meal: 'dinner', description: '蔬菜沙拉+鸡蛋', photos: [], dietitianScore: 1 },
+  );
+  MOCK_EXERCISE_RECORDS.push({ id: `e_${idSuffix}`, studentId: 's8', campId: 'camp2', date: iso(i, '20:00:00'), type: '游泳', duration: 45, intensity: 3, coachScore: 2 });
+  const w = parseFloat((78.0 - (i + PAST_DAYS_S8 - 1) * 0.15).toFixed(1));
+  MOCK_WEIGHT_RECORDS.push({ id: `w_${idSuffix}`, date: iso(i, '07:40:00'), weight: w, studentId: 's8', campId: 'camp2' });
+}
+
+// s12 (camp2)：演示用——每天只完成部分打卡。偶数天补全 5 项(算「打卡全部完成」)，奇数天仅 早餐+运动 2 项(算「打卡」但不算全部完成)
+// 目的：让学员结营概况里「打卡率(任意打卡)」与「打卡全部完成率(每天完成所有项目)」出现可见差异
+const S12_START = -2; // 第二期开营日
+const S12_RANGE_END = 0; // 只生成到昨天/今天，禁止未来日期与开营前记录
+for (let i = S12_START; i <= S12_RANGE_END; i++) {
+  const idSuffix = `s12_${(i >= 0 ? 'p' : 'n') + Math.abs(i).toString().padStart(2, '0')}`;
+  const complete = Math.abs(i) % 2 === 0; // 偶数天全完成
+  if (complete) {
+    MOCK_DIET_RECORDS.push(
+      { id: `d_b_${idSuffix}`, studentId: 's12', campId: 'camp2', date: iso(i, '07:20:00'), meal: 'breakfast', description: '燕麦+鸡蛋+牛奶', photos: [], dietitianScore: 2 },
+      { id: `d_l_${idSuffix}`, studentId: 's12', campId: 'camp2', date: iso(i, '12:00:00'), meal: 'lunch', description: '鸡胸肉+糙米饭+蔬菜', photos: [], dietitianScore: 2 },
+      { id: `d_d_${idSuffix}`, studentId: 's12', campId: 'camp2', date: iso(i, '18:20:00'), meal: 'dinner', description: '清蒸鱼+西兰花', photos: [], dietitianScore: 2 },
+    );
+    MOCK_EXERCISE_RECORDS.push({ id: `e_${idSuffix}`, studentId: 's12', campId: 'camp2', date: iso(i, '19:30:00'), type: '瑜伽', duration: 40, intensity: 3, coachScore: 2 });
+    const w = parseFloat((63.0 - (i - S12_START) * 0.15).toFixed(1)); // 随时间递减模拟减重
+    MOCK_WEIGHT_RECORDS.push({ id: `w_${idSuffix}`, date: iso(i, '07:10:00'), weight: w, studentId: 's12', campId: 'camp2' });
+  } else {
+    // 部分打卡：只打 早餐 + 运动 两项（计入打卡，但不算全部完成）
+    MOCK_DIET_RECORDS.push(
+      { id: `d_b_${idSuffix}`, studentId: 's12', campId: 'camp2', date: iso(i, '07:20:00'), meal: 'breakfast', description: '燕麦+鸡蛋+牛奶', photos: [], dietitianScore: 2 },
+    );
+    MOCK_EXERCISE_RECORDS.push({ id: `e_${idSuffix}`, studentId: 's12', campId: 'camp2', date: iso(i, '19:30:00'), type: '瑜伽', duration: 40, intensity: 3, coachScore: 2 });
+  }
+}
+
+export const MOCK_COACH_ACTIVITIES: CoachActivityRecord[] = [
+  {
+    id: 'a1',
+    title: '全身燃脂 HIIT',
+    description: '每天坚持15分钟，帮你快速燃烧卡路里！第一步：高抬腿；第二步：开合跳；第三步：波比跳。',
+    imageUrls: [
+      'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=800&q=80',
+      'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80',
+      'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&q=80'
+    ],
+    coachName: '李教练',
+    date: dateStr(0),
+    videoUrls: ['http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'],
+  },
+  {
+    id: 'a2',
+    title: '晨间瑜伽唤醒',
+    description: '通过几个简单的体式，唤醒僵硬的身体，开始元气满满的一天。',
+    imageUrls: [
+      'https://images.unsplash.com/photo-1506126613408-eca07ce68773?w=800&q=80',
+      'https://images.unsplash.com/photo-1599901860904-17e08c2d159a?w=800&q=80'
+    ],
+    coachName: '王教练',
+    date: dateStr(-1),
+    campIds: ['camp1'],
+  },
+  {
+    id: 'a3',
+    title: '核心力量强化',
+    description: '不要只关注马甲线，核心肌群的强化对任何运动都至关重要。',
+    imageUrls: [
+      'https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=800&q=80',
+      'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=800&q=80',
+      'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=800&q=80'
+    ],
+    coachName: '张教练',
+    date: dateStr(-2),
+  }
+];
+
+// Mock reward data
+export const MOCK_REWARD_TIERS: RewardTier[] = [
+  {
+    id: 't0',
+    campId: 'camp1',
+    name: '运动跳绳',
+    requiredDays: 5,
+    imageUrl: rewardImg('运动跳绳', '🏃', '#4A90D9', '#357ABD'),
+    stock: 100,
+    source: 'streak',
+    description: '专业计数跳绳，防滑手柄，轴承顺滑，每日燃脂好搭档',
+    deliveryMethods: ['shipped', 'in-person'],
+  },
+  {
+    id: 't1',
+    campId: 'camp1',
+    name: '运动水杯',
+    requiredDays: 10,
+    imageUrl: rewardImg('运动水杯', '🥤', '#1F6A95', '#06A952'),
+    stock: 50,
+    source: 'streak',
+    description: '便携运动水杯 500ml，BPA-free 材质，健康饮水好搭档',
+    deliveryMethods: ['shipped', 'in-person'],
+  },
+  {
+    id: 't2',
+    campId: 'camp1',
+    name: '瑜伽垫',
+    requiredDays: 21,
+    imageUrl: rewardImg('瑜伽垫', '🧘', '#8B5CF6', '#7C3AED'),
+    stock: 20,
+    source: 'streak',
+    description: '加厚防滑瑜伽垫 6mm，TPE 环保材质，健身塑形更舒适',
+    deliveryMethods: ['shipped', 'in-person'],
+  },
+  {
+    id: 't3',
+    campId: 'camp1',
+    name: '智能体脂秤',
+    requiredDays: 28,
+    imageUrl: rewardImg('智能体脂秤', '⚖️', '#374151', '#1F2937'),
+    stock: 5,
+    source: 'streak',
+    description: '智能体脂秤，连接手机同步记录，28 项身体数据科学管理',
+    deliveryMethods: ['shipped'],
+  },
+];
+
+export const MOCK_REWARD_CLAIMS: RewardClaim[] = [
+  {
+    id: 'c1',
+    campId: 'camp1',
+    tierId: 't0',
+    studentId: 's1',
+    studentName: '李明',
+    recipientName: '李明',
+    recipientPhone: '13800000001',
+    recipientAddress: '北京市朝阳区某某路1号',
+    claimDate: iso(-6, '10:00:00'),
+    status: 'shipped',
+    trackingNumber: 'SF1029384756',
+    shipDate: iso(-5, '09:00:00'),
+    deliveryMethod: 'shipped',
+  },
+  {
+    id: 'c2',
+    campId: 'camp1',
+    tierId: 't0',
+    studentId: 's2',
+    studentName: '王丽',
+    recipientName: '王丽',
+    recipientPhone: '13800000002',
+    recipientAddress: '上海市浦东新区某某路2号',
+    claimDate: iso(0, '11:00:00'),
+    status: 'pending',
+    deliveryMethod: 'shipped',
+  },
+];
+
+// Default meal time config - 默认全部关闭，学员可随时打卡
+export const DEFAULT_MEAL_TIME_CONFIG: MealTimeConfig = {
+  breakfast: { start: '06:00', end: '10:00', enabled: false },
+  lunch: { start: '11:00', end: '14:00', enabled: false },
+  dinner: { start: '17:00', end: '21:00', enabled: false },
+  snack: { start: '14:00', end: '17:00', enabled: false },
+};
+
+// Default health metric configs (clinical indicators with gender-specific ranges)
+export const DEFAULT_METRIC_CONFIGS: MetricConfig[] = [
+  // 血压心率（心脑血管营核心）
+  { id: 'mc_bp_sbp', name: '收缩压', unit: 'mmHg', normalRange: '<130', category: '血压心率' },
+  { id: 'mc_bp_dbp', name: '舒张压', unit: 'mmHg', normalRange: '<80', category: '血压心率' },
+  { id: 'mc_hr', name: '静息心率', unit: '次/分', normalRange: '60-100', category: '血压心率' },
+  // 血管与炎症
+  { id: 'mc_imt', name: '颈动脉内中膜厚度', unit: 'mm', normalRange: '<1.0', category: '血管与炎症' },
+  { id: 'mc_hcy', name: '同型半胱氨酸', unit: 'μmol/L', normalRange: '<15', category: '血管与炎症' },
+  { id: 'mc_crp', name: '超敏C反应蛋白', unit: 'mg/L', normalRange: '<3.0', category: '血管与炎症' },
+  // 身体测量数据
+  { id: 'mc_body_weight', name: '体重', unit: 'kg', normalRange: '参考值视身高而定', category: '身体测量数据' },
+  { id: 'mc_body_muscle', name: '肌肉量', unit: 'kg', normalRange: '40.0 - 55.0', category: '身体测量数据' },
+  { id: 'mc_body_skeletal', name: '骨骼肌', unit: 'kg', normalRange: '25.0 - 35.0', category: '身体测量数据' },
+  { id: 'mc_body_fat', name: '脂肪量', unit: 'kg', normalRange: '10.0 - 20.0', category: '身体测量数据' },
+  { id: 'mc_body_bmr', name: '基础代谢率', unit: 'kcal', normalRange: '1300 - 1700', category: '身体测量数据' },
+  { id: 'mc_body_whr', name: '腰臀比', unit: '', normalRange: '0.70 - 0.90', category: '身体测量数据' },
+  { id: 'mc_body_visceral', name: '内脏脂肪面积', unit: 'cm²', normalRange: '50 - 100', category: '身体测量数据' },
+  { id: 'mc_body_obesity', name: '肥胖度', unit: '%', normalRange: '90 - 110', category: '身体测量数据' },
+  { id: 'mc_body_cell', name: '身体细胞量', unit: 'kg', normalRange: '30.0 - 45.0', category: '身体测量数据' },
+  { id: 'mc_body_edema', name: '浮肿指数', unit: '', normalRange: '0.36 - 0.39', category: '身体测量数据' },
+  { id: 'mc_body_asmi', name: '四肢骨骼肌质量指数', unit: 'kg/㎡', normalRange: '6.0 - 9.0', category: '身体测量数据' },
+  { id: 'mc_body_ainst', name: 'AINST评分', unit: '分', normalRange: '70 - 100', category: '身体测量数据' },
+  // 肝功能相关
+  { id: 'mc_liver_alt', name: '丙氨酸氨基转移酶', unit: 'U/L', normalRange: '9-50', category: '肝功能相关' },
+  { id: 'mc_liver_ast', name: '天门冬氨酸氨基转移酶', unit: 'U/L', normalRange: '15-40', category: '肝功能相关' },
+  { id: 'mc_liver_tp', name: '总蛋白', unit: 'g/L', normalRange: '65-85', category: '肝功能相关' },
+  { id: 'mc_liver_alb', name: '白蛋白', unit: 'g/L', normalRange: '40-55', category: '肝功能相关' },
+  { id: 'mc_liver_palb', name: '前白蛋白', unit: 'mg/L', normalRange: '200-430', category: '肝功能相关' },
+  { id: 'mc_liver_tbil', name: '总胆红素', unit: 'μmol/L', normalRange: '0-23', category: '肝功能相关' },
+  { id: 'mc_liver_dbil', name: '直接胆红素', unit: 'μmol/L', normalRange: '0-6.84', category: '肝功能相关' },
+  { id: 'mc_liver_alp', name: '碱性磷酸酶', unit: 'U/L', normalRange: '45-125', category: '肝功能相关' },
+  { id: 'mc_liver_ggt', name: 'γ-谷氨酰基转移酶', unit: 'U/L', normalRange: '男10-60 / 女7-45', category: '肝功能相关' },
+  // 肾功能相关
+  { id: 'mc_kidney_urea', name: '尿素氮', unit: 'mmol/L', normalRange: '3.1-8', category: '肾功能相关' },
+  { id: 'mc_kidney_cr', name: '肌酐', unit: 'μmol/L', normalRange: '57-97', category: '肾功能相关' },
+  { id: 'mc_kidney_ua', name: '尿酸', unit: 'μmol/L', normalRange: '208-428', category: '肾功能相关' },
+  // 血脂相关
+  { id: 'mc_bl_tc', name: '总胆固醇', unit: 'mmol/L', normalRange: '<5.2', category: '血脂相关' },
+  { id: 'mc_bl_tg', name: '甘油三酯', unit: 'mmol/L', normalRange: '<1.7', category: '血脂相关' },
+  { id: 'mc_bl_hdl', name: '高密度脂蛋白胆固醇', unit: 'mmol/L', normalRange: '1.04-1.55', category: '血脂相关' },
+  { id: 'mc_bl_ldl', name: '低密度脂蛋白胆固醇', unit: 'mmol/L', normalRange: '<1.8（高危）', category: '血脂相关' },
+  // 血糖相关
+  { id: 'mc_bs_fasting', name: '葡萄糖(空腹)', unit: 'mmol/L', normalRange: '3.89-6.11', category: '血糖相关' },
+  { id: 'mc_bs_hba1c', name: '糖化血红蛋白', unit: '%', normalRange: '4.0-6.0', category: '血糖相关' },
+];
+
+// Mock metric values keyed by metric config id (beforeValue/afterValue only;
+// isBeforeOut/isAfterOut are computed dynamically by isValueOutOfRange)
+// This is the default set (student s1), with afterValues showing improvement
+export const MOCK_METRIC_VALUES: Record<string, MetricValue> = {
+  'mc_bp_sbp': { beforeValue: 158, afterValue: 136 },
+  'mc_bp_dbp': { beforeValue: 96, afterValue: 84 },
+  'mc_hr': { beforeValue: 78, afterValue: 72 },
+  'mc_imt': { beforeValue: 1.21, afterValue: 1.12 },
+  'mc_hcy': { beforeValue: 16.8, afterValue: 13.2 },
+  'mc_crp': { beforeValue: 3.8, afterValue: 2.4 },
+  'mc_body_weight': { beforeValue: 80.5, afterValue: 75.2 },
+  'mc_body_muscle': { beforeValue: 45.2, afterValue: 46.5 },
+  'mc_body_skeletal': { beforeValue: 28.1, afterValue: 28.8 },
+  'mc_body_fat': { beforeValue: 28.5, afterValue: 23.8 },
+  'mc_body_bmr': { beforeValue: 1450, afterValue: 1480 },
+  'mc_body_whr': { beforeValue: 0.95, afterValue: 0.88 },
+  'mc_body_visceral': { beforeValue: 120, afterValue: 95 },
+  'mc_body_obesity': { beforeValue: 125, afterValue: 108 },
+  'mc_body_cell': { beforeValue: 35.5, afterValue: 36.2 },
+  'mc_body_edema': { beforeValue: 0.40, afterValue: 0.38 },
+  'mc_body_asmi': { beforeValue: 7.5, afterValue: 7.8 },
+  'mc_body_ainst': { beforeValue: 65, afterValue: 78 },
+  'mc_liver_alt': { beforeValue: 55, afterValue: 38 },
+  'mc_liver_ast': { beforeValue: 35, afterValue: 28 },
+  'mc_liver_tp': { beforeValue: 72, afterValue: 74 },
+  'mc_liver_alb': { beforeValue: 45, afterValue: 47 },
+  'mc_liver_palb': { beforeValue: 250, afterValue: 280 },
+  'mc_liver_tbil': { beforeValue: 15.2, afterValue: 14.0 },
+  'mc_liver_dbil': { beforeValue: 4.1, afterValue: 3.5 },
+  'mc_liver_alp': { beforeValue: 95, afterValue: 88 },
+  'mc_liver_ggt': { beforeValue: 65, afterValue: 42 },
+  'mc_kidney_urea': { beforeValue: 5.4, afterValue: 5.0 },
+  'mc_kidney_cr': { beforeValue: 88, afterValue: 85 },
+  'mc_kidney_ua': { beforeValue: 450, afterValue: 380 },
+  'mc_bl_tc': { beforeValue: 5.5, afterValue: 4.8 },
+  'mc_bl_tg': { beforeValue: 2.1, afterValue: 1.5 },
+  'mc_bl_hdl': { beforeValue: 1.1, afterValue: 1.3 },
+  'mc_bl_ldl': { beforeValue: 3.5, afterValue: 2.9 },
+  'mc_bs_fasting': { beforeValue: 5.8, afterValue: 5.2 },
+  'mc_bs_hba1c': { beforeValue: 6.2, afterValue: 5.8 },
+};
+
+/**
+ * 每位学员的指标值（用于结营报告）
+ * key = studentId, value = { [configId]: MetricValue }
+ * s1 使用 MOCK_METRIC_VALUES 的数据（已有 afterValue）
+ * 其他学员有各自的 before/after 数据
+ */
+export const MOCK_STUDENT_METRIC_VALUES: Record<string, Record<string, MetricValue>> = {
+  's1': MOCK_METRIC_VALUES,
+  's2': {
+    'mc_body_weight': { beforeValue: 62.0, afterValue: 58.5 },
+    'mc_body_muscle': { beforeValue: 38.0, afterValue: 39.5 },
+    'mc_body_skeletal': { beforeValue: 23.5, afterValue: 24.2 },
+    'mc_body_fat': { beforeValue: 22.0, afterValue: 18.5 },
+    'mc_body_bmr': { beforeValue: 1300, afterValue: 1330 },
+    'mc_body_whr': { beforeValue: 0.85, afterValue: 0.80 },
+    'mc_body_visceral': { beforeValue: 85, afterValue: 70 },
+    'mc_body_obesity': { beforeValue: 105, afterValue: 98 },
+    'mc_body_cell': { beforeValue: 30.0, afterValue: 30.8 },
+    'mc_body_edema': { beforeValue: 0.38, afterValue: 0.37 },
+    'mc_body_asmi': { beforeValue: 6.2, afterValue: 6.5 },
+    'mc_body_ainst': { beforeValue: 72, afterValue: 82 },
+    'mc_liver_alt': { beforeValue: 28, afterValue: 22 },
+    'mc_liver_ast': { beforeValue: 22, afterValue: 20 },
+    'mc_liver_tp': { beforeValue: 68, afterValue: 70 },
+    'mc_liver_alb': { beforeValue: 42, afterValue: 44 },
+    'mc_liver_palb': { beforeValue: 220, afterValue: 250 },
+    'mc_liver_tbil': { beforeValue: 12.0, afterValue: 11.0 },
+    'mc_liver_dbil': { beforeValue: 3.0, afterValue: 2.5 },
+    'mc_liver_alp': { beforeValue: 78, afterValue: 75 },
+    'mc_liver_ggt': { beforeValue: 32, afterValue: 25 },
+    'mc_kidney_urea': { beforeValue: 4.5, afterValue: 4.2 },
+    'mc_kidney_cr': { beforeValue: 62, afterValue: 60 },
+    'mc_kidney_ua': { beforeValue: 320, afterValue: 280 },
+    'mc_bl_tc': { beforeValue: 4.8, afterValue: 4.2 },
+    'mc_bl_tg': { beforeValue: 1.3, afterValue: 1.0 },
+    'mc_bl_hdl': { beforeValue: 1.2, afterValue: 1.4 },
+    'mc_bl_ldl': { beforeValue: 2.8, afterValue: 2.3 },
+    'mc_bs_fasting': { beforeValue: 5.2, afterValue: 4.8 },
+    'mc_bs_hba1c': { beforeValue: 5.6, afterValue: 5.3 },
+  },
+  's3': {
+    'mc_body_weight': { beforeValue: 95.0, afterValue: 88.0 },
+    'mc_body_muscle': { beforeValue: 48.0, afterValue: 49.5 },
+    'mc_body_skeletal': { beforeValue: 30.0, afterValue: 30.8 },
+    'mc_body_fat': { beforeValue: 35.0, afterValue: 28.0 },
+    'mc_body_bmr': { beforeValue: 1550, afterValue: 1580 },
+    'mc_body_whr': { beforeValue: 1.0, afterValue: 0.92 },
+    'mc_body_visceral': { beforeValue: 140, afterValue: 105 },
+    'mc_body_obesity': { beforeValue: 135, afterValue: 118 },
+    'mc_body_cell': { beforeValue: 38.0, afterValue: 39.0 },
+    'mc_body_edema': { beforeValue: 0.39, afterValue: 0.38 },
+    'mc_body_asmi': { beforeValue: 8.0, afterValue: 8.2 },
+    'mc_body_ainst': { beforeValue: 58, afterValue: 72 },
+    'mc_liver_alt': { beforeValue: 72, afterValue: 45 },
+    'mc_liver_ast': { beforeValue: 48, afterValue: 35 },
+    'mc_liver_tp': { beforeValue: 70, afterValue: 73 },
+    'mc_liver_alb': { beforeValue: 43, afterValue: 46 },
+    'mc_liver_palb': { beforeValue: 230, afterValue: 260 },
+    'mc_liver_tbil': { beforeValue: 18.0, afterValue: 15.0 },
+    'mc_liver_dbil': { beforeValue: 5.0, afterValue: 4.0 },
+    'mc_liver_alp': { beforeValue: 105, afterValue: 95 },
+    'mc_liver_ggt': { beforeValue: 80, afterValue: 50 },
+    'mc_kidney_urea': { beforeValue: 6.0, afterValue: 5.2 },
+    'mc_kidney_cr': { beforeValue: 95, afterValue: 90 },
+    'mc_kidney_ua': { beforeValue: 480, afterValue: 400 },
+    'mc_bl_tc': { beforeValue: 6.2, afterValue: 5.0 },
+    'mc_bl_tg': { beforeValue: 2.8, afterValue: 1.6 },
+    'mc_bl_hdl': { beforeValue: 0.9, afterValue: 1.1 },
+    'mc_bl_ldl': { beforeValue: 4.0, afterValue: 3.0 },
+    'mc_bs_fasting': { beforeValue: 6.5, afterValue: 5.6 },
+    'mc_bs_hba1c': { beforeValue: 6.5, afterValue: 5.9 },
+  },
+  's4': {
+    'mc_body_weight': { beforeValue: 58.0, afterValue: 55.5 },
+    'mc_body_muscle': { beforeValue: 36.0, afterValue: 37.2 },
+    'mc_body_skeletal': { beforeValue: 22.0, afterValue: 22.8 },
+    'mc_body_fat': { beforeValue: 19.0, afterValue: 16.0 },
+    'mc_body_bmr': { beforeValue: 1250, afterValue: 1280 },
+    'mc_body_whr': { beforeValue: 0.82, afterValue: 0.78 },
+    'mc_body_visceral': { beforeValue: 75, afterValue: 60 },
+    'mc_body_obesity': { beforeValue: 102, afterValue: 96 },
+    'mc_body_cell': { beforeValue: 28.0, afterValue: 29.0 },
+    'mc_body_edema': { beforeValue: 0.37, afterValue: 0.37 },
+    'mc_body_asmi': { beforeValue: 5.8, afterValue: 6.1 },
+    'mc_body_ainst': { beforeValue: 75, afterValue: 84 },
+    'mc_liver_alt': { beforeValue: 18, afterValue: 16 },
+    'mc_liver_ast': { beforeValue: 20, afterValue: 18 },
+    'mc_liver_tp': { beforeValue: 70, afterValue: 72 },
+    'mc_liver_alb': { beforeValue: 44, afterValue: 45 },
+    'mc_liver_palb': { beforeValue: 240, afterValue: 260 },
+    'mc_liver_tbil': { beforeValue: 10.5, afterValue: 10.0 },
+    'mc_liver_dbil': { beforeValue: 2.8, afterValue: 2.5 },
+    'mc_liver_alp': { beforeValue: 72, afterValue: 70 },
+    'mc_liver_ggt': { beforeValue: 25, afterValue: 22 },
+    'mc_kidney_urea': { beforeValue: 4.0, afterValue: 3.8 },
+    'mc_kidney_cr': { beforeValue: 58, afterValue: 56 },
+    'mc_kidney_ua': { beforeValue: 280, afterValue: 250 },
+    'mc_bl_tc': { beforeValue: 4.5, afterValue: 4.0 },
+    'mc_bl_tg': { beforeValue: 1.1, afterValue: 0.9 },
+    'mc_bl_hdl': { beforeValue: 1.3, afterValue: 1.5 },
+    'mc_bl_ldl': { beforeValue: 2.5, afterValue: 2.1 },
+    'mc_bs_fasting': { beforeValue: 5.0, afterValue: 4.7 },
+    'mc_bs_hba1c': { beforeValue: 5.4, afterValue: 5.2 },
+  },
+  // s5: 部分指标改善、部分不变或恶化（使企业汇报版改善率不再全是 100%）
+  's5': {
+    'mc_body_weight': { beforeValue: 70.0, afterValue: 68.5 },
+    'mc_body_muscle': { beforeValue: 42.0, afterValue: 41.5 },   // 肌肉略减（未改善）
+    'mc_body_skeletal': { beforeValue: 26.0, afterValue: 26.2 },
+    'mc_body_fat': { beforeValue: 24.0, afterValue: 22.0 },
+    'mc_body_bmr': { beforeValue: 1380, afterValue: 1370 },      // 代谢略降（未改善）
+    'mc_body_whr': { beforeValue: 0.88, afterValue: 0.85 },
+    'mc_body_visceral': { beforeValue: 95, afterValue: 88 },
+    'mc_body_obesity': { beforeValue: 108, afterValue: 104 },
+    'mc_liver_alt': { beforeValue: 32, afterValue: 28 },
+    'mc_liver_ast': { beforeValue: 25, afterValue: 23 },
+    'mc_liver_ggt': { beforeValue: 38, afterValue: 42 },          // GGT 升高（未改善）
+    'mc_kidney_ua': { beforeValue: 360, afterValue: 380 },        // 尿酸升高（未改善）
+    'mc_bl_tc': { beforeValue: 4.8, afterValue: 4.6 },
+    'mc_bl_tg': { beforeValue: 1.4, afterValue: 1.2 },
+    'mc_bl_hdl': { beforeValue: 1.1, afterValue: 1.2 },
+    'mc_bl_ldl': { beforeValue: 2.8, afterValue: 2.6 },
+    'mc_bs_fasting': { beforeValue: 5.4, afterValue: 5.3 },
+    'mc_bs_hba1c': { beforeValue: 5.6, afterValue: 5.5 },
+  },
+  // s6: 改善较少的学员（多项指标几乎不变）
+  's6': {
+    'mc_body_weight': { beforeValue: 65.0, afterValue: 64.5 },
+    'mc_body_muscle': { beforeValue: 40.0, afterValue: 40.0 },    // 不变
+    'mc_body_fat': { beforeValue: 20.0, afterValue: 19.5 },
+    'mc_body_bmr': { beforeValue: 1350, afterValue: 1350 },       // 不变
+    'mc_body_visceral': { beforeValue: 80, afterValue: 78 },
+    'mc_liver_alt': { beforeValue: 22, afterValue: 24 },          // 略升（未改善）
+    'mc_liver_ggt': { beforeValue: 28, afterValue: 30 },          // 略升（未改善）
+    'mc_kidney_ua': { beforeValue: 310, afterValue: 305 },
+    'mc_bl_tc': { beforeValue: 4.5, afterValue: 4.4 },
+    'mc_bl_tg': { beforeValue: 1.2, afterValue: 1.3 },            // 略升（未改善）
+    'mc_bl_hdl': { beforeValue: 1.2, afterValue: 1.2 },           // 不变
+    'mc_bl_ldl': { beforeValue: 2.6, afterValue: 2.5 },
+    'mc_bs_fasting': { beforeValue: 5.1, afterValue: 5.0 },
+    'mc_bs_hba1c': { beforeValue: 5.3, afterValue: 5.3 },         // 不变
+  },
+};
+
+// Per-student weight records (for camp report weight trend)
+export const MOCK_STUDENT_WEIGHTS: Record<string, WeightRecord[]> = {
+  's2': [
+    { id: 'w_s2_1', date: iso(-15, '07:00:00'), weight: 62.0, studentId: 's2', campId: 'camp1' },
+    { id: 'w_s2_2', date: iso(-10, '07:10:00'), weight: 61.0, studentId: 's2', campId: 'camp1' },
+    { id: 'w_s2_3', date: iso(-5, '07:00:00'), weight: 59.8, studentId: 's2', campId: 'camp1' },
+    { id: 'w_s2_4', date: iso(-1, '07:05:00'), weight: 58.5, studentId: 's2', campId: 'camp1' },
   ],
-  interactions: s.id === 's1' ? ['阿托伐他汀：避免大量西柚/柚子汁', '阿司匹林：避免空腹饮酒，注意胃肠道反应'] : ['降压药：避免与高钾盐同用，遵医嘱', '二甲双胍：随餐服用，避免空腹'],
-  precautions: ['每日食盐 <5g，警惕酱油、腐乳、腌制品中的隐形盐', '烹调油每日 25–30g，优先橄榄油、菜籽油', '戒烟限酒，男性酒精 <25g/日'],
-  reviewDate: '2026-12-25',
-}));
+  's3': [
+    { id: 'w_s3_1', date: iso(-15, '07:00:00'), weight: 95.0, studentId: 's3', campId: 'camp1' },
+    { id: 'w_s3_2', date: iso(-10, '07:10:00'), weight: 92.5, studentId: 's3', campId: 'camp1' },
+    { id: 'w_s3_3', date: iso(-5, '07:00:00'), weight: 89.8, studentId: 's3', campId: 'camp1' },
+    { id: 'w_s3_4', date: iso(-1, '07:05:00'), weight: 88.0, studentId: 's3', campId: 'camp1' },
+  ],
+  's4': [
+    { id: 'w_s4_1', date: iso(-15, '07:00:00'), weight: 58.0, studentId: 's4', campId: 'camp1' },
+    { id: 'w_s4_2', date: iso(-10, '07:10:00'), weight: 57.0, studentId: 's4', campId: 'camp1' },
+    { id: 'w_s4_3', date: iso(-5, '07:00:00'), weight: 56.0, studentId: 's4', campId: 'camp1' },
+    { id: 'w_s4_4', date: iso(-1, '07:05:00'), weight: 55.5, studentId: 's4', campId: 'camp1' },
+  ],
+};
 
-const MEDICATIONS: MedicationPlan[] = STUDENTS.map((s, i) => ({
-  id: `medplan_${s.id}`,
-  studentId: s.id,
-  doctorId: i % 2 === 0 ? 'd1' : 'd2',
-  doctorName: i % 2 === 0 ? '李建国' : '周敏',
-  updatedAt: '2026-12-01 11:20',
-  drugs: i === 1
-    ? [
-        { name: '苯磺酸氨氯地平片', dose: '5 mg', freq: '每日 1 次，晨服', note: '监测踝部水肿' },
-        { name: '阿托伐他汀钙片', dose: '20 mg', freq: '每晚 1 次', note: '避免西柚汁' },
-        { name: '阿司匹林肠溶片', dose: '100 mg', freq: '每日 1 次，餐后', note: '注意黑便、牙龈出血' },
-        { name: '二甲双胍缓释片', dose: '0.5 g', freq: '每日 2 次，随餐', note: '肾功能 eGFR<45 需减量' },
-      ]
-    : [
-        { name: '苯磺酸氨氯地平片', dose: '5 mg', freq: '每日 1 次，晨服' },
-        { name: '阿托伐他汀钙片', dose: '20 mg', freq: '每晚 1 次', note: '避免西柚汁' },
-        { name: '阿司匹林肠溶片', dose: '100 mg', freq: '每日 1 次，餐后' },
-      ],
-  adherence: i === 1 ? 0.94 : 0.88,
-  note: '用药调整需经医师复诊，不可自行停药',
-}));
-
-const FOLLOWUPS: FollowupRecord[] = [
-  {
-    id: 'fu1', studentId: 's1', campId: 'camp1', doctorId: 'd1', doctorName: '李建国',
-    date: '2026-12-01 11:00', type: '入企面诊', risk: 'high', sbp: 158, dbp: 96, hr: 78,
-    symptoms: '偶有晨起头晕，无胸痛、无夜间阵发性呼吸困难',
-    conclusion: '高血压 3 级（很高危），颈动脉斑块，LDL-C 4.62 mmol/L 未达标；心电图为窦性心律，未见缺血性改变。',
-    plan: '维持氨氯地平 5mg qd、阿托伐他汀 20mg qn、阿司匹林 100mg qd；启动 21 天强化期运动与营养处方；家庭血压早晚各一次。',
-    nextDate: '2026-12-22', traced: true,
-  },
-  {
-    id: 'fu2', studentId: 's1', campId: 'camp1', doctorId: 'd1', doctorName: '李建国',
-    date: '2026-12-08 16:30', type: '线上随访', risk: 'high', sbp: 148, dbp: 92, hr: 76,
-    symptoms: '头晕缓解，运动后无胸闷；饮食已开始减盐',
-    conclusion: '血压较开营下降 10/4 mmHg，耐受良好；运动依从性较好，继续当前强度。',
-    plan: '维持处方；第 2 周起有氧运动增至每周 5 次、每次 30 分钟；2 周后复查家庭血压平均值。',
-    nextDate: '2026-12-22', traced: true,
-  },
-  {
-    id: 'fu3', studentId: 's1', campId: 'camp1', doctorId: 'd1', doctorName: '李建国',
-    date: '2026-12-15 15:00', type: '电话随访', risk: 'high', sbp: 138, dbp: 86, hr: 74,
-    symptoms: '无不适，睡眠改善，已戒烟 2 周',
-    conclusion: '家庭血压平均值 136/85 mmHg，较基线下降 22/11 mmHg；用药依从 94%。',
-    plan: '维持现有用药与运动处方；12 月 22 日入企复诊，评估是否调整氨氯地平剂量。',
-    nextDate: '2026-12-22', traced: true,
-  },
-  {
-    id: 'fu4', studentId: 's2', campId: 'camp1', doctorId: 'd2', doctorName: '周敏',
-    date: '2026-12-03 10:20', type: '入企面诊', risk: 'very_high', sbp: 165, dbp: 92, hr: 84,
-    symptoms: '活动后气短，偶发心悸',
-    conclusion: '冠心病史合并高血压、糖尿病，运动风险高危，需心电监护下起始训练。',
-    plan: '调整二甲双胍剂量，运动处方从 15 分钟低强度起始，营养处方按糖尿病低GI执行。',
-    nextDate: '2026-12-24', traced: true,
-  },
-  {
-    id: 'fu5', studentId: 's3', campId: 'camp1', doctorId: 'd2', doctorName: '周敏',
-    date: '2026-12-10 14:00', type: '线上随访', risk: 'high', sbp: 142, dbp: 90, hr: 82,
-    symptoms: '无明显不适，应酬较多',
-    conclusion: '血压下降但仍未达标，腹型肥胖，建议加强饮食依从。',
-    plan: '加用低剂量他汀强化，营养师加密随访，限制饮酒。',
-    nextDate: '2026-12-24', traced: true,
-  },
-  {
-    id: 'fu6', studentId: 's5', campId: 'camp1', doctorId: 'd2', doctorName: '周敏',
-    date: '2026-12-12 09:40', type: '绿色通道', risk: 'very_high', sbp: 176, dbp: 104, hr: 110,
-    symptoms: '晨起血压 176/104，伴心慌',
-    conclusion: '血压危急值，房颤伴快速心室率，已安排心内科门诊加号。',
-    plan: '当日门诊评估，暫停运动处方，调整降压与控率方案。',
-    nextDate: '2026-12-19', traced: true,
-  },
-];
-
-const ALERTS: AlertItem[] = [
-  { id: 'al1', studentId: 's5', studentName: '陈志强', campId: 'camp1', type: '血压危急', level: 'high', value: '176/104 mmHg', time: relTime(-1, '07:42'), status: 'open' },
-  { id: 'al2', studentId: 's2', studentName: '李秀兰', campId: 'camp1', type: '心率异常', level: 'high', value: '静息心率 112 次/分', time: relTime(-2, '21:10'), status: 'open' },
-  { id: 'al3', studentId: 's3', studentName: '王建国', campId: 'camp1', type: '随访逾期', level: 'medium', value: '计划随访日 12-15，未完成', time: relTime(-3, '09:00'), status: 'open' },
-  { id: 'al4', studentId: 's9', studentName: '吴刚', campId: 'camp1', type: '指标异常', level: 'medium', value: '尿酸 512 μmol/L', time: relTime(-4, '10:30'), status: 'open' },
-  { id: 'al5', studentId: 's11', studentName: '冯涛', campId: 'camp1', type: '用药依从低', level: 'medium', value: '近 7 日漏服 3 次', time: relTime(-5, '18:00'), status: 'open' },
-  { id: 'al6', studentId: 's1', studentName: '张伟', campId: 'camp1', type: '指标异常', level: 'medium', value: 'LDL-C 4.62 mmol/L 未达标', time: '2026-12-01 11:30', status: 'handled', handler: '李建国' },
-];
+// 将所有学员的体重记录合并到 MOCK_WEIGHT_RECORDS，确保 store.weightRecords 包含全部学员数据
+// 前后端联调时，后端 GET /weight-records 应返回全部学员的体重记录（含 studentId 字段）
+Object.values(MOCK_STUDENT_WEIGHTS).forEach((records) => {
+  records.forEach((r) => {
+    if (!MOCK_WEIGHT_RECORDS.some((m) => m.id === r.id)) {
+      MOCK_WEIGHT_RECORDS.push(r);
+    }
+  });
+});
 
 // ============================================================================
-//  运营活动 / 奖品 / 小红花
+//  账户管理 Mock 数据
 // ============================================================================
 
-const ACTIVITIES: ActivityDef[] = [
-  { id: 'act1', name: '21 / 45 / 90 天连续打卡', type: '连续打卡', window: '开营第 1–90 天', rule: '连续完成每日血压、运动、饮食打卡，断卡重新累计。', reward: '三档实物奖：血压计 / 低钠盐礼盒 / 健康礼包', target: 21, unit: '天', status: 'active', joined: true, progress: 18, phase: 1, icon: 'flame' },
-  { id: 'act2', name: '运动达标周', type: '每周主题挑战', window: '开营第 3 周', rule: '按运动处方完成 ≥5 天运动打卡，单次时长达到处方要求。', reward: '30 朵小红花 + 抽奖资格', target: 5, unit: '天', status: 'active', joined: true, progress: 4, phase: 1, icon: 'dumbbell' },
-  { id: 'act3', name: '血压自测 7 日赛', type: '指标监测', window: '开营第 4 周', rule: '连续 7 天早晚各测 1 次血压并录入，数据完整无缺项。', reward: '20 朵小红花 + 血压计抽奖资格', target: 7, unit: '天', status: 'active', joined: true, progress: 5, phase: 1, icon: 'heart' },
-  { id: 'act4', name: '阶梯达标奖 · 第一阶段', type: '阶梯达标', window: '第 1–3 个月', rule: '血压达标率、运动时长、低盐天数分别达到阶梯目标，上传凭证经医师/运动师确认。', reward: '阶梯礼品 + 小红花', target: 3, unit: '项', status: 'active', joined: true, progress: 1, phase: 1, icon: 'target' },
-  { id: 'act5', name: '季度之星评选', type: '排行激励', window: '第 3 个月', rule: '综合小红花榜与指标改善榜评选季度之星，全营公示。', reward: '荣誉证书 + 礼品 + 全营公示', target: 1, unit: '次', status: 'upcoming', joined: false, progress: 0, phase: 1, icon: 'star' },
-  { id: 'act6', name: '全勤幸运抽奖', type: '抽奖', window: '第 3、6 个月节点', rule: '当期全勤学员自动进入抽奖池，线上抽取并公示中奖名单。', reward: '特别礼品', target: 1, unit: '次', status: 'upcoming', joined: false, progress: 0, phase: 1, icon: 'gift' },
-  { id: 'act7', name: '看得见的改变 · 晒报告', type: 'UGC 分享', window: '第 6 个月', rule: '分享阶段健康报告截图并配一句改变感言，精选内容全营展示。', reward: '小红花 + 精选展示', target: 1, unit: '次', status: 'upcoming', joined: false, progress: 0, phase: 2, icon: 'image' },
-  { id: 'act8', name: '阶段健康成果发布会', type: '线上活动', window: '第 6 个月', rule: '线上直播发布阶段成果、优秀学员分享、医师答疑。', reward: '参与小红花 + 抽奖', target: 1, unit: '次', status: 'upcoming', joined: false, progress: 0, phase: 2, icon: 'video' },
-  { id: 'act9', name: '年度之星与结营典礼', type: '排行激励', window: '结营日', rule: '年度小红花榜、改善榜颁奖，线上结营典礼并发布年度报告。', reward: '奖杯/证书 + 大奖', target: 1, unit: '次', status: 'upcoming', joined: false, progress: 0, phase: 3, icon: 'trophy' },
-  { id: 'act10', name: '一起走 · 万步有约', type: '线上健走', window: '第 2–12 个月', rule: '每日步数同步或手动录入，团队累计里程解锁城市地标，周榜前 10 名得小红花。', reward: '团队里程奖 + 周榜小红花', target: 45, unit: '天', status: 'active', joined: true, progress: 18, phase: 2, icon: 'footprints' },
+/** 营期/期列表 */
+export const MOCK_CAMPS: Camp[] = [
+  { id: 'camp1', name: '第一期', startDate: dateStr(-15), endDate: dateStr(13), status: 'active' },
+  { id: 'camp2', name: '第二期', startDate: dateStr(-2), endDate: dateStr(26), status: 'active' },
+  { id: 'camp3', name: '第三期', startDate: dateStr(7), endDate: dateStr(35), status: 'upcoming' },
+];
+
+/** 账户列表（手机号 = 登录凭证） */
+export const MOCK_ACCOUNTS: Account[] = [
+  // 营养师（第一批数据库预维护，后续可在营养师端管理）
+  { id: 'd0', phone: '18888888888', name: '管理员', role: 'dietitian', active: true, createdAt: iso(-30, '09:00:00') },
+  { id: 'd1', phone: '13900000001', name: '王营养师', role: 'dietitian', active: true, createdAt: iso(-30, '09:00:00') },
+  { id: 'd2', phone: '13900000002', name: '李营养师', role: 'dietitian', active: true, createdAt: iso(-20, '09:00:00') },
+  // 体验营养师 / 运营督导：同号不同角色，带督导权限可见运营总览
+  { id: 'sup1', phone: '13900000009', name: '运营督导', role: 'dietitian', campIds: ['camp1', 'camp2'], active: true, supervisor: true, createdAt: iso(-30, '09:00:00') },
+  // 教练
+  { id: 'c1', phone: '13700000001', name: '李教练', role: 'coach', campIds: ['camp1'], active: true, createdAt: iso(-28, '10:00:00') },
+  { id: 'c2', phone: '13700000002', name: '王教练', role: 'coach', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-28, '10:00:00') },
+  { id: 'c3', phone: '13700000003', name: '张教练', role: 'coach', active: true, createdAt: iso(-28, '10:00:00') },
+  // 体验教练：同号不同角色
+  { id: 'c4', phone: '13900000009', name: '体验教练', role: 'coach', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-28, '10:00:00') },
+  // 医师与两级管理员（心脑血管营新增角色）
+  { id: 'dr1', phone: '13600000001', name: '李建国', role: 'doctor', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-30, '09:00:00') },
+  { id: 'dr2', phone: '13600000002', name: '周敏', role: 'doctor', campIds: ['camp1'], active: true, createdAt: iso(-20, '09:00:00') },
+  { id: 'oa1', phone: '13500000001', name: '王丽', role: 'org_admin', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-30, '09:00:00') },
+  { id: 'sa1', phone: '13400000001', name: '李项目', role: 'super_admin', campIds: ['camp1', 'camp2', 'camp3'], active: true, createdAt: iso(-30, '09:00:00') },
+  // 学员（id 与 MOCK_STUDENTS 一致，确保登录后能关联到打卡/体重/检测数据）
+  { id: 's1', phone: '13800000001', name: '张伟', role: 'student', campIds: ['camp1'], active: true, createdAt: iso(-15, '08:00:00') },
+  { id: 's2', phone: '13800000002', name: '李秀兰', role: 'student', campIds: ['camp1'], active: true, createdAt: iso(-15, '08:00:00') },
+  { id: 's3', phone: '13800000003', name: '王建国', role: 'student', campIds: ['camp1'], active: true, createdAt: iso(-15, '08:00:00') },
+  { id: 's4', phone: '13800000004', name: '赵敏', role: 'student', campIds: ['camp1'], active: true, createdAt: iso(-15, '08:00:00') },
+  { id: 's5', phone: '13800000005', name: '陈志强', role: 'student', campIds: ['camp1'], active: true, createdAt: iso(-15, '08:00:00') },
+  { id: 's6', phone: '13800000006', name: '刘芳', role: 'student', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-15, '08:00:00') },
+  { id: 's7', phone: '13800000007', name: '孙海', role: 'student', campIds: ['camp2'], active: true, createdAt: iso(-2, '08:00:00') },
+  { id: 's8', phone: '13800000008', name: '周慧', role: 'student', campIds: ['camp2'], active: true, createdAt: iso(-2, '08:00:00') },
+  { id: 's9', phone: '13800000009', name: '刘梅', role: 'student', campIds: ['camp2'], active: false, createdAt: iso(-2, '08:00:00') },
+  { id: 's10', phone: '13800000010', name: '孙悟空', role: 'student', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-15, '08:00:00') },
+  // 仅属于未开营营期（camp3）的学员，用于演示"营期未开始禁止打卡"
+  { id: 's11', phone: '13800000011', name: '钱多多', role: 'student', campIds: ['camp3'], active: true, createdAt: iso(7, '08:00:00') },
+  // 体验学员：同号不同角色
+  { id: 's13', phone: '13900000009', name: '体验学员', role: 'student', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-15, '08:00:00') },
+  // s12 演示用：仅部分打卡，展示打卡率与打卡全部完成率区别
+  { id: 's12', phone: '13800000012', name: '陈曦', role: 'student', campIds: ['camp2'], active: true, createdAt: iso(-10, '08:00:00') },
+];
+
+/** 积分商城商品 */
+export const MOCK_POINT_PRODUCTS: PointProduct[] = [
+  // 按营期分流：camp1 = 水杯/瑜伽垫/筋膜枪；camp2 = 跳绳/体脂秤/蛋白粉（camp3 新营期默认空，营养师可自行新增）
+  { id: 'pp1', name: '运动水杯', imageUrl: rewardImg('运动水杯', '🥤', '#2C7DA0', '#0099CC'), description: '便携运动水杯 500ml，BPA-free 材质，健康饮水好搭档', pointsRequired: 30, stock: 50, active: true, deliveryOptions: ['shipped', 'in-person'], maxExchange: 2, campId: 'camp1' },
+  { id: 'pp2', name: '跳绳', imageUrl: rewardImg('跳绳', '🤸', '#E8674F', '#FF6B35'), description: '专业计数跳绳，防滑手柄，轴承顺滑，燃脂利器', pointsRequired: 50, stock: 29, active: true, deliveryOptions: ['shipped', 'in-person'], campId: 'camp2' },
+  { id: 'pp3', name: '瑜伽垫', imageUrl: rewardImg('瑜伽垫', '🧘', '#1F6A95', '#164864'), description: '加厚防滑瑜伽垫 6mm，TPE 环保材质，运动更舒适', pointsRequired: 80, stock: 20, active: true, deliveryOptions: ['shipped'], campId: 'camp1' },
+  { id: 'pp4', name: '电子体脂秤', imageUrl: rewardImg('体脂秤', '⚖️', '#8B5CF6', '#6D28D9'), description: '智能体脂秤，13项身体数据监测，蓝牙连接APP', pointsRequired: 120, stock: 10, active: true, deliveryOptions: ['shipped'], campId: 'camp2' },
+  { id: 'pp5', name: '蛋白粉', imageUrl: rewardImg('蛋白粉', '💪', '#F59E0B', '#D97706'), description: '乳清蛋白粉 500g，运动后补充蛋白质，助力恢复', pointsRequired: 100, stock: 15, active: true, deliveryOptions: ['shipped', 'in-person'], campId: 'camp2' },
+  { id: 'pp6', name: '筋膜枪', imageUrl: rewardImg('筋膜枪', '🔫', '#EC4899', '#DB2777'), description: '迷你筋膜枪，4档力度调节，运动后放松肌肉', pointsRequired: 200, stock: 5, active: true, deliveryOptions: ['shipped'], maxExchange: 1, campId: 'camp1' },
+];
+
+/** 积分兑换记录 */
+export const MOCK_POINT_EXCHANGES: PointExchangeRecord[] = [
+  // campId 与对应商品 pp1(camp1)/pp2(camp2)/pp3(camp1) 一致，避免无归属导致营期视图口径不一致
+  { id: 'pe1', studentId: 's1', studentName: '李明', productId: 'pp1', productName: '运动水杯', productImage: rewardImg('运动水杯', '🥤', '#2C7DA0', '#0099CC'), pointsSpent: 30, exchangeDate: iso(-3, '14:30:00'), status: 'fulfilled', deliveryMethod: 'shipped', trackingNumber: 'SF1024567890', shipDate: iso(-2, '10:00:00'), recipientName: '李明', recipientPhone: '13800001111', recipientAddress: '北京市海淀区中关村大街1号', campId: 'camp1' },
+  { id: 'pe2', studentId: 's7', studentName: '郑爽', productId: 'pp2', productName: '跳绳', productImage: rewardImg('跳绳', '🤸', '#E8674F', '#FF6B35'), pointsSpent: 50, exchangeDate: iso(-1, '09:15:00'), status: 'pending', deliveryMethod: 'shipped', recipientName: '郑爽', recipientPhone: '13800000007', recipientAddress: '上海市浦东新区张江路100号', campId: 'camp2' },
+  { id: 'pe3', studentId: 's3', studentName: '张伟', productId: 'pp3', productName: '瑜伽垫', productImage: rewardImg('瑜伽垫', '🧘', '#1F6A95', '#164864'), pointsSpent: 80, exchangeDate: iso(-5, '16:20:00'), status: 'fulfilled', deliveryMethod: 'in-person', deliveredAt: iso(-4, '14:00:00'), campId: 'camp1' },
+  { id: 'pe4', studentId: 's7', studentName: '郑爽', productId: 'pp2', productName: '跳绳', productImage: rewardImg('跳绳', '🤸', '#E8674F', '#FF6B35'), pointsSpent: 50, exchangeDate: iso(-1, '11:00:00'), status: 'cancelled', deliveryMethod: 'shipped', recipientName: '郑爽', recipientPhone: '13800000007', recipientAddress: '上海市浦东新区张江路100号', cancelledAt: iso(-1, '12:34:00'), campId: 'camp2' },
+];
+
+/** 营养师手动加减分记录（补录线下打卡积分等） */
+export const MOCK_MANUAL_SCORES: ManualScoreRecord[] = [
+  { id: 'ms1', studentId: 's1', points: 10, reason: '营前线下打卡补录（5天饮食+运动）', dietitianName: '营养师小王', createdAt: iso(-2, '10:00:00'), date: dateStr(-7), campId: 'camp1' },
+  { id: 'ms2', studentId: 's2', points: 6, reason: '线下运动打卡补录', dietitianName: '营养师小王', createdAt: iso(-2, '10:05:00'), date: dateStr(-5), campId: 'camp1' },
+  { id: 'ms3', studentId: 's3', points: -2, reason: '打卡作弊扣分', dietitianName: '营养师小王', createdAt: iso(-1, '15:00:00'), date: dateStr(-1), campId: 'camp1' },
 ];
 
 // ============================================================================
-//  消息 / 通知
+//  演示数据扩充（versionall）
+//  ---------------------------------------------------------------------------
+//  目标：三端登录后每个页面都有可看的真实感数据，而不是空态。
+//  - 新增 s14–s20 学员，覆盖第一期/第二期
+//  - s2–s20 生成连续多天的饮食/运动/体重记录，完成度分层（全勤/良好/偶尔/几乎不打卡）
+//  - 批注按营养师/教练真实姓名写入 comments[] 并镜像单字段（与 store.addRecordComment 口径一致）
+//  - 数据由固定种子生成，日期随“今天”平移，但每天完成模式稳定，刷新不跳变
 // ============================================================================
 
-const THREADS: Thread[] = [
-  {
-    id: 'th_s1_d1', studentId: 's1', title: '李建国医师 · 随访沟通',
-    members: [{ role: 'student', name: '张伟' }, { role: 'doctor', name: '李建国' }],
-    messages: [
-      { id: 'm1', fromRole: 'doctor', fromName: '李建国', text: '张伟您好，开营筛查报告我看过了。血压和低密度脂蛋白都需要干预，先按目前方案用药，21 天强化期我们每周跟进一次。', time: relTime(-16, '11:30'), kind: 'text', read: true },
-      { id: 'm2', fromRole: 'doctor', fromName: '李建国', text: '已为您制定随访与干预方案：家庭血压早晚各一次，运动从快走 20 分钟起始，2 周后复评。', time: relTime(-16, '11:32'), kind: 'record', read: true },
-      { id: 'm3', fromRole: 'student', fromName: '张伟', text: '收到，李主任。这两天早上血压 150/92 左右，头有点晕，需要调药吗？', time: relTime(-10, '08:12'), kind: 'text', read: true },
-      { id: 'm4', fromRole: 'doctor', fromName: '李建国', text: '先继续监测，不要自行加药。头晕如果加重或出现胸闷，随时发消息，我们安排绿色通道。', time: relTime(-10, '09:05'), kind: 'text', read: true },
-      { id: 'm5', fromRole: 'doctor', fromName: '李建国', text: '12 月 15 日电话随访记录已归档：家庭血压平均 136/85，较基线下降 22/11，方案不变，22 日入企复诊。', time: relTime(-3, '15:20'), kind: 'record', read: false },
-    ],
-  },
-  {
-    id: 'th_s1_c1', studentId: 's1', title: '王凯运动师 · 运动处方',
-    members: [{ role: 'student', name: '张伟' }, { role: 'coach', name: '王凯' }],
-    messages: [
-      { id: 'm6', fromRole: 'coach', fromName: '王凯', text: '您的运动处方已发布：快走每周 5 次、每次 30 分钟，心率控制在 96–112。前两周以适应为主，不要追求配速。', time: relTime(-15, '14:00'), kind: 'prescription', read: true },
-      { id: 'm7', fromRole: 'student', fromName: '张伟', text: '今天走了 35 分钟，平均心率 108，没有不舒服。', time: relTime(-2, '18:20'), kind: 'text', read: true },
-      { id: 'm8', fromRole: 'coach', fromName: '王凯', text: '很好，强度在目标区间内。下周开始每周加 1 次弹力带抗阻，注意不要憋气。', time: relTime(-2, '19:10'), kind: 'text', read: false },
-    ],
-  },
-  {
-    id: 'th_s1_n1', studentId: 's1', title: '陈静营养师 · 饮食处方',
-    members: [{ role: 'student', name: '张伟' }, { role: 'dietitian', name: '陈静' }],
-    messages: [
-      { id: 'm9', fromRole: 'dietitian', fromName: '陈静', text: '饮食处方已发您：每日 1800 kcal，食盐 <5g，优先 DASH 饮食。您正在服用他汀，注意不要大量喝西柚汁。', time: relTime(-15, '15:10'), kind: 'prescription', read: true },
-      { id: 'm10', fromRole: 'student', fromName: '张伟', text: '应酬比较多，晚上在外吃饭怎么控制？', time: relTime(-6, '20:05'), kind: 'text', read: true },
-      { id: 'm11', fromRole: 'dietitian', fromName: '陈静', text: '点菜时优先清蒸、白灼，避开红烧和腌制品；主食减半，先吃蔬菜和蛋白质。第二天早餐清淡一些即可，不用极端节食。', time: relTime(-6, '20:30'), kind: 'text', read: true },
-    ],
-  },
+const demoNewStudents = [
+  { id: 's14', name: '林悦', age: 29, gender: 'female' as const, phone: '13800000014' },
+  { id: 's15', name: '高翔', age: 38, gender: 'male' as const, phone: '13800000015' },
+  { id: 's16', name: '何雨', age: 26, gender: 'female' as const, phone: '13800000016' },
+  { id: 's17', name: '马超', age: 34, gender: 'male' as const, phone: '13800000017' },
+  { id: 's18', name: '唐宁', age: 31, gender: 'female' as const, phone: '13800000018' },
+  { id: 's19', name: '郭峰', age: 42, gender: 'male' as const, phone: '13800000019' },
+  { id: 's20', name: '苏晴', age: 27, gender: 'female' as const, phone: '13800000020' },
+];
+demoNewStudents.forEach((s) => {
+  if (!MOCK_STUDENTS.some((x) => x.id === s.id)) MOCK_STUDENTS.push(s);
+});
+
+const demoNewAccounts: { id: string; name: string; campIds: string[] }[] = [
+  { id: 's14', name: '林悦', campIds: ['camp1'] },
+  { id: 's15', name: '高翔', campIds: ['camp1'] },
+  { id: 's16', name: '何雨', campIds: ['camp1'] },
+  { id: 's17', name: '马超', campIds: ['camp1', 'camp2'] },
+  { id: 's18', name: '唐宁', campIds: ['camp2'] },
+  { id: 's19', name: '郭峰', campIds: ['camp2'] },
+  { id: 's20', name: '苏晴', campIds: ['camp2'] },
+];
+demoNewAccounts.forEach((a, i) => {
+  if (!MOCK_ACCOUNTS.some((x) => x.id === a.id)) {
+    MOCK_ACCOUNTS.push({
+      id: a.id,
+      phone: `138000000${14 + i}`,
+      name: a.name,
+      role: 'student',
+      campIds: a.campIds,
+      active: true,
+      createdAt: iso(-15, '08:00:00'),
+    });
+  }
+});
+
+/** 确定性伪随机：同一种子每次结果一致，保证演示数据稳定 */
+function demoRand(seed: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) {
+    h ^= seed.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 10000) / 10000;
+}
+
+interface DemoProfile {
+  id: string;
+  campId: 'camp1' | 'camp2';
+  /** 打卡完成度 0–1 */
+  rate: number;
+  startWeight: number;
+  /** 批注密度 */
+  annotate: number;
+  /** 主要批注营养师 */
+  dietitian: string;
+  /** 主要批注教练 */
+  coach: string;
+}
+
+const demoProfiles: DemoProfile[] = [
+  // 仅对尚无打卡数据的学员生成，避免与原有 s1–s8/s12 种子重复计分
+  { id: 's10', campId: 'camp1', rate: 0.08, startWeight: 74, annotate: 0.05, dietitian: '王营养师', coach: '李教练' },
+  { id: 's13', campId: 'camp1', rate: 0.95, startWeight: 80, annotate: 0.4, dietitian: '王营养师', coach: '李教练' },
+  { id: 's14', campId: 'camp1', rate: 0.8, startWeight: 61, annotate: 0.25, dietitian: '李营养师', coach: '王教练' },
+  { id: 's15', campId: 'camp1', rate: 0.55, startWeight: 90, annotate: 0.18, dietitian: '王营养师', coach: '李教练' },
+  { id: 's16', campId: 'camp1', rate: 0.68, startWeight: 57, annotate: 0.2, dietitian: '李营养师', coach: '王教练' },
+  { id: 's17', campId: 'camp1', rate: 0.76, startWeight: 84, annotate: 0.26, dietitian: '王营养师', coach: '李教练' },
+  { id: 's10', campId: 'camp2', rate: 0.33, startWeight: 74, annotate: 0.1, dietitian: '李营养师', coach: '李教练' },
+  { id: 's13', campId: 'camp2', rate: 0.92, startWeight: 72, annotate: 0.9, dietitian: '李营养师', coach: '王教练' },
+  { id: 's17', campId: 'camp2', rate: 0.7, startWeight: 84, annotate: 0.2, dietitian: '王营养师', coach: '李教练' },
+  { id: 's18', campId: 'camp2', rate: 0.85, startWeight: 59, annotate: 0.28, dietitian: '李营养师', coach: '王教练' },
+  { id: 's19', campId: 'camp2', rate: 0.5, startWeight: 96, annotate: 0.15, dietitian: '王营养师', coach: '李教练' },
+  { id: 's20', campId: 'camp2', rate: 0.7, startWeight: 66, annotate: 0.2, dietitian: '李营养师', coach: '王教练' },
 ];
 
-// ============================================================================
-//  Seed
-// ============================================================================
+const demoMealText = {
+  breakfast: ['燕麦粥 + 水煮蛋 + 无糖豆浆', '全麦面包两片 + 煎蛋 + 牛奶', '小米粥 + 鸡蛋 + 凉拌黄瓜', '玉米一根 + 鸡蛋羹 + 黑咖啡'],
+  lunch: ['香煎鸡胸肉 + 糙米饭 + 西兰花', '清蒸鱼 + 杂粮饭 + 时蔬', '牛肉沙拉 + 藜麦', '番茄牛腩 + 半碗米饭 + 青菜'],
+  dinner: ['紫薯 + 虾仁 + 生菜', '豆腐 + 菌菇汤 + 少量杂粮饭', '三文鱼 + 芦笋 + 南瓜', '鸡胸肉卷 + 蔬菜沙拉'],
+};
+const demoExerciseTypes = ['快走', '跑步', '力量训练', '跳绳', '游泳', '骑行', '瑜伽'];
+const dietitianComments = [
+  '早餐蛋白质够，主食可以再减一点。',
+  '午餐搭配标准，继续保持。',
+  '晚餐主食偏多，建议换成粗粮半份。',
+  '蔬菜量不错，油少一点会更好。',
+  '今天整体达标，注意补充饮水。',
+];
+const coachComments = [
+  '配速稳定，心率区间控制得不错。',
+  '动作标准，核心收紧的细节再注意一下。',
+  '运动量合适，记得拉伸放松。',
+  '强度可以再提一档，注意别受伤。',
+  '今天完成得很好，保持节奏。',
+];
 
-export function createSeedData(): AppData {
+function demoAnnotation(seed: string, text: string, author: string, role: 'dietitian' | 'coach', dayOffset: number, read: boolean) {
   return {
-    orgs: ORGS,
-    accounts: ACCOUNTS,
-    students: STUDENTS,
-    camps: [camp, camp2],
-    metrics: METRIC_DEFS,
-    snapshots: SNAPSHOTS,
-    bpRecords: BP_RECORDS,
-    weightRecords: WEIGHT_RECORDS,
-    exerciseRecords: EXERCISE_RECORDS,
-    dietRecords: DIET_RECORDS,
-    medRecords: MED_RECORDS,
-    exerciseRxs: EXERCISE_RXS,
-    nutritionRxs: NUTRITION_RXS,
-    medications: MEDICATIONS,
-    followups: FOLLOWUPS,
-    alerts: ALERTS,
-    activities: ACTIVITIES,
-    rewardTiers: [
-      { id: 'rt21', name: '21 天连续打卡 · 电子血压计', days: 21, desc: '上臂式电子血压计，支持双人记忆', icon: '压', stock: 40, claimed: 12, active: true },
-      { id: 'rt45', name: '45 天连续打卡 · 低钠盐礼盒', days: 45, desc: '低钠盐 6 袋 + 限盐勺 + 低钠食谱', icon: '盐', stock: 60, claimed: 8, active: true },
-      { id: 'rt90', name: '90 天连续打卡 · 健康礼包', days: 90, desc: '分药盒、血压记录本、运动毛巾', icon: '礼', stock: 30, claimed: 2, active: true },
-    ],
-    products: [
-      { id: 'p1', name: '上臂式电子血压计', category: '监测设备', flowers: 299, stock: 26, icon: '压', desc: '医用级 accuracy，双人记忆，语音播报', delivery: ['shipped'], active: true, limitPerPerson: 1 },
-      { id: 'p2', name: '低钠盐礼盒', category: '健康食品', flowers: 39, stock: 120, icon: '盐', desc: '低钠盐 6 袋 + 2g 限盐勺', delivery: ['shipped', 'in-person'], active: true, limitPerPerson: 2 },
-      { id: 'p3', name: '七日分药盒', category: '用药辅助', flowers: 59, stock: 80, icon: '药', desc: '早中晚三格，便携防潮', delivery: ['shipped', 'in-person'], active: true, limitPerPerson: 1 },
-      { id: 'p4', name: '智能运动手环', category: '监测设备', flowers: 399, stock: 12, icon: '环', desc: '心率/步数/睡眠监测，7 天续航', delivery: ['shipped'], active: true, limitPerPerson: 1 },
-      { id: 'p5', name: '低芥酸菜籽油 2L', category: '健康食品', flowers: 89, stock: 60, icon: '油', desc: '富含不饱和脂肪酸，适合日常烹调', delivery: ['shipped', 'in-person'], active: true, limitPerPerson: 2 },
-      { id: 'p6', name: '体脂秤', category: '监测设备', flowers: 199, stock: 18, icon: '秤', desc: '八电极，支持体脂/肌肉/内脏脂肪', delivery: ['shipped'], active: true, limitPerPerson: 1 },
-      { id: 'p7', name: '家庭急救药盒', category: '用药辅助', flowers: 129, stock: 35, icon: '盒', desc: '硝酸甘油避光存放格 + 用药卡', delivery: ['shipped', 'in-person'], active: true, limitPerPerson: 1 },
-      { id: 'p8', name: '保温杯 500ml', category: '生活用品', flowers: 69, stock: 0, icon: '杯', desc: '316 不锈钢，刻度提醒饮水', delivery: ['in-person'], active: false, limitPerPerson: 1 },
-    ],
-    exchanges: [
-      { id: 'ex1', studentId: 's1', studentName: '张伟', productId: 'p2', productName: '低钠盐礼盒', flowers: 39, date: '2026-12-12 10:20', status: 'shipped', delivery: 'shipped', trackingNo: 'SF1234567890', address: '北京市昌平区回龙观龙域中心 A 座' },
-      { id: 'ex2', studentId: 's2', studentName: '李秀兰', productId: 'p3', productName: '七日分药盒', flowers: 59, date: '2026-12-16 15:40', status: 'pending', delivery: 'in-person' },
-    ],
-    rewardClaims: [
-      { id: 'rc1', studentId: 's1', tierId: 'rt21', tierName: '21 天连续打卡 · 电子血压计', days: 21, date: '2026-12-01', status: 'unlocked', delivery: 'shipped' },
-      { id: 'rc2', studentId: 's2', tierId: 'rt45', tierName: '45 天连续打卡 · 低钠盐礼盒', days: 45, date: '2026-12-08', status: 'shipped', delivery: 'shipped', trackingNo: 'SF9876543210' },
-    ],
-    ledger: [
-      { id: 'lg1', studentId: 's1', date: '2026-12-01', amount: 50, reason: '入营完成筛查与授权', type: 'earn' },
-      { id: 'lg2', studentId: 's1', date: '2026-12-05', amount: 30, reason: '连续打卡 7 天', type: 'earn' },
-      { id: 'lg3', studentId: 's1', date: '2026-12-08', amount: 20, reason: '血压自测 7 日赛完成', type: 'earn' },
-      { id: 'lg4', studentId: 's1', date: '2026-12-09', amount: 15, reason: '运动达标周完成', type: 'earn' },
-      { id: 'lg5', studentId: 's1', date: '2026-12-10', amount: 20, reason: '饮食依从周奖励', type: 'earn' },
-      { id: 'lg6', studentId: 's1', date: '2026-12-11', amount: 30, reason: '每周主题挑战完成', type: 'earn' },
-      { id: 'lg7', studentId: 's1', date: '2026-12-12', amount: 50, reason: '线下健康讲座参与', type: 'earn' },
-      { id: 'lg8', studentId: 's1', date: '2026-12-12', amount: -39, reason: '兑换低钠盐礼盒', type: 'spend' },
-      { id: 'lg9', studentId: 's1', date: '2026-12-14', amount: 20, reason: '邀请同事了解健康营', type: 'earn' },
-      { id: 'lg10', studentId: 's1', date: '2026-12-16', amount: 30, reason: '连续打卡 14 天', type: 'earn' },
-      { id: 'lg11', studentId: 's1', date: '2026-12-17', amount: 10, reason: '完成每周健康知识问答', type: 'earn' },
-    ],
-    notices: [
-      { id: 'nt1', studentId: 's1', category: 'followup', title: '随访记录已归档', body: '李建国医师已将 12 月 15 日电话随访记录归档，结论：血压较基线下降 22/11 mmHg。', time: relTime(-3, '15:20'), read: false },
-      { id: 'nt2', studentId: 's1', category: 'comment', title: '运动批注', body: '王凯运动师批注了您 12 月 16 日的快走记录：强度控制得不错。', time: relTime(-2, '19:10'), read: false },
-      { id: 'nt3', studentId: 's1', category: 'prescription', title: '运动处方已发布', body: '您的个体化运动处方已更新，请查看并按时完成。', time: relTime(-15, '14:00'), read: true },
-      { id: 'nt4', studentId: 's1', category: 'activity', title: '血压自测 7 日赛', body: '还差 2 天完成挑战，完成后可获 20 朵小红花与抽奖资格。', time: relTime(-1, '08:00'), read: false },
-      { id: 'nt5', studentId: 's1', category: 'alert', title: '复诊提醒', body: '12 月 22 日 09:30 入企复诊，地点：国际医院健康管理中心 3 层。', time: relTime(-1, '10:00'), read: true },
-      { id: 'nt6', studentId: 's1', category: 'system', title: '第 6 个月复筛预告', body: '2027 年 5 月 20 日将进行第 6 个月入企复筛，请提前安排时间。', time: '2026-12-01 09:00', read: true },
-    ],
-    threads: THREADS,
-    config: {
-      flowerRate: 1,
-      targets: { sbp: 130, dbp: 80, ldl: 1.8, hba1c: 6.5 },
-      critical: { sbp: 180, dbp: 110, hrLow: 50, hrHigh: 110 },
-      streakTiers: [21, 45, 90],
-      activitySwitch: { act1: true, act2: true, act3: true, act4: true, act5: true, act6: true, act7: true, act8: true, act9: true, act10: true },
-      delegate: { activity: true, accounts: true, camps: true, rewards: false },
-    } as GlobalConfig,
-    permissions: [
-      { module: '账号与准入', student: '●', coach: '○', dietitian: '○', doctor: '◐ 审核', orgAdmin: '● 机构内', superAdmin: '●' },
-      { module: '电子健康档案', student: '● 编辑', coach: '◐ 录运动', dietitian: '◐ 录营养', doctor: '◐ 录方案', orgAdmin: '● 机构内', superAdmin: '●' },
-      { module: '运动管理', student: '● 打卡', coach: '● 评估/处方/批注', dietitian: '○', doctor: '○', orgAdmin: '● 机构内', superAdmin: '●' },
-      { module: '营养管理', student: '● 打卡', coach: '—', dietitian: '● 评估/处方/批注', doctor: '○', orgAdmin: '● 机构内', superAdmin: '●' },
-      { module: '用药与诊疗', student: '● 查看', coach: '—', dietitian: '—', doctor: '● 开具', orgAdmin: '—', superAdmin: '● 配置' },
-      { module: '打卡与激励', student: '● 打卡/领奖', coach: '◐ 运动积分', dietitian: '◐ 饮食积分', doctor: '—', orgAdmin: '● 机构内', superAdmin: '●' },
-      { module: '运营活动', student: '● 参与', coach: '○', dietitian: '○', doctor: '○', orgAdmin: '● 机构内', superAdmin: '●' },
-      { module: '报告与数据', student: '● 查看', coach: '○', dietitian: '○', doctor: '○', orgAdmin: '● 机构内', superAdmin: '● 项目' },
-      { module: '互联网医院', student: '● 问诊', coach: '—', dietitian: '—', doctor: '● 接诊', orgAdmin: '—', superAdmin: '● 接入' },
-      { module: '商城', student: '● 兑换', coach: '—', dietitian: '—', doctor: '◐ 开方', orgAdmin: '● 机构内', superAdmin: '● 配置' },
-      { module: '系统与配置', student: '—', coach: '—', dietitian: '◐ 部分', doctor: '—', orgAdmin: '● 机构内', superAdmin: '全部' },
-    ],
+    comments: [{ id: `cm_${seed}`, role, name: author, text, date: iso(dayOffset, '21:10:00') }],
+    commentRead: read,
   };
 }
 
-/** 登录页一键体验账号 */
-export const DEMO_LOGINS = [
-  { role: 'student', label: '学员 · 张伟', phone: '13900000001', desc: '高危 · 高血压 + 斑块', color: '#1F6A95' },
-  { role: 'doctor', label: '医师 · 李建国', phone: '13800000001', desc: '心内科主任医师', color: '#144E73' },
-  { role: 'coach', label: '运动师 · 王凯', phone: '13700000001', desc: '心脏康复中心', color: '#D9553E' },
-  { role: 'dietitian', label: '营养师 · 陈静', phone: '13600000001', desc: '临床营养科', color: '#2C7DA0' },
-  { role: 'org_admin', label: '机构管理员 · 王丽', phone: '13500000001', desc: '国际医院 · 二级运营', color: '#7A5C3E' },
-  { role: 'super_admin', label: '超级管理员 · 李项目', phone: '13400000001', desc: '北医国际 · 全局管控', color: '#1E3A52' },
-] as const;
+demoProfiles.forEach((p) => {
+  const startOffset = p.campId === 'camp1' ? -15 : -2;
+  const days = 0 - startOffset + 1;
+  let weight = p.startWeight;
+  for (let i = 0; i < days; i++) {
+    const off = startOffset + i;
+    // 体验学员：今天不预置任何打卡记录，保证登录后早餐/午餐/晚餐、运动、体重都能现场演示打卡
+    if (p.id === 's13' && off === 0) continue;
+    const dayKey = `${p.id}_${p.campId}_${i}`;
+    // 首日强制有记录：保证每位学员都有营前体重基线，首页「较开营」不为 0
+    const active = i === 0 || demoRand(dayKey + 'active') < p.rate;
+    if (!active) continue;
 
-export const CAMP_START = '2026-12-01';
-export const CAMP_DAY = 18;
-export { DEMO_TODAY };
+    const isRecent = off >= -2;
+    const read = !isRecent;
+
+    (['breakfast', 'lunch', 'dinner'] as const).forEach((meal, mi) => {
+      const hit = demoRand(dayKey + meal) < Math.min(0.98, p.rate + 0.12);
+      if (!hit) return;
+      const doAnno = demoRand(dayKey + 'ann' + meal) < p.annotate;
+      const seed = `dm_${p.id}_${p.campId}_${i}_${mi}`;
+      const annoText = dietitianComments[Math.floor(demoRand(seed + 't') * dietitianComments.length)];
+      MOCK_DIET_RECORDS.push({
+        id: seed,
+        studentId: p.id,
+        campId: p.campId,
+        date: iso(off, meal === 'breakfast' ? '08:05:00' : meal === 'lunch' ? '12:20:00' : '18:40:00'),
+        meal,
+        description: demoMealText[meal][Math.floor(demoRand(seed + 'm') * 4)],
+        photos: [],
+        hasStaple: demoRand(seed + 's') > 0.2,
+        hasProtein: demoRand(seed + 'p') > 0.15,
+        hasVegetable: demoRand(seed + 'v') > 0.25,
+        ...(doAnno
+          ? {
+              ...demoAnnotation(seed, annoText, p.dietitian, 'dietitian', off, read),
+              dietitianComment: annoText,
+              dietitianName: p.dietitian,
+              dietitianCommentDate: iso(off, '21:10:00'),
+              dietitianScore: (demoRand(seed + 'sc') > 0.35 ? 2 : 1) as 1 | 2,
+            }
+          : {}),
+      });
+    });
+
+    if (demoRand(dayKey + 'ex') < Math.min(0.95, p.rate + 0.1)) {
+      const seed = `de_${p.id}_${p.campId}_${i}`;
+      const doAnno = demoRand(dayKey + 'exann') < p.annotate;
+      const annoText = coachComments[Math.floor(demoRand(seed + 't') * coachComments.length)];
+      MOCK_EXERCISE_RECORDS.push({
+        id: seed,
+        studentId: p.id,
+        campId: p.campId,
+        date: iso(off, '19:10:00'),
+        type: demoExerciseTypes[Math.floor(demoRand(seed + 'ty') * demoExerciseTypes.length)],
+        duration: 25 + Math.floor(demoRand(seed + 'd') * 45),
+        intensity: 2 + Math.floor(demoRand(seed + 'i') * 4),
+        notes: '',
+        photos: [],
+        ...(doAnno
+          ? {
+              ...demoAnnotation(seed, annoText, p.coach, 'coach', off, read),
+              coachComment: annoText,
+              coachName: p.coach,
+              coachCommentDate: iso(off, '21:30:00'),
+              coachScore: (demoRand(seed + 'sc') > 0.3 ? 2 : 1) as 1 | 2,
+            }
+          : {}),
+      });
+    }
+
+    // 体重：每 2 天一次，整体缓慢下降；最后一天保证有记录（演示趋势与结营报告）
+    // 体验学员第一期：每天一条体重，线性从 68 降到 63.5，与结营体测的营后体重对齐
+    const demoCamp1 = p.id === 's13' && p.campId === 'camp1';
+    if (demoCamp1 || demoRand(dayKey + 'wt') < p.rate * 0.65 || i <= 1 || i === days - 1) {
+      const seed = `dw_${p.id}_${p.campId}_${i}`;
+      if (demoCamp1) {
+        const endWeight = p.campId === 'camp1' ? 72 : p.startWeight - 0.6;
+        weight = Number((p.startWeight - (p.startWeight - endWeight) * (i / Math.max(1, days - 2))).toFixed(1));
+      } else if (i > 0) weight = Math.max(p.startWeight - 8, weight - 0.18 - demoRand(seed) * 0.12);
+      const doAnno = demoRand(dayKey + 'wtann') < p.annotate * 0.6;
+      const annoText = '体重下降节奏很好，注意蛋白摄入别掉。';
+      MOCK_WEIGHT_RECORDS.push({
+        id: seed,
+        studentId: p.id,
+        campId: p.campId,
+        date: iso(off, '07:10:00'),
+        weight: Number(weight.toFixed(1)),
+        photos: [],
+        ...(doAnno
+          ? {
+              ...demoAnnotation(seed, annoText, p.dietitian, 'dietitian', off, read),
+              dietitianComment: annoText,
+              dietitianName: p.dietitian,
+              dietitianCommentDate: iso(off, '21:00:00'),
+            }
+          : {}),
+      });
+    }
+  }
+});
+
+// 新学员的体测指标：以 s1 基线按比例生成营前/营后值，保证结营报告与指标变化统计有内容
+const demoMetricIds = ['s5', 's6', 's7', 's8', 's10', 's12', 's13', 's14', 's15', 's16', 's17', 's18', 's19', 's20'];
+demoMetricIds.forEach((sid, idx) => {
+  if (MOCK_STUDENT_METRIC_VALUES[sid]) return;
+  const factor = 0.88 + (idx % 7) * 0.035;
+  const values: Record<string, MetricValue> = {};
+  Object.entries(MOCK_METRIC_VALUES).forEach(([k, v]) => {
+    const before = Number((Number(v.beforeValue ?? 0) * factor).toFixed(2));
+    const improve = k.includes('weight') || k.includes('fat') || k.includes('visceral') || k.includes('obesity') || k.includes('tg') || k.includes('ldl') ? 0.92 : 1.02;
+    values[k] = { beforeValue: before, afterValue: Number((before * improve).toFixed(2)) };
+  });
+  MOCK_STUDENT_METRIC_VALUES[sid] = values;
+});
+
+// 体验学员 s13 的体重指标与打卡记录对齐（68 → 63.5），报告更可信
+if (MOCK_STUDENT_METRIC_VALUES.s13) {
+  // 体验学员第一期：给一套完整、方向正确的体成分/代谢/肝肾功能复测数据，
+  // 让「健康档案-体检指标」「结营报告-指标变化」「指标变化统计」都有可讲的改善故事。
+  Object.assign(MOCK_STUDENT_METRIC_VALUES.s13, {
+    'mc_body_weight': { beforeValue: 80, afterValue: 72 },
+    'mc_body_fat': { beforeValue: 32.0, afterValue: 25.5 },
+    'mc_body_muscle': { beforeValue: 40.1, afterValue: 41.2 },
+    'mc_body_skeletal': { beforeValue: 30.63, afterValue: 31.3 },
+    'mc_body_bmr': { beforeValue: 1620, afterValue: 1652 },
+    'mc_body_whr': { beforeValue: 1.06, afterValue: 0.95 },
+    'mc_body_visceral': { beforeValue: 150, afterValue: 112 },
+    'mc_body_obesity': { beforeValue: 155, afterValue: 132 },
+    'mc_body_cell': { beforeValue: 39.2, afterValue: 40.1 },
+    'mc_body_edema': { beforeValue: 0.46, afterValue: 0.40 },
+    'mc_body_asmi': { beforeValue: 7.5, afterValue: 7.9 },
+    'mc_body_ainst': { beforeValue: 63, afterValue: 80 },
+    'mc_liver_alt': { beforeValue: 59.95, afterValue: 38 },
+    'mc_liver_ast': { beforeValue: 42, afterValue: 30 },
+    'mc_liver_ggt': { beforeValue: 70, afterValue: 45 },
+    'mc_kidney_ua': { beforeValue: 490.5, afterValue: 410 },
+    'mc_bl_tc': { beforeValue: 6.0, afterValue: 5.1 },
+    'mc_bl_tg': { beforeValue: 2.29, afterValue: 1.6 },
+    'mc_bl_hdl': { beforeValue: 1.0, afterValue: 1.3 },
+    'mc_bl_ldl': { beforeValue: 3.8, afterValue: 3.0 },
+    'mc_bs_fasting': { beforeValue: 6.32, afterValue: 5.5 },
+    'mc_bs_hba1c': { beforeValue: 6.3, afterValue: 5.8 },
+  });
+}
+
+// 补充兑换/领取/补录，演示发放中心与学员「我的奖励」
+MOCK_POINT_EXCHANGES.push(
+  { id: 'pe5', studentId: 's13', studentName: '体验学员', productId: 'pp1', productName: '运动水杯', productImage: rewardImg('运动水杯', '🥤', '#2C7DA0', '#0099CC'), pointsSpent: 30, exchangeDate: iso(-1, '10:20:00'), status: 'pending', deliveryMethod: 'shipped', recipientName: '体验学员', recipientPhone: '13900000009', recipientAddress: '北京市朝阳区建国路 88 号', campId: 'camp1' },
+  { id: 'pe6', studentId: 's2', studentName: '王丽', productId: 'pp3', productName: '瑜伽垫', productImage: rewardImg('瑜伽垫', '🧘', '#1F6A95', '#164864'), pointsSpent: 80, exchangeDate: iso(-2, '15:40:00'), status: 'fulfilled', deliveryMethod: 'in-person', deliveredAt: iso(-1, '14:00:00'), campId: 'camp1' },
+  { id: 'pe7', studentId: 's18', studentName: '唐宁', productId: 'pp2', productName: '跳绳', productImage: rewardImg('跳绳', '🤸', '#E8674F', '#FF6B35'), pointsSpent: 50, exchangeDate: iso(0, '09:05:00'), status: 'pending', deliveryMethod: 'shipped', recipientName: '唐宁', recipientPhone: '13800000018', recipientAddress: '杭州市西湖区文三路 66 号', campId: 'camp2' },
+);
+MOCK_REWARD_CLAIMS.push(
+  { id: 'c3', campId: 'camp1', tierId: 't1', studentId: 's13', studentName: '体验学员', recipientName: '体验学员', recipientPhone: '13900000009', recipientAddress: '北京市朝阳区建国路 88 号', claimDate: iso(-1, '09:30:00'), status: 'pending', deliveryMethod: 'shipped' },
+  { id: 'c4', campId: 'camp2', tierId: 't0', studentId: 's18', studentName: '唐宁', recipientName: '唐宁', recipientPhone: '13800000018', recipientAddress: '杭州市西湖区文三路 66 号', claimDate: iso(-1, '16:00:00'), status: 'shipped', trackingNumber: 'SF1099238811', shipDate: iso(0, '10:00:00'), deliveryMethod: 'shipped' },
+);
+MOCK_MANUAL_SCORES.push(
+  { id: 'ms4', studentId: 's13', points: 8, reason: '线下体测与饮食指导补录', dietitianName: '王营养师', createdAt: iso(-1, '11:00:00'), date: dateStr(-3), campId: 'camp1' },
+  { id: 'ms5', studentId: 's18', points: 5, reason: '线下打卡补录', dietitianName: '李营养师', createdAt: iso(0, '09:40:00'), date: dateStr(-1), campId: 'camp2' },
+);
+
+// 第二期打卡奖励档位（原种子只有第一期档位，导致第二期学员「我的奖励」为空）
+if (!MOCK_REWARD_TIERS.some((t) => t.campId === 'camp2')) {
+  MOCK_REWARD_TIERS.push(
+    { id: 't4', campId: 'camp2', name: '运动毛巾', requiredDays: 3, imageUrl: rewardImg('运动毛巾', '🧴', '#2C7DA0', '#0B6BCB'), stock: 60, source: 'streak', description: '速干运动毛巾，健身通勤两用', deliveryMethods: ['shipped', 'in-person'] },
+    { id: 't5', campId: 'camp2', name: '运动水杯', requiredDays: 7, imageUrl: rewardImg('运动水杯', '🥤', '#1F6A95', '#06A952'), stock: 40, source: 'streak', description: '便携运动水杯 500ml，BPA-free 材质', deliveryMethods: ['shipped', 'in-person'] },
+    { id: 't6', campId: 'camp2', name: '瑜伽垫', requiredDays: 14, imageUrl: rewardImg('瑜伽垫', '🧘', '#8B5CF6', '#7C3AED'), stock: 20, source: 'streak', description: '加厚防滑瑜伽垫 6mm，TPE 环保材质', deliveryMethods: ['shipped', 'in-person'] },
+    { id: 't7', campId: 'camp2', name: '智能体脂秤', requiredDays: 28, imageUrl: rewardImg('智能体脂秤', '⚖️', '#374151', '#1F2937'), stock: 5, source: 'streak', description: '智能体脂秤，连接手机同步记录', deliveryMethods: ['shipped'] },
+  );
+}
+MOCK_REWARD_CLAIMS.push(
+  { id: 'c5', campId: 'camp2', tierId: 't4', studentId: 's13', studentName: '体验学员', recipientName: '体验学员', recipientPhone: '13900000009', recipientAddress: '北京市朝阳区建国路 88 号', claimDate: iso(0, '08:40:00'), status: 'pending', deliveryMethod: 'in-person' },
+  { id: 'c6', campId: 'camp2', tierId: 't4', studentId: 's7', studentName: '郑爽', recipientName: '郑爽', recipientPhone: '13800000007', recipientAddress: '上海市浦东新区张江路 100 号', claimDate: iso(-1, '10:00:00'), status: 'shipped', trackingNumber: 'SF1088776655', shipDate: iso(0, '09:30:00'), deliveryMethod: 'shipped' },
+);
+MOCK_POINT_EXCHANGES.push(
+  { id: 'pe8', studentId: 's13', studentName: '体验学员', productId: 'pp2', productName: '跳绳', productImage: rewardImg('跳绳', '🤸', '#E8674F', '#FF6B35'), pointsSpent: 50, exchangeDate: iso(0, '09:10:00'), status: 'pending', deliveryMethod: 'shipped', recipientName: '体验学员', recipientPhone: '13900000009', recipientAddress: '北京市朝阳区建国路 88 号', campId: 'camp2' },
+);
+
+// 演示积分：饮食/运动分依赖营养师逐条评分，演示账号可用积分容易为 0，导致积分商城无法兑换。
+// 这里按营期为学员补录「开营前线下打卡」积分，保证每人至少能兑换一档商品；不影响已消费记录口径。
+const demoPointSeeds: { sid: string; name: string; campId: string; points: number }[] = [
+  { sid: 's13', name: '体验学员', campId: 'camp1', points: 100 },
+  { sid: 's13', name: '体验学员', campId: 'camp2', points: 150 },
+  { sid: 's1', name: '李明', campId: 'camp1', points: 60 },
+  { sid: 's2', name: '王丽', campId: 'camp1', points: 90 },
+  { sid: 's3', name: '张伟', campId: 'camp1', points: 70 },
+  { sid: 's4', name: '赵静', campId: 'camp1', points: 70 },
+  { sid: 's5', name: '周杰', campId: 'camp1', points: 50 },
+  { sid: 's6', name: '吴磊', campId: 'camp1', points: 90 },
+  { sid: 's10', name: '孙悟空', campId: 'camp1', points: 20 },
+  { sid: 's14', name: '林悦', campId: 'camp1', points: 80 },
+  { sid: 's15', name: '高翔', campId: 'camp1', points: 60 },
+  { sid: 's16', name: '何雨', campId: 'camp1', points: 70 },
+  { sid: 's17', name: '马超', campId: 'camp1', points: 80 },
+  { sid: 's6', name: '吴磊', campId: 'camp2', points: 90 },
+  { sid: 's7', name: '郑爽', campId: 'camp2', points: 80 },
+  { sid: 's8', name: '王强', campId: 'camp2', points: 60 },
+  { sid: 's10', name: '孙悟空', campId: 'camp2', points: 30 },
+  { sid: 's12', name: '陈曦', campId: 'camp2', points: 50 },
+  { sid: 's17', name: '马超', campId: 'camp2', points: 80 },
+  { sid: 's18', name: '唐宁', campId: 'camp2', points: 100 },
+  { sid: 's19', name: '郭峰', campId: 'camp2', points: 40 },
+  { sid: 's20', name: '苏晴', campId: 'camp2', points: 60 },
+];
+demoPointSeeds.forEach((d, i) => {
+  MOCK_MANUAL_SCORES.push({
+    id: `ms_point_${i + 1}`,
+    studentId: d.sid,
+    points: d.points,
+    reason: '开营前线下打卡补录（饮食 + 运动）',
+    dietitianName: '王营养师',
+    createdAt: iso(-2, '09:20:00'),
+    date: dateStr(-8),
+    campId: d.campId,
+  });
+});
+
+// ============================================================================
+//  营期级体测数据
+//  ---------------------------------------------------------------------------
+//  原 MOCK_STUDENT_METRIC_VALUES 只有 studentId 维度，多期学员会把第一期的「结营后」
+//  值带进刚开营的第二期（开营 3 天显示减重 4.5kg、误发减重徽章）。这里按营期取值：
+//  - 第一期：有完整营前/营后复测
+//  - 第二期 / 第三期：仅营前值，营后值置空（阶段性报告不展示改善、不判定减重徽章）
+// ============================================================================
+const DEMO_METRIC_CAMP1_IDS = ['s1','s2','s3','s4','s5','s6','s7','s8','s10','s12','s13','s14','s15','s16','s17','s18','s19','s20'];
+
+export function metricValuesFor(studentId: string, campId?: string | null): Record<string, MetricValue> {
+  const base = MOCK_STUDENT_METRIC_VALUES[studentId] || {};
+  if (!campId || campId === 'camp1') return base;
+  // 第二期/第三期：只保留营前值
+  const beforeOnly: Record<string, MetricValue> = {};
+  Object.entries(base).forEach(([k, v]) => {
+    // 体验学员第二期：营前值 = 第一期营后值（连续减重的第二段），不再回到 80kg
+    const before = campId === 'camp2' && studentId === 's13' && v.afterValue != null ? v.afterValue : v.beforeValue;
+    beforeOnly[k] = { beforeValue: before, afterValue: null };
+  });
+  return beforeOnly;
+}
+
+/** 某营期是否有结营复测数据（用于报告/统计判断） */
+export function hasCampMetricReview(campId?: string | null): boolean {
+  return campId === 'camp1';
+}
+
+/** 兼容：列出有营前数据的学员（第一期演示用） */
+export const DEMO_METRIC_CAMP1_STUDENT_IDS = DEMO_METRIC_CAMP1_IDS;
+
+/** 演示数据版本：用于本机旧快照的一次性增量合并（改动 mock 种子时 +1） */
+export const DEMO_SCHEMA_VERSION = 5;
