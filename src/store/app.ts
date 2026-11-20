@@ -1046,6 +1046,7 @@ export const useAppStore = defineStore('app', () => {
     students, weightRecords, bpRecords, exerciseRecords, dietRecords, coachActivities,
     rewardTiers, rewardClaims, unlockRecords, campMessageList, metricConfigs, camps, accounts,
     pointProducts, pointExchanges, manualScoreRecords,
+    doctorFollowups, chatThreads,
     activityConfigByCamp, mealTimeConfigByCamp,
     badgeConfigsByCamp, badgeRecords,
   ];
@@ -1053,6 +1054,7 @@ export const useAppStore = defineStore('app', () => {
     'students', 'weightRecords', 'bpRecords', 'exerciseRecords', 'dietRecords', 'coachActivities',
     'rewardTiers', 'rewardClaims', 'unlockRecords', 'campMessageList', 'metricConfigs', 'camps', 'accounts',
     'pointProducts', 'pointExchanges', 'manualScoreRecords',
+    'doctorFollowups', 'chatThreads',
     'activityConfigByCamp', 'mealTimeConfigByCamp',
     'badgeConfigsByCamp', 'badgeRecords',
   ] as const;
