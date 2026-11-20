@@ -33,6 +33,7 @@ const VIEW_IMPORTERS: Record<string, () => Promise<{ default: Component }>> = {
   'doctor-followup': () => import('./components/DoctorFollowupView.vue'),
   'care-chat': () => import('./components/CareChatView.vue'),
   'followup': () => import('./components/StudentFollowupView.vue'),
+  'permission-config': () => import('./components/PermissionConfigView.vue'),
   'admin-dashboard': () => import('./components/AdminDashboardView.vue'),
   calendar: () => import('./components/CalendarView.vue'),
   'coach-dashboard': () => import('./components/CoachDashboardView.vue'),
@@ -75,8 +76,8 @@ const ROLE_TABS: Record<string, string[]> = {
   dietitian: ['dietitian-dashboard', 'dietitian-unannotated-list', 'dietitian-config', 'fulfillment-center', 'reward-config', 'dietitian-student-detail', 'account-manage'],
   doctor: ['doctor-dashboard', 'doctor-student-detail', 'doctor-followup', 'care-chat'],
   coach: ['coach-dashboard', 'coach-student-detail', 'coach-unannotated-list', 'activity-upload', 'activities-list', 'care-chat'],
-  org_admin: ['admin-dashboard'],
-  super_admin: ['admin-dashboard'],
+  org_admin: ['admin-dashboard', 'permission-config'],
+  super_admin: ['admin-dashboard', 'permission-config'],
 };
 let prefetchedRole = false;
 let prefetchedAll = false;

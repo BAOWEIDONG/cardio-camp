@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 import { useAppStore } from '../store/app';
 import { campDateRange, campDaysOf, elapsedCampDays } from '../lib/camps';
 import { NavBar, Card, StudentTabbar } from './ui';
-import { Trophy, TrendingDown, TrendingUp, Activity, Target, Download, Lock, MessageCircle, Award, HeartPulse } from 'lucide-vue-next';
+import { Trophy, TrendingDown, TrendingUp, Activity, Target, Download, Lock, MessageCircle, Award, HeartPulse, Pill } from 'lucide-vue-next';
 import BadgeInfoPopup from './BadgeInfoPopup.vue';
 import { Popup as VanPopup } from 'vant';
 import { metricValuesFor } from '../mock/data';
@@ -217,7 +217,7 @@ const roleTag = (m: ReportMessage) => (m.role === 'coach' ? { badge: '运动师'
 
 // 「结营建议」已移除：结营寄语已足够，学员端报告不再展示结营建议。
 
-// 目标达成度（学员在体重打卡页设置的目标体重）
+// 血压达标情况（学员在体重打卡页设置的目标体重）
 const targetInfo = computed(() => {
   const target = store.user?.targetWeight;
   const start = report.value.weightTrend.startWeight;
@@ -263,7 +263,7 @@ const metricChangeColor = (m: MetricChange): string => {
   return m.isImproved ? 'text-[#1F6A95]' : 'text-orange-500';
 };
 
-// 体重变化趋势箭头
+// 体重管理（辅助）箭头
 const weightTrendIcon = computed(() => {
   if (report.value.weightTrend.trend === 'decreasing') return TrendingDown;
   if (report.value.weightTrend.trend === 'increasing') return TrendingUp;
@@ -280,24 +280,56 @@ const cvSummary = computed(() => {
   const latestBp = store.latestBpFor(studentId.value, selectedCampId.value || undefined);
   const sbp = latestBp?.sbp || 0;
   const risk = sbp >= 160 ? '很高危' : sbp >= 140 ? '高危' : sbp >= 130 ? '中危' : '低危';
-  return { bp, ldl, fu, latestBp, risk };
+  const baseSbp = bp?.beforeValue ? Number(bp.beforeValue) : null;
+  const baselineRisk = baseSbp === null ? null : baseSbp >= 160 ? '很高危' : baseSbp >= 140 ? '高危' : baseSbp >= 130 ? '中危' : '低危';
+  return { bp, ldl, fu, latestBp, risk, baselineRisk };
 });
 
+const bpStats = computed(() => {
+  const recs = store.getStudentBpRecords(studentId.value, selectedCampId.value || campInfo.value?.id);
+  if (!recs.length) return null;
+  const last7 = recs.slice(-14);
+  const avgSbp = Math.round(last7.reduce((n, r) => n + r.sbp, 0) / last7.length);
+  const avgDbp = Math.round(last7.reduce((n, r) => n + r.dbp, 0) / last7.length);
+  const controlled = recs.filter((r) => r.sbp < 140 && r.dbp < 90).length;
+  const morning = recs.filter((r) => r.period === 'morning');
+  const evening = recs.filter((r) => r.period === 'evening');
+  const mean = recs.reduce((n, r) => n + r.sbp, 0) / recs.length;
+  const sd = Math.sqrt(recs.reduce((n, r) => n + (r.sbp - mean) ** 2, 0) / recs.length);
+  return {
+    avgSbp, avgDbp,
+    controlRate: controlled / recs.length,
+    morningAvg: morning.length ? Math.round(morning.reduce((n, r) => n + r.sbp, 0) / morning.length) : null,
+    eveningAvg: evening.length ? Math.round(evening.reduce((n, r) => n + r.sbp, 0) / evening.length) : null,
+    variability: Math.round(sd),
+    count: recs.length,
+  };
+});
+const bpTargetInfo = computed(() => {
+  if (!bpStats.value) return null;
+  const achieved = bpStats.value.avgSbp <= 130 && bpStats.value.avgDbp <= 80;
+  const progress = Math.max(8, Math.min(100, 100 - Math.max(0, bpStats.value.avgSbp - 130) * 4));
+  return { ...bpStats.value, achieved, progress, gap: Math.max(0, bpStats.value.avgSbp - 130) };
+});
+const medication = computed(() => store.getMedication(studentId.value));
+const medAdherence = computed(() => {
+  const med = store.getMedication(studentId.value);
+  return med ? Math.round(med.adherence * 100) : null;
+});
+const followupCount = computed(() => store.getDoctorFollowups(studentId.value).length);
+
 const encouragement = computed(() => {
-  const s = report.value.summary;
   const name = studentName.value;
-  // 第1优先：体重——有营前营后数据且降低
-  const p1 = (s.weightLossKg !== null && s.weightLossKg > 0) ? `减重${s.weightLossKg.toFixed(1)}公斤` : '';
-  // 第2优先：肌肉量——有营前营后数据且增加
-  const p2 = (s.muscleChangeKg !== null && s.muscleChangeKg > 0) ? `肌肉增加${s.muscleChangeKg.toFixed(1)}公斤` : '';
-  // 第3优先：脂肪量——有营前营后数据且降低
-  const p3 = (s.bodyFatLossKg !== null && s.bodyFatLossKg > 0) ? `脂肪量减少${s.bodyFatLossKg.toFixed(1)}公斤` : '';
-
-  const middle = p1 || p2 || p3
-    ? [p1, p2, p3].filter(Boolean).join('，')
-    : `累计坚持打卡${s.totalCheckinDays}天，最长连续打卡${s.longestStreak}天`;
-
-  return `恭喜你，${name}！本次营期${middle}，不积跬步无以至千里，不积汗水无以塑身形。`;
+  const sbpDrop = cvSummary.value.bp?.beforeValue && cvSummary.value.bp?.afterValue
+    ? Number(cvSummary.value.bp.beforeValue) - Number(cvSummary.value.bp.afterValue) : null;
+  const ldlDrop = cvSummary.value.ldl?.beforeValue && cvSummary.value.ldl?.afterValue
+    ? Number(cvSummary.value.ldl.beforeValue) - Number(cvSummary.value.ldl.afterValue) : null;
+  const parts: string[] = [];
+  if (sbpDrop && sbpDrop > 0) parts.push(`收缩压下降${sbpDrop.toFixed(0)} mmHg`);
+  if (ldlDrop && ldlDrop > 0) parts.push(`LDL-C 下降${ldlDrop.toFixed(1)} mmol/L`);
+  if (bpStats.value && bpStats.value.controlRate > 0) parts.push(`家庭血压达标率${Math.round(bpStats.value.controlRate * 100)}%`);
+  if (!parts.length) parts.push(`累计打卡${report.value.summary.totalCheckinDays}天，随访${followupCount.value}次`);
+  return `${name}，本期${parts.join('，')}。血压、血脂和用药依从是接下来继续守住的三条线。`;
 });
 
 // ─── 导出（普通浏览器=PDF，微信=长图长按保存）───
@@ -311,7 +343,7 @@ const exportPDF = () => {
 
 <template>
   <div class="flex min-h-full flex-col bg-[#F7F8FA] pb-24 font-sans">
-    <NavBar title="个人营期报告" :on-back="store.goBack">
+    <NavBar title="心脑血管营期报告" :on-back="store.goBack">
       <template #right>
         <button v-if="canView" class="text-[#1F6A95] hover:bg-blue-50 p-2 rounded-full transition-colors" @click="exportPDF">
           <Download class="h-5 w-5" />
@@ -349,21 +381,21 @@ const exportPDF = () => {
       <div class="bg-gradient-to-br from-[#123B53] to-[#1F6A95] rounded-2xl p-5 text-white shadow-lg">
         <div class="flex items-center gap-2 mb-3">
           <Trophy class="w-6 h-6" />
-          <h2 class="text-lg font-bold">个人营期报告</h2>
+          <h2 class="text-lg font-bold">心脑血管营期报告</h2>
         </div>
         <p class="text-sm leading-relaxed opacity-95">{{ encouragement }}</p>
         <div class="flex gap-4 mt-4 text-center">
           <div class="flex-1 bg-white/15 rounded-lg py-2">
-            <div class="text-xl font-bold">{{ report.summary.totalCheckinDays }}</div>
-            <div class="text-[10px] opacity-80">打卡天数</div>
+            <div class="text-xl font-bold">{{ bpStats ? Math.round(bpStats.controlRate * 100) + '%' : '--' }}</div>
+            <div class="text-[10px] opacity-80">阶段达标率</div>
           </div>
           <div class="flex-1 bg-white/15 rounded-lg py-2">
-            <div class="text-xl font-bold">{{ fmtPct(report.summary.completionRate) }}</div>
-            <div class="text-[10px] opacity-80">完成率</div>
+            <div class="text-xl font-bold">{{ medAdherence !== null ? medAdherence + '%' : '--' }}</div>
+            <div class="text-[10px] opacity-80">用药依从</div>
           </div>
           <div class="flex-1 bg-white/15 rounded-lg py-2">
-            <div class="text-xl font-bold">{{ earnedBadgeCount }}</div>
-            <div class="text-[10px] opacity-80">累计徽章</div>
+            <div class="text-xl font-bold">{{ followupCount }}</div>
+            <div class="text-[10px] opacity-80">随访次数</div>
           </div>
         </div>
       </div>
@@ -375,16 +407,39 @@ const exportPDF = () => {
           心血管核心指标
           <span class="ml-auto rounded-full bg-[#1F6A95]/10 px-2 py-0.5 text-[9px] font-bold text-[#1F6A95]">{{ cvSummary.risk }}</span>
         </h3>
+        <div class="mb-2 flex items-center gap-1.5 text-[9px] text-gray-500">
+          <span>风险分层：开营 {{ cvSummary.baselineRisk || '—' }}</span>
+          <span class="text-gray-300">→</span>
+          <span class="font-bold text-[#1F6A95]">当前 {{ cvSummary.risk }}</span>
+          <span class="ml-auto text-[8px] text-gray-400">按家庭血压与随访结论动态判定</span>
+        </div>
         <div class="grid grid-cols-2 gap-2">
           <div class="rounded-xl bg-[#F4F8FB] p-3">
-            <div class="text-[9px] text-gray-500">收缩压</div>
-            <div class="mt-1 text-[17px] font-black text-gray-900">{{ cvSummary.bp?.afterValue ?? cvSummary.latestBp?.sbp ?? '—' }}<span class="text-[9px] font-normal text-gray-400"> mmHg</span></div>
-            <div class="text-[8.5px] text-gray-400">开营 {{ cvSummary.bp?.beforeValue ?? '—' }} · {{ cvSummary.bp?.isImproved ? '较开营改善' : '待复筛' }}</div>
+            <div class="text-[9px] text-gray-500">7 日平均血压</div>
+            <div class="mt-1 text-[17px] font-black text-gray-900">{{ bpStats?.avgSbp ?? cvSummary.latestBp?.sbp ?? '—' }}<span class="text-[9px] font-normal text-gray-400">/{{ bpStats?.avgDbp ?? cvSummary.latestBp?.dbp ?? '—' }}</span></div>
+            <div class="text-[8.5px] text-gray-400">阶段目标 &lt;140/90 · 晨收缩压 {{ bpStats?.morningAvg ?? '—' }} / 晚 {{ bpStats?.eveningAvg ?? '—' }}</div>
           </div>
           <div class="rounded-xl bg-[#F4F8FB] p-3">
-            <div class="text-[9px] text-gray-500">LDL-C</div>
-            <div class="mt-1 text-[17px] font-black text-gray-900">{{ cvSummary.ldl?.afterValue ?? '—' }}<span class="text-[9px] font-normal text-gray-400"> mmol/L</span></div>
-            <div class="text-[8.5px] text-gray-400">目标 &lt;1.8 · 高危人群</div>
+            <div class="text-[9px] text-gray-500">阶段达标率</div>
+            <div class="mt-1 text-[17px] font-black text-[#1F6A95]">{{ bpStats ? Math.round(bpStats.controlRate * 100) + '%' : '—' }}</div>
+            <div class="text-[8.5px] text-gray-400">家庭自测 {{ bpStats?.count ?? 0 }} 次 · 波动 {{ bpStats?.variability ?? '—' }} mmHg</div>
+          </div>
+        </div>
+        <div class="mt-2 grid grid-cols-3 gap-2">
+          <div class="rounded-xl bg-[#F4F8FB] p-2.5">
+            <div class="text-[8px] text-gray-500">LDL-C</div>
+            <div class="text-[14px] font-black text-gray-900">{{ cvSummary.ldl?.afterValue ?? '—' }}<span class="text-[8px] font-normal text-gray-400"> mmol/L</span></div>
+            <div class="text-[7.5px] text-gray-400">目标 &lt;1.8</div>
+          </div>
+          <div class="rounded-xl bg-[#F4F8FB] p-2.5">
+            <div class="text-[8px] text-gray-500">用药依从</div>
+            <div class="text-[14px] font-black text-gray-900">{{ medAdherence !== null ? medAdherence + '%' : '—' }}</div>
+            <div class="text-[7.5px] text-gray-400">长期用药</div>
+          </div>
+          <div class="rounded-xl bg-[#F4F8FB] p-2.5">
+            <div class="text-[8px] text-gray-500">随访完成</div>
+            <div class="text-[14px] font-black text-gray-900">{{ followupCount }} 次</div>
+            <div class="text-[7.5px] text-gray-400">医师随访</div>
           </div>
         </div>
         <div v-if="cvSummary.fu" class="mt-2 rounded-xl bg-[#1F6A95]/5 px-3 py-2">
@@ -392,6 +447,24 @@ const exportPDF = () => {
           <div class="mt-0.5 text-[9.5px] leading-relaxed text-gray-700">{{ cvSummary.fu.conclusion }}</div>
           <div class="mt-0.5 text-[8.5px] leading-relaxed text-gray-500">方案：{{ cvSummary.fu.plan }}</div>
         </div>
+      </Card>
+
+      <!-- 长期用药与注意事项 -->
+      <Card v-if="medication">
+        <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2 border-b pb-2">
+          <Pill class="h-4 w-4 text-[#2C7DA0]" />
+          长期用药与注意事项
+          <span class="ml-auto text-[10px] font-normal text-gray-400">依从 {{ medAdherence ?? '—' }}%</span>
+        </h3>
+        <div v-for="d in medication.drugs" :key="d.name" class="flex items-start gap-2 border-b border-gray-50 py-2 last:border-0">
+          <span class="mt-0.5 h-1.5 w-1.5 rounded-full bg-[#1F6A95] shrink-0" />
+          <div class="min-w-0 flex-1">
+            <div class="text-[10px] font-bold text-gray-900">{{ d.name }} <span class="text-[8.5px] font-normal text-gray-500">{{ d.dose }}</span></div>
+            <div class="text-[8.5px] text-gray-500">{{ d.freq }}</div>
+            <div v-if="d.note" class="text-[8.5px] text-[#E8674F]">{{ d.note }}</div>
+          </div>
+        </div>
+        <div class="mt-2 rounded-xl bg-[#fdf6ef] px-2.5 py-2 text-[8.5px] leading-relaxed text-[#8a641f]">不可自行停药；他汀避免大量西柚汁，阿司匹林注意胃肠道出血，调整用药需医师复诊。</div>
       </Card>
 
       <!-- 徽章墙（里程碑 / 成就 / 活动，与「我的徽章」同源） -->
@@ -422,7 +495,7 @@ const exportPDF = () => {
       <Card>
         <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2 border-b pb-2">
           <component :is="weightTrendIcon" class="h-4 w-4 text-[#1F6A95]" />
-          体重变化趋势
+          体重管理（辅助）
         </h3>
         <template v-if="report.weightTrend.records.length > 0">
           <div class="flex items-center justify-between mb-4">
@@ -476,7 +549,7 @@ const exportPDF = () => {
         <div v-else class="text-center text-sm text-gray-400 py-6">暂无体重记录</div>
       </Card>
 
-      <!-- 指标变化（体成分 + 化验 合并为单模块，按分类分组；无营前营后数据则不显示） -->
+      <!-- 心脑血管与代谢指标（按分类分组；无营前营后数据则不显示） -->
       <Card>
         <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2 border-b pb-2">
           <Activity class="h-4 w-4 text-[#2C7DA0]" />
@@ -557,25 +630,25 @@ const exportPDF = () => {
         </div>
       </Card>
 
-      <!-- 目标达成度 -->
-      <Card v-if="targetInfo">
+      <!-- 血压达标情况 -->
+      <Card v-if="bpTargetInfo">
         <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2 border-b pb-2">
           <Target class="h-4 w-4 text-[#E8674F]" />
-          目标达成度
+          血压达标情况
         </h3>
         <div class="flex items-center justify-between mb-2 text-sm">
-          <span class="text-gray-500">目标 <span class="font-bold text-gray-900">{{ targetInfo.target }}kg</span></span>
-          <span class="text-gray-500">结营 <span class="font-bold text-gray-900">{{ fmt(targetInfo.end) }}kg</span></span>
+          <span class="text-gray-500">目标 <span class="font-bold text-gray-900">130/80 mmHg</span></span>
+          <span class="text-gray-500">当前 <span class="font-bold text-gray-900">{{ bpTargetInfo.avgSbp }}/{{ bpTargetInfo.avgDbp }} mmHg</span></span>
         </div>
         <div class="w-full bg-gray-100 rounded-full h-3 overflow-hidden mb-2">
           <div
-            class="h-full rounded-full bg-gradient-to-r from-[#1F6A95] to-[#4ade80] transition-all"
-            :style="{ width: `${Math.min(targetInfo.progress * 100, 100)}%` }"
+            class="h-full rounded-full bg-gradient-to-r from-[#1F6A95] to-[#4B99C8] transition-all"
+            :style="{ width: `${bpTargetInfo.progress}%` }"
           ></div>
         </div>
-        <p class="text-xs" :class="targetInfo.achieved ? 'text-[#1F6A95] font-bold' : 'text-gray-500'">
-          <template v-if="targetInfo.achieved">🎉 恭喜达成目标体重！</template>
-          <template v-else>达成 {{ Math.round(targetInfo.progress * 100) }}%，距目标还差 {{ targetInfo.remaining?.toFixed(1) }}kg，继续加油！</template>
+        <p class="text-xs" :class="bpTargetInfo.achieved ? 'text-[#1F6A95] font-bold' : 'text-gray-500'">
+          <template v-if="bpTargetInfo.achieved">血压已达标，继续保持家庭自测和用药依从。</template>
+          <template v-else>距收缩压目标还差 {{ bpTargetInfo.gap }} mmHg，重点看晨起血压和低盐依从。</template>
         </p>
       </Card>
 

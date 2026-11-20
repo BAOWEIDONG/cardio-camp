@@ -34,8 +34,8 @@ const activeCampName = computed(() => {
 
 // 按营期过滤学员（null = 全部活跃学员）
 const campStudents = computed(() => {
-  if (!activeCampId.value) return store.getAllStudents();
-  return store.getStudentsByCamp(activeCampId.value);
+  if (!activeCampId.value) return store.scopedStudents;
+  return store.scopedStudents.filter((s: any) => s.campIds?.includes(activeCampId.value!));
 });
 
 // 按营期过滤打卡记录（null = 全部记录）

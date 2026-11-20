@@ -7,25 +7,25 @@ import { Card } from './ui';
 const store = useAppStore();
 const role = computed(() => store.user?.role);
 const isSuper = computed(() => role.value === 'super_admin');
-const students = computed(() => isSuper.value ? store.students : store.students.filter((s) => (s as any).campIds?.includes('camp1') || !(s as any).campIds));
-const accounts = computed(() => store.accounts);
+const students = computed(() => store.scopedStudents);
+const accounts = computed(() => store.scopedAccounts);
 const highRisk = computed(() => students.value.filter((s) => {
   const b = store.latestBpFor(s.id, store.selectedCampId || 'camp1');
   return b && (b.sbp >= 140 || b.dbp >= 90);
 }).length);
 const allOrgs = [
-  { name: '北京大学国际医院', type: '总部', accounts: 18, students: students.value.length, active: true },
-  { name: '北大医疗康复医院', type: '机构', accounts: 6, students: 0, active: true },
-  { name: '北大医疗石油医院', type: '机构', accounts: 4, students: 0, active: false },
+  { id: 'org1', name: '北京大学国际医院', type: '总部', accounts: 18, students: students.value.length, active: true },
+  { id: 'org2', name: '北大医疗康复医院', type: '机构', accounts: 6, students: 0, active: true },
+  { id: 'org3', name: '北大医疗石油医院', type: '机构', accounts: 4, students: 0, active: false },
 ];
-const orgs = computed(() => isSuper.value ? allOrgs : allOrgs.slice(0, 1));
+const orgs = computed(() => isSuper.value ? allOrgs : allOrgs.filter((o) => o.id === store.currentOrgId));
 const roles = [
   { name: '学员', scope: '本人数据 · 打卡/领奖' },
   { name: '医师', scope: '所负责营期 · 诊疗/随访/用药' },
   { name: '运动师', scope: '所负责营期 · 评估/处方/批注' },
   { name: '营养师', scope: '所负责营期 · 营养处方/批注/配置' },
-  { name: '机构管理员', scope: '本机构 · 账号/营期/活动' },
-  { name: '超级管理员', scope: '全部机构 · 规则/权限/项目' },
+  { name: '医院管理员', scope: '本机构 · 账号/营期/活动' },
+  { name: '集团管理员', scope: '全部机构 · 规则/权限/项目' },
 ];
 const permissionRows = [
   { m: '账号与准入', s: '●', d: '◐审核', c: '○', n: '○', o: '●本机构', a: '●' },
@@ -45,7 +45,7 @@ const permissionRows = [
         <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#1E3A52] text-white shadow-lg"><ShieldCheck class="h-6 w-6" /></div>
         <div class="min-w-0 flex-1">
           <div class="text-[11px] text-gray-500">{{ isSuper ? '北京大学国际医院 · 健康事业部' : '北大医疗康复医院 · 健康管理部' }}</div>
-          <div class="text-[17px] font-black text-gray-900">{{ store.user?.name }} · {{ isSuper ? '超级管理员' : '机构运营管理员' }}</div>
+          <div class="text-[17px] font-black text-gray-900">{{ store.user?.name }} · {{ isSuper ? '集团管理员' : '医院管理员' }}</div>
         </div>
         <span class="rounded-full bg-[#1E3A52]/8 px-2.5 py-1 text-[9px] font-bold text-[#1E3A52]">{{ isSuper ? '一级管控' : '二级运营' }}</span>
       </div>
@@ -60,24 +60,28 @@ const permissionRows = [
           <div class="rounded-xl bg-white/10 px-2 py-2"><div class="text-[8px] text-white/55">在营学员</div><div class="text-[17px] font-black">{{ students.length }}</div></div>
           <div class="rounded-xl bg-white/10 px-2 py-2"><div class="text-[8px] text-white/55">高危</div><div class="text-[17px] font-black">{{ highRisk }}</div></div>
           <div class="rounded-xl bg-white/10 px-2 py-2"><div class="text-[8px] text-white/55">账号</div><div class="text-[17px] font-black">{{ accounts.length }}</div></div>
-          <div class="rounded-xl bg-white/10 px-2 py-2"><div class="text-[8px] text-white/55">营期</div><div class="text-[17px] font-black">{{ store.camps.length }}</div></div>
+          <div class="rounded-xl bg-white/10 px-2 py-2"><div class="text-[8px] text-white/55">营期</div><div class="text-[17px] font-black">{{ store.scopedCamps.length }}</div></div>
         </div>
       </div>
 
       <div class="grid grid-cols-4 gap-2">
-        <button class="flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="store.setCurrentView('account-manage')">
+        <button v-if="store.can('account', 'view')" class="flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="store.setCurrentView('account-manage')">
           <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1E3A52]/10 text-[#1E3A52]"><Users class="h-4 w-4" /></span>
           <span class="text-[9px] font-bold text-gray-700">账号管理</span>
         </button>
-        <button class="flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="store.setCurrentView('camp-summary')">
+        <button v-if="store.can('permission', 'view')" class="flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="store.setCurrentView('permission-config')">
+          <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1F6A95]/10 text-[#1F6A95]"><ShieldCheck class="h-4 w-4" /></span>
+          <span class="text-[9px] font-bold text-gray-700">权限配置</span>
+        </button>
+        <button v-if="store.can('report', 'view')" class="flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="store.setCurrentView('camp-summary')">
           <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#2C7DA0]/10 text-[#2C7DA0]"><ClipboardCheck class="h-4 w-4" /></span>
           <span class="text-[9px] font-bold text-gray-700">结营统计</span>
         </button>
-        <button class="flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="store.setCurrentView('metric-config')">
+        <button v-if="store.can('config', 'view')" class="flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="store.setCurrentView('metric-config')">
           <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#1F6A95]/10 text-[#1F6A95]"><Settings2 class="h-4 w-4" /></span>
           <span class="text-[9px] font-bold text-gray-700">指标配置</span>
         </button>
-        <button class="flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="store.setCurrentView('activity-admin')">
+        <button v-if="store.can('activity', 'view')" class="flex flex-col items-center gap-1.5 rounded-2xl bg-white py-3 shadow-sm" @click="store.setCurrentView('activity-admin')">
           <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E8674F]/10 text-[#E8674F]"><HeartPulse class="h-4 w-4" /></span>
           <span class="text-[9px] font-bold text-gray-700">活动配置</span>
         </button>
@@ -133,7 +137,7 @@ const permissionRows = [
       <div>
         <div class="mb-2 flex items-center gap-1.5 text-sm font-bold text-gray-900"><CalendarDays class="h-4 w-4 text-[#1E3A52]" /> 营期与批次</div>
         <div class="space-y-2">
-          <Card v-for="c in store.camps" :key="c.id" class="border-0 shadow-sm p-3.5">
+          <Card v-for="c in store.scopedCamps" :key="c.id" class="border-0 shadow-sm p-3.5">
             <div class="flex items-center gap-2">
               <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#1E3A52]/8 text-[#1E3A52]"><CalendarDays class="h-4 w-4" /></span>
               <div class="min-w-0 flex-1"><div class="text-[11px] font-bold text-gray-900">心脑血管防治营 · {{ c.name }}</div><div class="text-[9px] text-gray-400">{{ c.startDate }} – {{ c.endDate }}</div></div>

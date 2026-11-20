@@ -12,7 +12,7 @@ const isStudent = computed(() => role.value === 'student');
 const staffPatients = computed(() => {
   if (!store.user) return [];
   if (role.value === 'doctor') return store.getDoctorPatients(store.user.id);
-  return store.students.slice(0, 10);
+  return store.scopedStudents.slice(0, 10);
 });
 // 进入页面时一次性补齐会话，避免在 computed 里写状态导致循环
 if (store.user && !isStudent.value) {

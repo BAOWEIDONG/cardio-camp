@@ -11,6 +11,8 @@ export interface Camp {
   startDate?: string;  // 开营日期 YYYY-MM-DD
   endDate?: string;    // 结营日期 YYYY-MM-DD
   status: 'upcoming' | 'active' | 'ended';
+  /** 所属医院/机构 */
+  orgId?: string;
 }
 
 /** 账户（手机号 = 登录凭证，只有配置了手机号的人才能登录） */
@@ -18,7 +20,9 @@ export interface Account {
   id: string;
   phone: string;       // 手机号（唯一登录凭证）
   name: string;        // 姓名
-  role: Role;          // student | coach | dietitian
+  role: Role;          // student | coach | dietitian | doctor | org_admin | super_admin
+  /** 所属医院/机构（集团管理员可为空，代表集团） */
+  orgId?: string;
   /** 学员所属期（可多选，同一人可参与多期；运动师/营养师不强制） */
   campIds?: string[];
   /** 是否启用（禁用后该手机号无法登录） */
@@ -37,6 +41,8 @@ export interface MedicalReport {
 export interface User {
   id: string;
   role: Role;
+  /** 所属医院/机构（集团管理员可为空） */
+  orgId?: string;
   name: string;
   phone: string;
   gender?: 'male' | 'female';

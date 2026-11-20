@@ -14,7 +14,7 @@ const store = useAppStore();
 
 // ─── Tab 切换 ───
 const activeTab = ref<Role>('student');
-const roleLabel = (r: Role) => r === 'student' ? '学员' : r === 'coach' ? '运动师' : r === 'doctor' ? '医师' : r === 'dietitian' ? '营养师' : r === 'org_admin' ? '机构管理员' : '超级管理员';
+const roleLabel = (r: Role) => r === 'student' ? '学员' : r === 'coach' ? '运动师' : r === 'doctor' ? '医师' : r === 'dietitian' ? '营养师' : r === 'org_admin' ? '医院管理员' : '集团管理员';
 const tabs: { role: Role; label: string; icon: typeof Users; color: string }[] = [
   { role: 'student', label: '学员', icon: UserCircle, color: '#1F6A95' },
   { role: 'coach', label: '运动师', icon: Dumbbell, color: '#E8674F' },
@@ -41,7 +41,7 @@ const accountFormError = ref('');
 
 // ─── 计算属性 ───
 const filteredAccounts = computed(() => {
-  let list = store.accounts.filter((a) => a.role === activeTab.value);
+  let list = store.scopedAccounts.filter((a) => a.role === activeTab.value);
   // 学员 tab 下按营期筛选
   if (activeTab.value === 'student' && filterCampId.value !== 'all') {
     list = list.filter((a) => a.campIds?.includes(filterCampId.value));
@@ -310,7 +310,7 @@ const switchTab = (role: Role) => {
         </div>
         <div class="flex gap-2 overflow-x-auto pb-1">
           <Card
-            v-for="camp in store.camps"
+            v-for="camp in store.scopedCamps"
             :key="camp.id"
             class="p-3 shrink-0 w-36 cursor-pointer hover:shadow-md transition-shadow"
             @click="handleEditCamp(camp)"
@@ -328,7 +328,7 @@ const switchTab = (role: Role) => {
               {{ store.accounts.filter(a => a.role === 'student' && a.campIds?.includes(camp.id)).length }} 名学员
             </div>
           </Card>
-          <div v-if="store.camps.length === 0" class="text-xs text-gray-400 py-4 text-center w-full">
+          <div v-if="store.scopedCamps.length === 0" class="text-xs text-gray-400 py-4 text-center w-full">
             暂无营期，请先新增
           </div>
         </div>
@@ -364,7 +364,7 @@ const switchTab = (role: Role) => {
           全部期
         </button>
         <button
-          v-for="camp in store.camps"
+          v-for="camp in store.scopedCamps"
           :key="camp.id"
           :class="[
             'shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
@@ -440,16 +440,17 @@ const switchTab = (role: Role) => {
             </div>
             <div class="flex gap-1.5 shrink-0 items-center">
               <button
+                v-if="store.can('account', 'disable')"
                 @click="toggleActive(account)"
                 :class="['p-1.5 rounded-lg transition-colors', account.active ? 'text-blue-600 hover:bg-blue-50' : 'text-gray-400 hover:bg-gray-50']"
                 :title="account.active ? '点击禁用' : '点击启用'"
               >
                 <component :is="account.active ? ShieldCheck : ShieldOff" class="w-4 h-4" />
               </button>
-              <button @click="handleEditAccount(account)" class="text-blue-500 p-1.5 hover:bg-blue-50 rounded-lg">
+              <button v-if="store.can('account', 'edit')" @click="handleEditAccount(account)" class="text-blue-500 p-1.5 hover:bg-blue-50 rounded-lg">
                 <Edit3 class="w-4 h-4" />
               </button>
-              <button @click="handleDeleteAccount(account)" class="text-red-500 p-1.5 hover:bg-red-50 rounded-lg">
+              <button v-if="store.can('account', 'delete')" @click="handleDeleteAccount(account)" class="text-red-500 p-1.5 hover:bg-red-50 rounded-lg">
                 <Trash2 class="w-4 h-4" />
               </button>
             </div>
@@ -467,6 +468,7 @@ const switchTab = (role: Role) => {
     <!-- 底部新增按钮 -->
     <div class="sticky bottom-0 p-4 bg-white border-t border-gray-100">
       <button
+        v-if="store.can('account', 'create')"
         class="w-full py-3 rounded-xl text-white font-bold flex items-center justify-center gap-1"
         :style="`background-color: ${tabs.find(t => t.role === activeTab)?.color}`"
         @click="handleEditAccount()"
@@ -575,12 +577,12 @@ const switchTab = (role: Role) => {
           <!-- 营期关联（学员/运动师） -->
           <div v-if="editingAccount.role === 'student' || editingAccount.role === 'coach' || editingAccount.role === 'doctor'">
             <label class="text-sm font-medium text-gray-700 block mb-2">{{ editingAccount.role === 'coach' ? '负责营期' : '所属营期' }} <span v-if="editingAccount.role === 'student'" class="text-red-500">*</span></label>
-            <div v-if="store.camps.length === 0" class="text-xs text-orange-500 bg-orange-50 rounded-lg p-2.5">
+            <div v-if="store.scopedCamps.length === 0" class="text-xs text-orange-500 bg-orange-50 rounded-lg p-2.5">
               暂无营期，请先在上方新增营期
             </div>
             <div v-else class="flex flex-wrap gap-2">
               <button
-                v-for="camp in store.camps"
+                v-for="camp in store.scopedCamps"
                 :key="camp.id"
                 type="button"
                 :class="[

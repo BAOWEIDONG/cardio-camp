@@ -20,7 +20,7 @@ function iso(offsetDays: number, time: string): string {
   return `${dateStr(offsetDays)} ${time}`;
 }
 
-export const MOCK_STUDENTS: { id: string; name: string; age: number; gender: 'male' | 'female'; phone: string }[] = [
+export const MOCK_STUDENTS: { id: string; name: string; age: number; gender: 'male' | 'female'; phone: string; orgId?: string }[] = [
   { id: 's1', name: '张伟', age: 56, gender: 'male', phone: '13800000001' },
   { id: 's2', name: '李秀兰', age: 62, gender: 'female', phone: '13800000002' },
   { id: 's3', name: '王建国', age: 58, gender: 'male', phone: '13800000003' },
@@ -37,6 +37,8 @@ export const MOCK_STUDENTS: { id: string; name: string; age: number; gender: 'ma
   // 体验账号：同一手机号可按学员/营养师/运动师三种角色登录（登录时选择角色）
   { id: 's13', name: '体验学员', age: 30, gender: 'female', phone: '13900000009' },
 ];
+// 医院归属：s7-s10 归康复医院（org2），其余归国际医院（org1）
+MOCK_STUDENTS.forEach((s, i) => { s.orgId = i >= 6 && i < 10 ? 'org2' : 'org1'; });
 
 // 完整打卡天数：今天往前连续 N 天，三餐+运动都完成
 const COMPLETE_DAYS = 11;
@@ -77,6 +79,15 @@ BP_SEEDS.forEach((seed, si) => {
     }
   }
 });
+// 康复医院（org2）第二期血压记录（s7-s10，开营 3 天）
+['s7', 's8', 's9', 's10'].forEach((sid, idx) => {
+  const base = [136, 156, 150, 132][idx];
+  for (let d = -2; d <= 0; d++) {
+    MOCK_BP_RECORDS.push({ id: `bp_${sid}_c2_${d}_m`, studentId: sid, campId: 'camp2', date: iso(d, '07:30:00'), period: 'morning', sbp: base - (d + 2) * 3, dbp: 88 - (d + 2), hr: 76, takenMed: true });
+    MOCK_BP_RECORDS.push({ id: `bp_${sid}_c2_${d}_e`, studentId: sid, campId: 'camp2', date: iso(d, '20:10:00'), period: 'evening', sbp: base - (d + 2) * 3 + 3, dbp: 89 - (d + 2), hr: 80, takenMed: true });
+  }
+});
+
 // 医师批注示例
 const bpCommentTarget = MOCK_BP_RECORDS.find((r) => r.studentId === 's1' && r.date.startsWith(dateStr(-1)) && r.period === 'morning');
 if (bpCommentTarget) {
@@ -858,9 +869,9 @@ Object.values(MOCK_STUDENT_WEIGHTS).forEach((records) => {
 
 /** 营期/期列表 */
 export const MOCK_CAMPS: Camp[] = [
-  { id: 'camp1', name: '第一期 · 21天强化', startDate: dateStr(-15), endDate: dateStr(5), status: 'active' },
-  { id: 'camp2', name: '第二期', startDate: dateStr(-2), endDate: dateStr(26), status: 'active' },
-  { id: 'camp3', name: '第三期', startDate: dateStr(7), endDate: dateStr(35), status: 'upcoming' },
+  { id: 'camp1', name: '第一期 · 21天强化', startDate: dateStr(-15), endDate: dateStr(5), status: 'active', orgId: 'org1' },
+  { id: 'camp2', name: '第二期', startDate: dateStr(-2), endDate: dateStr(26), status: 'active', orgId: 'org2' },
+  { id: 'camp3', name: '第三期', startDate: dateStr(7), endDate: dateStr(35), status: 'upcoming', orgId: 'org1' },
 ];
 
 /** 账户列表（手机号 = 登录凭证） */
@@ -880,8 +891,13 @@ export const MOCK_ACCOUNTS: Account[] = [
   // 医师与两级管理员（心脑血管营新增角色）
   { id: 'dr1', phone: '13600000001', name: '李建国', role: 'doctor', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-30, '09:00:00') },
   { id: 'dr2', phone: '13600000002', name: '周敏', role: 'doctor', campIds: ['camp1'], active: true, createdAt: iso(-20, '09:00:00') },
-  { id: 'oa1', phone: '13500000001', name: '王丽', role: 'org_admin', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-30, '09:00:00') },
+  { id: 'oa1', phone: '13500000001', name: '王丽', role: 'org_admin', orgId: 'org1', campIds: ['camp1', 'camp2'], active: true, createdAt: iso(-30, '09:00:00') },
+  { id: 'oa2', phone: '13500000002', name: '刘强', role: 'org_admin', orgId: 'org2', campIds: ['camp2'], active: true, createdAt: iso(-30, '09:00:00') },
   { id: 'sa1', phone: '13400000001', name: '李项目', role: 'super_admin', campIds: ['camp1', 'camp2', 'camp3'], active: true, createdAt: iso(-30, '09:00:00') },
+  // 康复医院团队（org2）
+  { id: 'dr3', phone: '13600000003', name: '赵医生', role: 'doctor', orgId: 'org2', campIds: ['camp2'], active: true, createdAt: iso(-20, '09:00:00') },
+  { id: 'c5', phone: '13700000005', name: '周运动师', role: 'coach', orgId: 'org2', campIds: ['camp2'], active: true, createdAt: iso(-20, '09:00:00') },
+  { id: 'd3', phone: '13900000003', name: '孙营养师', role: 'dietitian', orgId: 'org2', campIds: ['camp2'], active: true, createdAt: iso(-20, '09:00:00') },
   // 学员（id 与 MOCK_STUDENTS 一致，确保登录后能关联到打卡/体重/检测数据）
   { id: 's1', phone: '13800000001', name: '张伟', role: 'student', campIds: ['camp1'], active: true, createdAt: iso(-15, '08:00:00') },
   { id: 's2', phone: '13800000002', name: '李秀兰', role: 'student', campIds: ['camp1'], active: true, createdAt: iso(-15, '08:00:00') },

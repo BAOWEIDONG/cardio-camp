@@ -38,7 +38,7 @@ const activeCampName = computed(() => {
 
 // 按营期过滤学员
 const campStudents = computed(() => {
-  const allCoachStudents = store.getCoachStudents();
+  const allCoachStudents = store.getCoachStudents().filter((s: any) => (s.orgId || 'org1') === store.currentOrgId || store.isGroupAdmin);
   if (!activeCampId.value) return allCoachStudents;
   // 按营期精确过滤
   return allCoachStudents.filter(s => {

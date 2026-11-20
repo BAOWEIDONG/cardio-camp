@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed, watch } from 'vue';
 import { showImagePreview } from 'vant';
-import type { User, WeightRecord, BpRecord, ExerciseRecord, DietRecord, CheckinComment, ChatThread, ChatMessage, CoachActivityRecord, RewardTier, RewardClaim, MealTimeConfig, MetricConfig, Camp, Account, PointProduct, PointExchangeRecord, ManualScoreRecord, ExchangeAuditEntry, ConfigAudit, RewardTierSnapshot, UnlockRecord, CampMessageEntry, BadgeConfig, BadgeRecord } from '../types';
+import type { User, Role, WeightRecord, BpRecord, ExerciseRecord, DietRecord, CheckinComment, ChatThread, ChatMessage, CoachActivityRecord, RewardTier, RewardClaim, MealTimeConfig, MetricConfig, Camp, Account, PointProduct, PointExchangeRecord, ManualScoreRecord, ExchangeAuditEntry, ConfigAudit, RewardTierSnapshot, UnlockRecord, CampMessageEntry, BadgeConfig, BadgeRecord } from '../types';
 import {
   MOCK_REWARD_TIERS,
   MOCK_REWARD_CLAIMS,
@@ -30,6 +30,7 @@ import { calculateStreak, calculateLongestStreakInRange } from '../lib/streak';
 import { latestOrFirst, latestOrFirstId } from '../lib/camps';
 import { MOCK_FOLLOWUPS, MOCK_MEDS, DOCTOR_PATIENTS, type FollowupRecord, type MedicationPlan } from '../lib/doctorData';
 import { MOCK_CHAT_THREADS } from '../lib/chatData';
+import { defaultPermissions, mergePermissions, permissionKey } from '../lib/permissions';
 import { loadMsgSeenState, saveMsgSeenState, systemMsgUnread } from '../lib/messageSeen';
 
 /** 生成 yyyy-MM-dd HH:mm:ss 格式的当前时间字符串（全站统一格式） */
@@ -83,6 +84,7 @@ export type View =
   | 'doctor-followup'
   | 'care-chat'
   | 'followup'
+  | 'permission-config'
   | 'admin-dashboard'
   | 'calendar'
   | 'coach-dashboard'
@@ -375,6 +377,12 @@ export const useAppStore = defineStore('app', () => {
   const camps = ref<Camp[]>([...MOCK_CAMPS]);
   /** 账户列表（手机号=登录凭证） */
   const accounts = ref<Account[]>([...MOCK_ACCOUNTS]);
+  const permissionOverrides = ref<Record<string, Record<string, string[]>>>({});
+  const isGroupAdmin = computed(() => user.value?.role === 'super_admin');
+  const currentOrgId = computed(() => user.value?.orgId || 'org1');
+  const scopedStudents = computed(() => isGroupAdmin.value ? students.value : students.value.filter((s) => (s as any).orgId === currentOrgId.value));
+  const scopedAccounts = computed(() => isGroupAdmin.value ? accounts.value : accounts.value.filter((a) => a.orgId === currentOrgId.value));
+  const scopedCamps = computed(() => isGroupAdmin.value ? camps.value : camps.value.filter((c) => c.orgId === currentOrgId.value));
 
   /** 徽章配置（按营期独立，营养师可增删改） */
   const badgeConfigsByCamp = ref<Record<string, BadgeConfig[]>>({
@@ -1046,7 +1054,7 @@ export const useAppStore = defineStore('app', () => {
     students, weightRecords, bpRecords, exerciseRecords, dietRecords, coachActivities,
     rewardTiers, rewardClaims, unlockRecords, campMessageList, metricConfigs, camps, accounts,
     pointProducts, pointExchanges, manualScoreRecords,
-    doctorFollowups, chatThreads,
+    doctorFollowups, chatThreads, permissionOverrides,
     activityConfigByCamp, mealTimeConfigByCamp,
     badgeConfigsByCamp, badgeRecords,
   ];
@@ -1054,7 +1062,7 @@ export const useAppStore = defineStore('app', () => {
     'students', 'weightRecords', 'bpRecords', 'exerciseRecords', 'dietRecords', 'coachActivities',
     'rewardTiers', 'rewardClaims', 'unlockRecords', 'campMessageList', 'metricConfigs', 'camps', 'accounts',
     'pointProducts', 'pointExchanges', 'manualScoreRecords',
-    'doctorFollowups', 'chatThreads',
+    'doctorFollowups', 'chatThreads', 'permissionOverrides',
     'activityConfigByCamp', 'mealTimeConfigByCamp',
     'badgeConfigsByCamp', 'badgeRecords',
   ] as const;
@@ -1658,9 +1666,34 @@ export const useAppStore = defineStore('app', () => {
     return medications.value.find((m) => m.studentId === studentId) || null;
   }
 
+  function rolePermissions(orgId: string, role: Role) {
+    const base = defaultPermissions(role);
+    return mergePermissions(base, permissionOverrides.value[permissionKey(orgId, role)]);
+  }
+
+  function toggleRolePermission(orgId: string, role: Role, module: string, action: string) {
+    const key = permissionKey(orgId, role);
+    const current = rolePermissions(orgId, role);
+    const next = { ...current, [module]: current[module] || [] };
+    next[module] = next[module].includes(action) ? next[module].filter((a) => a !== action) : [...next[module], action];
+    permissionOverrides.value[key] = next;
+  }
+
+  function resetRolePermissions(orgId: string, role: Role) {
+    delete permissionOverrides.value[permissionKey(orgId, role)];
+  }
+
+  function can(module: string, action: string) {
+    const r = user.value?.role;
+    if (!r) return false;
+    const perms = rolePermissions(currentOrgId.value, r);
+    return (perms[module] || []).includes(action);
+  }
+
   function getDoctorPatients(doctorId: string) {
     const ids = DOCTOR_PATIENTS[doctorId] || [];
-    return students.value.filter((s) => ids.includes(s.id));
+    const orgId = accounts.value.find((a) => a.id === doctorId)?.orgId || currentOrgId.value;
+    return students.value.filter((s) => ids.includes(s.id) && ((s as any).orgId || 'org1') === orgId);
   }
 
   function chatThreadsForStudent(studentId: string) {
@@ -1866,6 +1899,16 @@ export const useAppStore = defineStore('app', () => {
     getDoctorFollowups,
     getMedication,
     getDoctorPatients,
+    permissionOverrides,
+    isGroupAdmin,
+    currentOrgId,
+    scopedStudents,
+    scopedAccounts,
+    scopedCamps,
+    rolePermissions,
+    toggleRolePermission,
+    resetRolePermissions,
+    can,
     chatThreads,
     chatThreadsForStudent,
     ensureChatThread,

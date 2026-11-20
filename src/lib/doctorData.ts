@@ -77,6 +77,22 @@ export const MOCK_FOLLOWUPS: FollowupRecord[] = [
     plan: '加用低剂量他汀强化，营养师加密随访，限制饮酒。',
     nextDate: d(6),
   },
+  {
+    id: 'fu6', studentId: 's7', campId: 'camp2', doctorId: 'dr3', doctorName: '赵医生',
+    date: `${d(-2)} 10:30`, type: '入企面诊', risk: '中危', sbp: 136, dbp: 88, hr: 78,
+    symptoms: '偶有应酬后头晕，无胸痛',
+    conclusion: '高血压 1 级合并血脂异常，颈动脉未见明显斑块，运动风险中危。',
+    plan: '先生活方式干预 4 周，家庭血压早晚各一次；运动从快走 20 分钟起始，低盐低脂饮食。',
+    nextDate: d(5),
+  },
+  {
+    id: 'fu7', studentId: 's8', campId: 'camp2', doctorId: 'dr3', doctorName: '赵医生',
+    date: `${d(-1)} 15:00`, type: '线上随访', risk: '高危', sbp: 153, dbp: 87, hr: 74,
+    symptoms: '晨起血压偏高，无明显不适',
+    conclusion: '高血压 2 级，需强化限盐与家庭自测，暂不调整药物。',
+    plan: '继续氨氯地平 5mg qd；营养师加密随访，2 周后复评。',
+    nextDate: d(6),
+  },
 ];
 
 export const MOCK_MEDS: MedicationPlan[] = [
@@ -104,10 +120,19 @@ export const MOCK_MEDS: MedicationPlan[] = [
       { name: '阿托伐他汀钙片', dose: '20 mg', freq: '每晚 1 次' },
     ],
   },
+  {
+    id: 'med_s7', studentId: 's7', doctorId: 'dr3', doctorName: '赵医生', updatedAt: `${d(-2)} 10:40`, adherence: 0.9,
+    drugs: [
+      { name: '苯磺酸氨氯地平片', dose: '5 mg', freq: '每日 1 次' },
+      { name: '阿托伐他汀钙片', dose: '20 mg', freq: '每晚 1 次' },
+    ],
+    note: '先生活方式干预，4 周后复评',
+  },
 ];
 
 /** 医师负责的患者（演示用固定分组，正式环境按营期/分组授权） */
 export const DOCTOR_PATIENTS: Record<string, string[]> = {
   dr1: ['s1', 's2', 's3', 's5'],
   dr2: ['s4', 's6', 's7', 's8'],
+  dr3: ['s7', 's8', 's9', 's10'],
 };

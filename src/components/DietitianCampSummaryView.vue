@@ -49,6 +49,28 @@ const { data: summary, done: summaryReady } = useDeferred<DietitianCampSummary>(
   ),
 );
 
+const cvStats = computed(() => {
+  if (!summary.value) return null;
+  let bpTotal = 0, bpCtrl = 0, ldlTotal = 0, ldlImproved = 0, medSum = 0, medN = 0, fuN = 0;
+  campStudents.value.forEach((s) => {
+    const recs = store.getStudentBpRecords(s.id, store.selectedCampId);
+    bpTotal += recs.length;
+    bpCtrl += recs.filter((r) => r.sbp < 140 && r.dbp < 90).length;
+    const rep = summary.value!.studentReports.find((r) => r.studentId === s.id);
+    const ldl = rep?.metricChanges.find((m) => m.name.includes('低密度脂蛋白'));
+    if (ldl && ldl.change !== null) { ldlTotal += 1; if (ldl.isImproved) ldlImproved += 1; }
+    const med = store.getMedication(s.id);
+    if (med) { medSum += med.adherence; medN += 1; }
+    if (store.getDoctorFollowups(s.id).length) fuN += 1;
+  });
+  return {
+    bpRate: bpTotal ? Math.round((bpCtrl / bpTotal) * 100) : null,
+    ldlRate: ldlTotal ? Math.round((ldlImproved / ldlTotal) * 100) : null,
+    medRate: medN ? Math.round((medSum / medN) * 100) : null,
+    fuRate: campStudents.value.length ? Math.round((fuN / campStudents.value.length) * 100) : null,
+  };
+});
+
 // 减重总人数及占比（分母=本营期参营学员总数：体重下降人数 / 参营学员总数）
 const weightLossStats = computed(() => {
   if (!summary.value) return { count: 0, total: 0 };
@@ -150,6 +172,22 @@ const freqRate = (r: { checkinStats: { totalCheckinDays: number; campDays: numbe
           </div>
           <ChevronRight class="w-4 h-4 text-[#1F6A95]" />
         </div>
+      </Card>
+
+      <!-- 心脑血管核心结果 -->
+      <Card v-if="cvStats">
+        <h3 class="font-bold text-gray-900 mb-3 flex items-center gap-2 border-b pb-2">
+          <Activity class="h-4 w-4 text-[#1F6A95]" />
+          心脑血管核心结果
+          <span class="ml-auto text-[10px] font-normal text-gray-400">按本营期 {{ campStudents.length }} 人</span>
+        </h3>
+        <div class="grid grid-cols-4 gap-2 text-center">
+          <div class="rounded-xl bg-[#1F6A95]/5 py-2.5"><div class="text-[18px] font-black text-[#1F6A95]">{{ cvStats.bpRate ?? '—' }}%</div><div class="text-[8.5px] text-gray-500">阶段血压达标</div></div>
+          <div class="rounded-xl bg-[#1F6A95]/5 py-2.5"><div class="text-[18px] font-black text-[#1F6A95]">{{ cvStats.ldlRate ?? '—' }}%</div><div class="text-[8.5px] text-gray-500">LDL 改善率</div></div>
+          <div class="rounded-xl bg-[#1F6A95]/5 py-2.5"><div class="text-[18px] font-black text-[#1F6A95]">{{ cvStats.medRate ?? '—' }}%</div><div class="text-[8.5px] text-gray-500">用药依从</div></div>
+          <div class="rounded-xl bg-[#1F6A95]/5 py-2.5"><div class="text-[18px] font-black text-[#1F6A95]">{{ cvStats.fuRate ?? '—' }}%</div><div class="text-[8.5px] text-gray-500">随访覆盖</div></div>
+        </div>
+        <div class="mt-2 text-[8.5px] leading-relaxed text-gray-400">阶段达标按家庭血压 &lt;140/90；LDL 改善按开营 vs 结营复筛；用药依从与随访次数来自医师端记录。</div>
       </Card>
 
       <!-- 概览卡片 -->

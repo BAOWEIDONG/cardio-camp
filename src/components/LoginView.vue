@@ -48,7 +48,7 @@ const handlePhoneSubmit = () => {
     // 尝试找到该手机号但角色不匹配的账户，给出更精确的提示
     const wrongRoleAccount = store.accounts.find((a) => a.phone === phone.value && a.active);
     if (wrongRoleAccount) {
-      const roleLabel = ({ student: '学员', coach: '运动师', dietitian: '营养师', doctor: '医师', org_admin: '机构管理员', super_admin: '超级管理员' } as Record<string,string>)[wrongRoleAccount.role] || '用户';
+      const roleLabel = ({ student: '学员', coach: '运动师', dietitian: '营养师', doctor: '医师', org_admin: '医院管理员', super_admin: '集团管理员' } as Record<string,string>)[wrongRoleAccount.role] || '用户';
       error.value = `该手机号已注册为${roleLabel}，请切换角色后登录`;
     } else {
       const inactiveAccount = store.accounts.find((a) => a.phone === phone.value);
@@ -88,19 +88,24 @@ const handlePhoneSubmit = () => {
   store.setUser({
     id: account.id,
     role: account.role,
+    orgId: account.orgId,
     name: account.name,
     phone: account.phone,
     gender: studentInfo?.gender,
     age: studentInfo?.age,
     supervisor: account.supervisor === true,
   });
-  const roleLabel = ({ student: '学员', coach: '运动师', dietitian: '营养师', doctor: '医师', org_admin: '机构管理员', super_admin: '超级管理员' } as Record<string,string>)[account.role] || '用户';
+  const roleLabel = ({ student: '学员', coach: '运动师', dietitian: '营养师', doctor: '医师', org_admin: '医院管理员', super_admin: '集团管理员' } as Record<string,string>)[account.role] || '用户';
   showToast(`欢迎回来${account.name ? '，' + roleLabel + ' ' + account.name : '，' + roleLabel}`);
 
   if (account.role === 'coach') store.resetToView('coach-dashboard');
   else if (account.role === 'dietitian') store.resetToView('dietitian-dashboard');
-  else if (account.role === 'doctor') { store.selectedCampId = 'camp1'; store.resetToView('doctor-dashboard'); }
-  else if (account.role === 'org_admin' || account.role === 'super_admin') { store.selectedCampId = 'camp1'; store.resetToView('admin-dashboard'); }
+  else if (account.role === 'doctor' || account.role === 'org_admin' || account.role === 'super_admin') {
+    const orgId = account.orgId || 'org1';
+    const camp = store.camps.find((c) => (c.orgId || 'org1') === orgId && c.status === 'active') || store.camps.find((c) => c.status === 'active') || store.camps[0];
+    if (camp) store.selectedCampId = camp.id;
+    store.resetToView(account.role === 'doctor' ? 'doctor-dashboard' : 'admin-dashboard');
+  }
   else store.resetToView(isQuestionnaireSubmitted(account.id) ? 'dashboard' : 'questionnaire');
 };
 </script>
@@ -158,18 +163,21 @@ const handlePhoneSubmit = () => {
             :class="['flex flex-col items-center justify-center py-4 rounded-2xl border-2 transition-all', role === 'org_admin' ? 'border-[#96703F] bg-[#96703F]/5' : 'border-gray-100 bg-white hover:border-[#96703F]/30']"
           >
             <div :class="['p-2 rounded-full mb-2', role === 'org_admin' ? 'bg-[#96703F] text-white' : 'bg-gray-100 text-gray-500']"><Building2 class="w-6 h-6" /></div>
-            <span :class="['text-sm font-bold', role === 'org_admin' ? 'text-[#96703F]' : 'text-gray-600']">机构管理员</span>
+            <span :class="['text-sm font-bold', role === 'org_admin' ? 'text-[#96703F]' : 'text-gray-600']">医院管理员</span>
           </button>
           <button
             @click="role = 'super_admin'"
             :class="['flex flex-col items-center justify-center py-4 rounded-2xl border-2 transition-all', role === 'super_admin' ? 'border-[#1E3A52] bg-[#1E3A52]/5' : 'border-gray-100 bg-white hover:border-[#1E3A52]/30']"
           >
             <div :class="['p-2 rounded-full mb-2', role === 'super_admin' ? 'bg-[#1E3A52] text-white' : 'bg-gray-100 text-gray-500']"><ShieldCheck class="w-6 h-6" /></div>
-            <span :class="['text-sm font-bold', role === 'super_admin' ? 'text-[#1E3A52]' : 'text-gray-600']">超级管理员</span>
+            <span :class="['text-sm font-bold', role === 'super_admin' ? 'text-[#1E3A52]' : 'text-gray-600']">集团管理员</span>
           </button>
         </div>
 
-        <button class="w-full rounded-xl border border-[#1F6A95]/20 bg-[#1F6A95]/5 py-2.5 text-[11px] font-bold text-[#1F6A95]" @click="fillDemo">填入体验账号（{{ role === 'student' ? '学员' : role === 'coach' ? '运动师' : role === 'dietitian' ? '营养师' : role === 'doctor' ? '医师' : role === 'org_admin' ? '机构管理员' : '超级管理员' }}）</button>
+        <div class="rounded-xl bg-gray-50 px-3 py-2 text-[9px] leading-relaxed text-gray-500">
+          管理入口：<b class="text-[#1F6A95]">集团管理员</b>可查看所有医院并配置任意医院团队；<b class="text-[#1F6A95]">医院管理员</b>只能查看和配置本院团队。
+        </div>
+        <button class="w-full rounded-xl border border-[#1F6A95]/20 bg-[#1F6A95]/5 py-2.5 text-[11px] font-bold text-[#1F6A95]" @click="fillDemo">填入体验账号（{{ role === 'student' ? '学员' : role === 'coach' ? '运动师' : role === 'dietitian' ? '营养师' : role === 'doctor' ? '医师' : role === 'org_admin' ? '医院管理员' : '集团管理员' }}）</button>
         <Button class="w-full" size="lg" @click="handleWeChatLogin">
           <MessageCircle class="h-5 w-5" />
           登录/注册
